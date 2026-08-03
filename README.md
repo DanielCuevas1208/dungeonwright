@@ -18,11 +18,13 @@ Every run builds a new dungeon that you can explore and finish.
 Dungeonwright generates a connected dungeon on every run.
 You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
-The same seed always builds the same dungeon.
+The same seed always builds the same run.
+The run descends through several floors.
 
 ## Features
 
 - A new map for every run, driven by a seed.
+- Multi-floor runs that descend into a new dungeon.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
@@ -40,11 +42,12 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds full gamepad support.
-Every action has a gamepad binding.
-Movement uses the left stick or the d-pad.
-Analog input gets a deadzone and a diagonal speed cap.
-Menus show the controls for the active device.
+This release adds a multi-floor descent.
+Every run now spans several floors.
+The exit on a floor leads down to the next floor.
+One seed replays the whole run, floor by floor.
+Coins and shards carry over between floors.
+The run ends when you clear the final floor.
 
 ## Requirements
 
@@ -68,6 +71,7 @@ Leave the field empty for a random seed.
 
 Move with WASD or the arrow keys.
 Attack with Space, J, or a mouse click.
+Reach the exit to descend to the next floor.
 Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
@@ -106,10 +110,17 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+A run has more than one floor.
+Each floor builds a fresh dungeon from a child seed.
+The child seed comes from the run seed through a fixed mixer.
+So one seed replays every floor in the same order.
+Coins and shards carry over between floors.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/core` holds the run state and the descent seed chain.
 - `scripts/input` holds the controls helper.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, and pickups.
@@ -120,26 +131,25 @@ The scene controller turns the map into a live game.
 
 ## Design guarantees
 
-A seed always produces the same map.
+A seed always produces the same floors.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
 
 ## Evaluation evidence
 
-The suite has 68 tests.
-It covers generation, biomes, combat, drops, pathfinding, and input.
-All 68 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 81 tests.
+It covers generation, biomes, descent, combat, drops, pathfinding, and input.
+All 81 tests pass in a headless run.
+A smoke test loads the game and clears a fixed-seed run floor by floor.
 The smoke test also checks every action has a gamepad binding.
 
 ## Roadmap
 
 Done in this release:
-- Full gamepad support.
+- Multi-floor descent with a floor counter.
 
 Next up:
-- Multi-floor descent and a depth counter.
 - Ranged monsters and projectiles.
 - Sound and music.
 - More biomes and items.
@@ -147,7 +157,7 @@ Next up:
 ## Limitations
 
 The demo has three biomes.
-Each run is a single floor.
+Each run stays inside one biome.
 All monsters use melee attacks.
 The game has no audio yet.
 

@@ -23,6 +23,8 @@ var room_min: int = 5
 var room_max: int = 9
 var corridor_style: StringName = CorridorStyle.elbow
 var loop_chance: float = 0.25
+## The number of floors a run covers in this biome.
+var max_floors: int = 1
 var door_count_min: int = 2
 var door_count_max: int = 3
 var monster_density: float = 0.5
@@ -47,6 +49,8 @@ func validate() -> Array[String]:
 		problems.append("monster density must be between 0 and 1")
 	if loop_chance < 0.0 or loop_chance > 1.0:
 		problems.append("loop chance must be between 0 and 1")
+	if max_floors < 1:
+		problems.append("max floors must be at least 1")
 	if monster_table.is_empty():
 		problems.append("monster table is empty")
 	if palette.is_empty():

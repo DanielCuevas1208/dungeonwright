@@ -6,6 +6,10 @@ extends RefCounted
 ## the start, the exit, keys, doors, and monster spawns.
 
 var seed_value: int = 0
+## The seed that started the whole run. It never changes between floors.
+var run_seed: int = 0
+## The floor of the run that this result describes. Floors start at 1.
+var floor: int = 1
 var config: DungeonConfig = null
 var map: DungeonMap = null
 var rooms: Array[Room] = []
@@ -39,3 +43,7 @@ func key_count() -> int:
 ## The number of monster spawns.
 func monster_count() -> int:
 	return monster_spawns.size()
+
+## True when this floor is the last floor of the run.
+func is_final_floor() -> bool:
+	return config != null and floor >= Descent.floor_count(config)

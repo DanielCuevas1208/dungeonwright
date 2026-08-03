@@ -13,6 +13,12 @@ static var biome_id: StringName = &""
 static var status: RunStatus = RunStatus.IDLE
 static var started_at: float = 0.0
 static var finished_at: float = 0.0
+## The current floor of the run. Floors start at 1.
+static var floor: int = 1
+## The number of floors the run covers.
+static var max_floors: int = 1
+## The number of floors the hero cleared so far.
+static var floors_cleared: int = 0
 
 ## Elapsed play time in seconds for the current run.
 static func elapsed() -> float:

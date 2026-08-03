@@ -4,6 +4,19 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor runs that descend into a new dungeon per floor.
+- A deterministic floor seed chain from a single run seed.
+- A floor counter in the HUD and on the result screen.
+- A floor-cleared transition overlay.
+- The hero keeps coins and shards between floors.
+- The exit only ends the run on the final floor.
+- Unit and integration tests for the descent chain.
+- A smoke test that clears every floor of a run.
+
 ## [0.2.0] - 2026-08-03
 
 Added

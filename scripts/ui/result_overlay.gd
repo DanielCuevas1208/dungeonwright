@@ -17,14 +17,22 @@ func _ready() -> void:
 	visible = false
 	_build()
 
-func show_result(p_won: bool, p_seed: String, p_depth: int, p_coins: int, p_time: float) -> void:
+func show_result(
+	p_won: bool,
+	p_seed: String,
+	p_depth: int,
+	p_coins: int,
+	p_time: float,
+	p_floors_cleared: int = 0,
+	p_max_floors: int = 1
+) -> void:
 	visible = true
 	_title.text = "Victory" if p_won else "Defeat"
 	_title.add_theme_color_override("font_color", Color("#7fe8b9") if p_won else Color("#e07070"))
 	var minutes := int(p_time) / 60
 	var seconds := int(p_time) % 60
-	_summary.text = "Seed: %s\nDepth: %d\nCoins: %d\nTime: %d:%02d" % [
-		p_seed, p_depth, p_coins, minutes, seconds,
+	_summary.text = "Seed: %s\nFloor: %d / %d\nDepth: %d\nCoins: %d\nTime: %d:%02d" % [
+		p_seed, p_floors_cleared, p_max_floors, p_depth, p_coins, minutes, seconds,
 	]
 	_same_seed_button.visible = p_won
 	_new_button.grab_focus()

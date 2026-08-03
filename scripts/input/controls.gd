@@ -55,12 +55,12 @@ static func label_for(p_action: StringName, p_gamepad: bool) -> String:
 			return "Start" if p_gamepad else "Esc"
 	return ""
 
-## A two-line hint for the menu, tailored to the active device.
+## A hint for the menu, tailored to the active device.
 static func hint_text() -> String:
 	return hint_for(gamepad_active())
 
-## A two-line hint for the menu, tailored to a given device.
+## A hint for the menu, tailored to a given device.
 static func hint_for(p_gamepad: bool) -> String:
 	if p_gamepad:
-		return "Move: left stick or d-pad   Attack: A or R shoulder\nOpen doors: walk in with a key   New run: Y   Pause: Start"
-	return "Move: WASD or arrows   Attack: Space, J, or click\nOpen doors: walk in with a key   New run: N   Pause: Esc"
+		return "Move: left stick or d-pad   Attack: A or R shoulder\nOpen doors: walk in with a key   Reach the exit to descend\nNew run: Y   Pause: Start"
+	return "Move: WASD or arrows   Attack: Space, J, or click\nOpen doors: walk in with a key   Reach the exit to descend\nNew run: N   Pause: Esc"
