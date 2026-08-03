@@ -12,6 +12,7 @@ enum Tile {
 	DOOR_OPEN,
 	START,
 	EXIT,
+	STAIRS_DOWN,
 }
 
 var width: int = 0

@@ -46,6 +46,7 @@ func setup(
 	p_view: DungeonView,
 	p_occupancy: Dictionary
 ) -> void:
+	_clear_visuals()
 	stats = p_stats
 	grid_pos = p_start
 	view = p_view
@@ -57,6 +58,18 @@ func setup(
 	add_child(_sprite)
 	_add_light()
 	emit_hud()
+
+## Removes the visuals from a previous setup so a floor change can
+## rebuild the hero without stacking sprites.
+func _clear_visuals() -> void:
+	for child in get_children():
+		child.queue_free()
+
+## Resets the loot a hero carries into a brand-new run.
+func reset_progress() -> void:
+	coins = 0
+	shards = 0
+	keys_held = 0
 
 func _physics_process(p_delta: float) -> void:
 	if view == null or stats == null:

@@ -8,6 +8,7 @@ extends Node2D
 ## turns its output into a live scene.
 
 signal run_started(seed_value: int)
+signal floor_started(floor_number: int)
 
 @onready var dungeon_view: DungeonView = $World/DungeonView
 @onready var monsters_root: Node2D = $World/Monsters
@@ -27,6 +28,7 @@ var run: DungeonResult = null
 var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
+var floor_number: int = 1
 var monster_index := 0
 var _ended := false
 var _beacon_phase := 0.0
@@ -66,7 +68,10 @@ func _physics_process(p_delta: float) -> void:
 	_collect_pickups()
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos:
-		_on_victory()
+		if RunProfile.is_final_floor(floor_number):
+			_on_victory()
+		else:
+			advance_floor()
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -82,32 +87,53 @@ func _on_start_requested(p_seed_text: String) -> void:
 
 func _on_new_run_requested(p_same_seed: bool) -> void:
 	if p_same_seed:
-		_start_run(run_seed)
+		_start_run(run_seed, 1, false)
 	else:
-		_start_run(randi())
+		_start_run(randi(), 1, false)
 
 ## Starts a run with a chosen seed. Public entry point for tooling.
 func start_run(p_seed_value: int) -> void:
-	_start_run(p_seed_value)
+	_start_run(p_seed_value, 1, false)
 
-func _start_run(p_seed_value: int) -> void:
+## Moves the run down one floor. Public entry point for tooling.
+## On the deepest floor this is a no-op.
+func advance_floor() -> void:
+	if run == null or _ended:
+		return
+	if RunProfile.is_final_floor(floor_number):
+		return
+	_start_run(run_seed, floor_number + 1, true)
+
+func _start_run(
+	p_seed_value: int,
+	p_floor: int = 1,
+	p_carry_progress: bool = false
+) -> void:
 	run_seed = p_seed_value
+	floor_number = p_floor
 	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
-	run = DungeonGenerator.new().generate(biome, p_seed_value)
+	var config := RunProfile.config_for(biome, floor_number)
+	run = DungeonGenerator.new().generate(config, RunProfile.floor_seed(p_seed_value, floor_number))
 
 	_clear_world()
 	occupancy.clear()
 	_ended = false
 
-	dungeon_view.configure(run.map, biome)
+	if not p_carry_progress:
+		player.reset_progress()
+
+	dungeon_view.configure(run.map, config)
 	var stats := CombatStats.make({
-		"max_health": biome.starting_health,
-		"health": biome.starting_health,
-		"damage": biome.player_damage,
+		"max_health": config.starting_health,
+		"health": config.starting_health,
+		"damage": config.player_damage,
 	})
 	player.setup(stats, run.start_pos, dungeon_view, occupancy)
 	occupancy[run.start_pos] = player
 	player.can_enter = _hero_can_enter
+
+	if not RunProfile.is_final_floor(floor_number):
+		run.map.set_tile_cell(run.exit_pos, DungeonMap.Tile.STAIRS_DOWN)
 
 	monster_index = 0
 	for spawn in run.monster_spawns:
@@ -121,21 +147,30 @@ func _start_run(p_seed_value: int) -> void:
 	camera.enabled = true
 	camera.position = player.position
 	_apply_camera_limits()
-	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
+	ambient.color = Color(config.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(p_seed_value), run.depth)
+	hud.set_run(
+		biome.display_name,
+		SeededRng.encode_seed(p_seed_value),
+		run.depth,
+		floor_number
+	)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
 
 	RunState.seed_value = p_seed_value
 	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
 	RunState.biome_id = biome.id
 	RunState.status = RunState.RunStatus.ACTIVE
-	RunState.started_at = Time.get_ticks_msec() / 1000.0
+	RunState.floor = floor_number
+	if floor_number == 1:
+		RunState.started_at = Time.get_ticks_msec() / 1000.0
 
 	menu_overlay.hide_menu()
 	result_overlay.hide_result()
 	get_tree().paused = false
-	run_started.emit(p_seed_value)
+	floor_started.emit(floor_number)
+	if floor_number == 1:
+		run_started.emit(p_seed_value)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	var spec := MonsterSpecs.by_id(p_monster_id)
@@ -208,7 +243,8 @@ func _on_player_died() -> void:
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		floor_number
 	)
 	get_tree().paused = true
 
@@ -223,7 +259,8 @@ func _on_victory() -> void:
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		floor_number
 	)
 	get_tree().paused = true
 

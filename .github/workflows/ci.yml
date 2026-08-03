@@ -36,6 +36,14 @@ jobs:
       - name: Import project resources
         run: godot --headless --import
 
+      - name: Check the working tree stays clean
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "The import generated files that are not committed:"
+            git status --porcelain
+            exit 1
+          fi
+
       - name: Run the GUT test suite
         run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 

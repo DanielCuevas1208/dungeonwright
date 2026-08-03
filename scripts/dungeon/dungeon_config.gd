@@ -56,3 +56,27 @@ func validate() -> Array[String]:
 ## True when the config can generate a valid dungeon.
 func is_valid() -> bool:
 	return validate().is_empty()
+
+## Returns an independent copy of this config.
+func clone() -> DungeonConfig:
+	var copy := DungeonConfig.new()
+	copy.id = id
+	copy.display_name = display_name
+	copy.description = description
+	copy.width = width
+	copy.height = height
+	copy.room_count_min = room_count_min
+	copy.room_count_max = room_count_max
+	copy.room_min = room_min
+	copy.room_max = room_max
+	copy.corridor_style = corridor_style
+	copy.loop_chance = loop_chance
+	copy.door_count_min = door_count_min
+	copy.door_count_max = door_count_max
+	copy.monster_density = monster_density
+	copy.monster_cap = monster_cap
+	copy.monster_table = monster_table.duplicate(true)
+	copy.starting_health = starting_health
+	copy.player_damage = player_damage
+	copy.palette = palette.duplicate(true)
+	return copy

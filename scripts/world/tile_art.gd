@@ -16,6 +16,7 @@ const TILE_DOOR_LOCKED := &"door_locked"
 const TILE_DOOR_OPEN := &"door_open"
 const TILE_START := &"start"
 const TILE_EXIT := &"exit"
+const TILE_STAIRS := &"stairs_down"
 
 const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin",
@@ -45,6 +46,7 @@ static func build_tile_textures(p_palette: Dictionary) -> Dictionary:
 		TILE_DOOR_OPEN: _from_pattern(_DOOR_OPEN, p_palette, palette_roles),
 		TILE_START: _from_pattern(_START, p_palette, palette_roles),
 		TILE_EXIT: _from_pattern(_EXIT, p_palette, palette_roles),
+		TILE_STAIRS: _from_pattern(_STAIRS, p_palette, palette_roles),
 	}
 	_tile_cache[key] = textures
 	return textures
@@ -204,6 +206,17 @@ const _EXIT := [
 	".g0..0g.",
 	".g'00'g.",
 	"..gggg..",
+	"........",
+]
+
+const _STAIRS := [
+	"........",
+	"..g..g..",
+	"..gg.gg.",
+	"..gg.gg.",
+	"..ggggg.",
+	"..ggggg.",
+	"..ggggg.",
 	"........",
 ]
 

@@ -4,6 +4,22 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor descent through three floors per run.
+- A floor counter in the HUD and the run summary.
+- Stairs-down tiles on every floor below the deepest.
+- Per-floor difficulty scaling for monsters and hero stats.
+- Deterministic floor seeds derived from the run seed.
+- A run profile module that drives the descent rules.
+- Unit and integration tests for floors and replay.
+
+Fixed
+
+- The hero no longer stacks sprites when a run restarts.
+
 ## [0.2.0] - 2026-08-03
 
 Added

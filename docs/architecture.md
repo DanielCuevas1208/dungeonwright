@@ -72,6 +72,23 @@ The class wraps the mulberry32 algorithm.
 The output depends only on the seed, never on the platform.
 Seeds display as six-character base-36 strings.
 
+## Run profile and floors
+
+A run spans three floors.
+The `RunProfile` class owns this structure.
+It derives a fresh seed for each floor from the run seed.
+It scales a copy of the biome so deeper floors get harder.
+
+Each floor uses the scaled biome config.
+The generator stays floor-agnostic and always carves the base rules.
+The scene controller converts the exit tile into stairs on shallow floors.
+The deepest floor keeps the exit tile, so the run ends in victory.
+
+The scaling is pure math.
+It raises monster density, monster count, hero health, and hero damage.
+Every scaled config stays inside the biome validation rules.
+Replaying a run seed rebuilds the same floor sequence.
+
 ## Combat model
 
 The player and each monster carry a `CombatStats` block.
@@ -90,6 +107,11 @@ It generates a map and spawns the world.
 The hero, monsters, and pickups are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
+
+Reaching the exit on a shallow floor starts the next floor.
+The controller keeps the loot and rebuilds the hero stats.
+It clears the world and reuses the same run seed.
+The HUD floor counter and the run summary track the descent.
 
 The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
@@ -111,9 +133,10 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
-Integration tests run many seeds across all biomes.
+Unit tests cover the RNG, generator, biomes, floors, combat, and drops.
+Integration tests run many seeds across all biomes and floors.
 Every generated dungeon must be solvable.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.
+A smoke test descends a fixed-seed run through every floor.

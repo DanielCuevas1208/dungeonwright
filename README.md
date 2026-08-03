@@ -1,7 +1,7 @@
 # Dungeonwright
 
 A seeded dungeon crawler built with Godot and GDScript.
-Every run builds a new dungeon that you can explore and finish.
+Every run builds a three-floor dungeon that you can explore and finish.
 
 ```
 ####.D.############
@@ -17,34 +17,72 @@ Every run builds a new dungeon that you can explore and finish.
 
 Dungeonwright generates a connected dungeon on every run.
 You explore rooms and corridors.
-You find keys, open locked doors, and reach the exit.
+You find keys, open locked doors, and descend stairs.
+A run spans three floors, and the same seed replays every floor.
 The same seed always builds the same dungeon.
 
 ## Features
 
-- A new map for every run, driven by a seed.
+- A new three-floor dungeon for every run, driven by a seed.
 - Rooms, corridors, locked doors, and keys.
+- Stairs down and a floor counter in the HUD.
 - Three biomes with different generation rules.
+- Deeper floors add more monsters and tougher hero stats.
 - Monsters with simple combat and balanced drops.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 - Full gamepad support with analog movement.
 
-## First release
-
-This release ships a playable demo.
-The generator guarantees the exit is always reachable.
-You can walk, fight, collect loot, and finish a run.
-You can replay any run from its seed.
-
 ## This release
 
-This release adds full gamepad support.
-Every action has a gamepad binding.
-Movement uses the left stick or the d-pad.
-Analog input gets a deadzone and a diagonal speed cap.
-Menus show the controls for the active device.
+This release adds multi-floor descent.
+Reaching the exit on a floor brings you to the stairs.
+The stairs carry you to the next, harder floor.
+A floor counter shows your depth in the top-left panel.
+The deepest floor holds the true exit, where the run ends in victory.
+
+## Sample run
+
+The generator prints a dungeon as text in the terminal.
+Here is floor two of a run, seed `0093CI`.
+`#` is a wall, `.` is a floor, `D` is a locked door, and `>` is the stairs down.
+
+```
+##############################################
+##############################################
+##############......##########################
+##############......##########################
+##############......##########################
+##############......##########################
+##############......##########################
+##############......###########.......########
+####........#######D###########.......########
+####........#######.###########.......########
+####........###.........#######...>...########
+####........###.........#######.......########
+####........###.........#######.......########
+####........###.........##########.###########
+########.######....S.......D..####.###########
+########.######.........#####.####.........###
+########.######.........##.......#.........###
+########.######.........##.......#.........###
+#####.........#.........##.......#.........###
+#####.........#####.######........D........###
+#####.........#####.######.......##........###
+#####.........#........###.......##........###
+#####.........#........###.......###.#########
+#####.........#........###########.....#######
+#########..............###########.....#######
+###############........###########.....#######
+###############........###########.....#######
+###############........###########.....#######
+##############################################
+##############################################
+```
+
+Floor one starts at `S`, and every floor stays solvable.
+Replaying the seed `0093CI` rebuilds the same three floors.
 
 ## Requirements
 
@@ -106,8 +144,14 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+A run profile drives the whole descent.
+It derives a fresh seed for each floor from the run seed.
+It scales the biome rules so deeper floors get harder.
+Reaching the exit on a shallow floor replaces it with stairs.
+
 ## Project layout
 
+- `scripts/core` holds the run profile and shared run state.
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
 - `scripts/input` holds the controls helper.
@@ -120,26 +164,26 @@ The scene controller turns the map into a live game.
 
 ## Design guarantees
 
-A seed always produces the same map.
+A seed always produces the same three floors.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+Deeper floors always stay solvable.
 
 ## Evaluation evidence
 
-The suite has 68 tests.
-It covers generation, biomes, combat, drops, pathfinding, and input.
-All 68 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 83 tests.
+It covers generation, biomes, floors, combat, drops, pathfinding, and input.
+All 83 tests pass in a headless run.
+A smoke test loads the game and descends a fixed-seed run to the bottom.
 The smoke test also checks every action has a gamepad binding.
 
 ## Roadmap
 
 Done in this release:
-- Full gamepad support.
+- Multi-floor descent and a depth counter.
 
 Next up:
-- Multi-floor descent and a depth counter.
 - Ranged monsters and projectiles.
 - Sound and music.
 - More biomes and items.
@@ -147,7 +191,7 @@ Next up:
 ## Limitations
 
 The demo has three biomes.
-Each run is a single floor.
+Each run is three floors deep.
 All monsters use melee attacks.
 The game has no audio yet.
 
