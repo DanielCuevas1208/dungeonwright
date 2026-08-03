@@ -47,12 +47,34 @@ func _verify() -> void:
 		_fail("exit is not reachable from the start")
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
+	_verify_audio()
+
+## Verifies the audio hub plays every effect and the biome music.
+func _verify_audio() -> void:
+	if _main.audio == null:
+		_fail("audio hub is missing")
+	elif not _main.audio.is_ready():
+		_fail("audio hub did not build its players")
+	elif _main.audio._music_player.stream == null:
+		_fail("run did not start the music bed")
+	else:
+		for id in SoundKit.ids():
+			if not _main.audio.play_sfx(id, 12345):
+				_fail("audio hub rejected effect " + str(id))
+
+	var music := MusicBox.buffer(_main.run.config.id, _main.run.seed_value)
+	if WaveBuilder.peak(music) <= 0.05:
+		_fail("run music bed is silent")
+	if WaveBuilder.peak(music) > 1.0:
+		_fail("run music bed clips")
+	if absf(WaveBuilder.duration(music) - MusicBox.loop_seconds()) > 0.01:
+		_fail("run music bed has the wrong length")
 
 	if _failed:
 		print("[smoke] FAILED")
 		quit(1)
 	else:
-		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
+		print("Smoke test passed: seed 12345 spawned a solvable dungeon and audio.")
 		quit(0)
 
 func _fail(p_message: String) -> void:

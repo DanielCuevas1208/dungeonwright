@@ -1,7 +1,8 @@
 # Architecture
 
 This document explains the design of Dungeonwright.
-It covers the generation pipeline, the combat model, and the scene flow.
+It covers the generation pipeline, the combat model, the audio
+generators, and the scene flow.
 
 ## Generation pipeline
 
@@ -95,12 +96,37 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Audio generation
+
+All audio is generated from code.
+The game ships no audio files.
+Three pure classes live in `scripts/audio`.
+
+`WaveBuilder` builds PCM sample buffers.
+It offers tones, frequency sweeps, noise, mixing, and scaling.
+Its output depends only on its inputs.
+
+`SoundKit` builds every named sound effect.
+Effects cover hits, damage, drops, doors, victory, and defeat.
+A small seeded jitter keeps each effect stable per seed.
+
+`MusicBox` builds a looping ambient bed for each biome.
+The bed has a low drone and soft pentatonic notes.
+Loop edges fade so the loop point does not click.
+
+The `AudioHub` node plays the buffers.
+It keeps a pool of effect players and one music player.
+A cache stops repeated effects from regenerating.
+Mute stops all players and toggles a HUD label.
+
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops,
+and every audio generator.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+Audio tests assert determinism, bounds, and audible output.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

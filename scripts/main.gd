@@ -18,6 +18,7 @@ signal run_started(seed_value: int)
 @onready var hud: Hud = $UI/HUD
 @onready var menu_overlay: MenuOverlay = $UI/MenuOverlay
 @onready var result_overlay: ResultOverlay = $UI/ResultOverlay
+@onready var audio: AudioHub = $Audio
 @onready var ambient: CanvasModulate = $Ambient
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
@@ -47,8 +48,12 @@ func _wire_signals() -> void:
 	menu_overlay.start_requested.connect(_on_start_requested)
 	menu_overlay.continue_requested.connect(_resume)
 	result_overlay.new_run_requested.connect(_on_new_run_requested)
+	audio.muted_changed.connect(hud.set_muted)
 
 func _unhandled_input(p_event: InputEvent) -> void:
+	if p_event.is_action_pressed("toggle_mute"):
+		audio.toggle_mute()
+		return
 	if p_event.is_action_pressed("new_run") and run != null:
 		_on_new_run_requested(false)
 		return
@@ -136,6 +141,8 @@ func _start_run(p_seed_value: int) -> void:
 	result_overlay.hide_result()
 	get_tree().paused = false
 	run_started.emit(p_seed_value)
+	audio.play_music(biome.id, p_seed_value)
+	audio.play_sfx(&"start", p_seed_value)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	var spec := MonsterSpecs.by_id(p_monster_id)
@@ -158,6 +165,7 @@ func _on_player_moved(p_grid: Vector2i) -> void:
 		run.map.set_tile_cell(p_grid, DungeonMap.Tile.DOOR_OPEN)
 		dungeon_view.refresh_cell(p_grid)
 		player.spend_key()
+		audio.play_sfx(&"door")
 
 func _collect_pickups() -> void:
 	for pickup: Pickup in pickups_root.get_children():
@@ -174,6 +182,7 @@ func _hero_can_enter(p_cell: Vector2i) -> bool:
 
 func _on_pickup_taken(p_pickup: Pickup) -> void:
 	player.apply_pickup(p_pickup.kind, p_pickup.count)
+	audio.play_sfx(&"key" if p_pickup.kind == &"key" else &"pickup")
 	p_pickup.queue_free()
 
 func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p_damage: int) -> void:
@@ -184,10 +193,12 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 		if not Combat.in_facing_arc(p_origin, p_facing, monster.grid_pos):
 			continue
 		monster.take_damage(p_damage)
+		audio.play_sfx(&"hit")
 		_spawn_slash(monster.grid_pos)
 
 func _on_monster_attack(p_damage: int) -> void:
 	player.take_damage(p_damage)
+	audio.play_sfx(&"hurt")
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
 	occupancy.erase(p_monster.grid_pos)
@@ -195,6 +206,7 @@ func _on_monster_died(p_monster: MonsterActor) -> void:
 	var drops := MonsterSpecs.roll_drops(p_monster.spec, drop_rng)
 	for drop in drops:
 		_spawn_pickup(drop.item, drop.count, p_monster.grid_pos)
+	audio.play_sfx(&"monster_die")
 	p_monster.queue_free()
 
 func _on_player_died() -> void:
@@ -203,6 +215,7 @@ func _on_player_died() -> void:
 	_ended = true
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
+	audio.play_sfx(&"defeat")
 	result_overlay.show_result(
 		false,
 		SeededRng.encode_seed(run_seed),
@@ -218,6 +231,7 @@ func _on_victory() -> void:
 	_ended = true
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
+	audio.play_sfx(&"victory")
 	result_overlay.show_result(
 		true,
 		SeededRng.encode_seed(run_seed),

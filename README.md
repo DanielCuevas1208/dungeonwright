@@ -27,15 +27,17 @@ The same seed always builds the same dungeon.
 - Three biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
 - Procedural pixel art with no bundled image files.
+- Procedural sound effects and ambient music with no audio files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 
-## First release
+## This release
 
-This release ships a playable demo.
-The generator guarantees the exit is always reachable.
-You can walk, fight, collect loot, and finish a run.
-You can replay any run from its seed.
+This release adds sound and music.
+The game builds every sound effect from code.
+Each biome plays its own ambient music loop.
+The same seed always produces the same audio.
+Press F to mute or unmute all output.
 
 ## Requirements
 
@@ -61,6 +63,7 @@ Move with WASD or the arrow keys.
 Attack with Space, J, or a mouse click.
 Press N for a new run.
 Press M to toggle the minimap.
+Press F to mute or unmute the audio.
 Press Escape to pause.
 
 ## Run the tests
@@ -90,10 +93,16 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+All audio is also generated from code.
+Synthesis primitives build every sound effect.
+A music generator builds a looping bed for each biome.
+The same seed and biome always produce the same audio.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/audio` holds the synthesis, effects, and music generators.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, and pickups.
 - `scripts/ui` builds the HUD and overlays.
@@ -107,19 +116,28 @@ A seed always produces the same map.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+A seed always produces the same sound effects and music.
 
 ## Evaluation evidence
 
-The suite has 56 tests.
-It covers generation, biomes, combat, drops, and pathfinding.
-All 56 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 97 tests.
+It covers generation, biomes, combat, drops, pathfinding,
+and audio synthesis.
+All 97 tests pass in a headless run.
+A smoke test loads the game, spawns a fixed-seed run,
+and verifies the generated audio.
 
 ## Roadmap
 
+Complete:
+
+- Sound effects and ambient music, generated from code.
+- A mute toggle and a sound state label.
+
+Next:
+
 - Add multi-floor descent and a depth counter.
 - Add ranged monsters and projectiles.
-- Add sound and music.
 - Add more biomes and items.
 - Add controller support.
 
@@ -128,7 +146,7 @@ A smoke test loads the game and spawns a fixed-seed run.
 The demo has three biomes.
 Each run is a single floor.
 All monsters use melee attacks.
-The game has no audio yet.
+Music is a single looping bed per biome.
 
 ## License
 

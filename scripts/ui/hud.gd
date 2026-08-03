@@ -8,6 +8,7 @@ extends Control
 var biome_label: Label = null
 var seed_label: Label = null
 var depth_label: Label = null
+var mute_label: Label = null
 var hp_fill: ColorRect = null
 var hp_label: Label = null
 var coin_label: Label = null
@@ -31,6 +32,12 @@ func set_run(p_biome: String, p_seed: String, p_depth: int) -> void:
 	biome_label.text = "Biome: " + p_biome
 	seed_label.text = "Seed: " + p_seed
 	depth_label.text = "Exit at depth " + str(p_depth)
+
+## Shows the current audio output state.
+func set_muted(p_muted: bool) -> void:
+	if mute_label == null:
+		return
+	mute_label.text = "Sound: " + ("Off" if p_muted else "On")
 
 func set_hp(p_current: int, p_max: int) -> void:
 	if hp_fill == null:
@@ -73,9 +80,11 @@ func _build_top_panel() -> void:
 	biome_label = _label("", 15)
 	seed_label = _label("", 15)
 	depth_label = _label("", 15)
+	mute_label = _label("Sound: On", 13)
 	box.add_child(biome_label)
 	box.add_child(seed_label)
 	box.add_child(depth_label)
+	box.add_child(mute_label)
 	add_child(panel)
 
 func _build_bottom_panel() -> void:
