@@ -1,7 +1,8 @@
 # Architecture
 
 This document explains the design of Dungeonwright.
-It covers the generation pipeline, the combat model, and the scene flow.
+It covers the generation pipeline, the combat model, the multi-floor
+run, and the scene flow.
 
 ## Generation pipeline
 
@@ -18,6 +19,10 @@ The pipeline runs in a fixed order.
 5. Choose the start and the farthest room as the exit.
 6. Place doors and keys.
 7. Scatter monsters in the rooms.
+
+The optional floor number scales monster pressure.
+Deeper floors hold more monsters.
+Floor zero is neutral, so single-floor maps stay unchanged.
 
 ### Room placement
 
@@ -72,6 +77,29 @@ The class wraps the mulberry32 algorithm.
 The output depends only on the seed, never on the platform.
 Seeds display as six-character base-36 strings.
 
+## Multi-floor runs
+
+A run is a descent through three floors.
+The `RunProgression` module holds the run-level rules.
+
+Each floor gets its own map and biome.
+The floor seed derives from the run seed and the floor number.
+A fixed hash makes the sequence repeatable.
+
+Every floor uses a floor-seeded biome choice.
+Reaching the exit of a floor opens the stairwell prompt.
+The hero chooses to descend or to stay.
+On the final floor the exit is the goal and ends the run.
+
+Progress carries across floors.
+The hero keeps coins, health, and shards.
+Keys reset because each floor has its own doors.
+Descending restores a fixed amount of health.
+
+Monsters scale with the floor.
+Hit points and damage grow each floor.
+The generator places more monsters on deeper floors.
+
 ## Combat model
 
 The player and each monster carry a `CombatStats` block.
@@ -91,6 +119,9 @@ The hero, monsters, and pickups are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
 
+`Main` builds one floor at a time.
+It calls `RunProgression` for the biome and the floor seed.
+Descending keeps the hero node and rebuilds the world.
 The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
@@ -111,9 +142,11 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops, and the
+run progression rules.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+Multi-floor tests replay whole runs and check every floor stays solvable.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

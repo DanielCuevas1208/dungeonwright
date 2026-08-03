@@ -13,9 +13,10 @@ extends RefCounted
 ##   7. Scatter monsters in the rooms.
 ##
 ## Every step uses the same SeededRng, so a seed always produces the
-## same dungeon.
+## same dungeon. The optional floor number scales monster pressure:
+## deeper floors hold more monsters. Floor zero is neutral.
 
-func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
+func generate(p_config: DungeonConfig, p_seed: int, p_floor: int = 0) -> DungeonResult:
 	var result := DungeonResult.new()
 	result.seed_value = p_seed
 	result.config = p_config
@@ -37,7 +38,7 @@ func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
 	result.map.set_tile_cell(result.exit_pos, DungeonMap.Tile.EXIT)
 
 	_place_doors_and_keys(rng, p_config, result)
-	_place_monsters(rng, p_config, result)
+	_place_monsters(rng, p_config, result, p_floor)
 
 	result.depth = Pathfinding.flood(result.map, result.start_pos, true).get(result.exit_pos, 0)
 	result.solvable = Solvability.verify(result)
@@ -455,13 +456,16 @@ func _rooms_on_start_side(
 func _place_monsters(
 	p_rng: SeededRng,
 	p_config: DungeonConfig,
-	p_result: DungeonResult
+	p_result: DungeonResult,
+	p_floor: int = 0
 ) -> void:
 	var monster_ids: Array = []
 	var weights: Array = []
 	for entry in p_config.monster_table:
 		monster_ids.append(entry.monster)
 		weights.append(entry.weight)
+
+	var cap := p_config.monster_cap + RunProgression.cap_bonus(p_floor)
 
 	var monster_rooms: Array[int] = []
 	for room in p_result.rooms:
@@ -470,13 +474,13 @@ func _place_monsters(
 		monster_rooms.append(room.id)
 
 	for room_id in monster_rooms:
-		if p_result.monster_spawns.size() >= p_config.monster_cap:
+		if p_result.monster_spawns.size() >= cap:
 			break
 		var room := p_result.rooms[room_id]
-		var density := p_config.monster_density
+		var density := p_config.monster_density * RunProgression.density_multiplier(p_floor)
 		if room.area() >= 56:
 			density += 0.2
-		if not p_rng.chance(density):
+		if not p_rng.chance(minf(1.0, density)):
 			continue
 		var monster_id: StringName = monster_ids[p_rng.weighted_index(weights)]
 		p_result.monster_spawns.append({

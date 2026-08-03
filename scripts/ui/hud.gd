@@ -7,6 +7,7 @@ extends Control
 
 var biome_label: Label = null
 var seed_label: Label = null
+var floor_label: Label = null
 var depth_label: Label = null
 var hp_fill: ColorRect = null
 var hp_label: Label = null
@@ -27,10 +28,18 @@ func _ready() -> void:
 	_build_bottom_panel()
 	_build_minimap()
 
-func set_run(p_biome: String, p_seed: String, p_depth: int) -> void:
+func set_run(
+	p_floor: int,
+	p_total: int,
+	p_biome: String,
+	p_seed: String,
+	p_depth: int,
+	p_exit_is_goal: bool
+) -> void:
+	floor_label.text = "Floor %d of %d" % [p_floor + 1, p_total]
 	biome_label.text = "Biome: " + p_biome
 	seed_label.text = "Seed: " + p_seed
-	depth_label.text = "Exit at depth " + str(p_depth)
+	depth_label.text = ("Goal at depth " if p_exit_is_goal else "Stairs at depth ") + str(p_depth)
 
 func set_hp(p_current: int, p_max: int) -> void:
 	if hp_fill == null:
@@ -72,9 +81,11 @@ func _build_top_panel() -> void:
 	panel.add_child(box)
 	biome_label = _label("", 15)
 	seed_label = _label("", 15)
+	floor_label = _label("", 15)
 	depth_label = _label("", 15)
 	box.add_child(biome_label)
 	box.add_child(seed_label)
+	box.add_child(floor_label)
 	box.add_child(depth_label)
 	add_child(panel)
 

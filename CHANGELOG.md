@@ -4,6 +4,20 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor runs with a three-floor descent.
+- A floor counter in the HUD and the run summary.
+- A stairwell prompt between floors.
+- Carried coins and health across floors.
+- A small heal when the hero descends.
+- Deterministic per-floor seeds derived from the run seed.
+- Per-floor biome choice and monster scaling.
+- RunProgression, a pure module for run-level rules.
+- Unit and integration tests for the descent rules.
+
 ## [0.2.0] - 2026-08-03
 
 Added

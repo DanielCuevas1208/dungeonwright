@@ -48,6 +48,33 @@ func _verify() -> void:
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
 	_verify_input_bindings()
+	_verify_descent()
+
+## The descent must advance the floor, keep coins, and reset keys.
+func _verify_descent() -> void:
+	var first_cells := _main.run.map._cells.duplicate()
+	_main.player.coins = 7
+	_main.player.keys_held = 3
+	_main.descend()
+	if _main.current_floor != 1:
+		_fail("descent did not advance the floor")
+	elif _main.run == null:
+		_fail("descent did not generate a floor")
+	elif _main.run.map._cells == first_cells:
+		_fail("descent reused the previous map")
+	elif _main.player.coins != 7:
+		_fail("coins did not carry over the descent")
+	elif _main.player.keys_held != 0:
+		_fail("keys did not reset on descent")
+	elif not _main.run.solvable:
+		_fail("descended floor is not solvable")
+
+	if _failed:
+		print("[smoke] FAILED")
+		quit(1)
+	else:
+		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
+		quit(0)
 
 func _verify_input_bindings() -> void:
 	for action in Controls.ACTIONS:
@@ -60,13 +87,6 @@ func _verify_input_bindings() -> void:
 			_fail("action %s has no gamepad binding" % action)
 	if Controls.hint_for(false).is_empty() or Controls.hint_for(true).is_empty():
 		_fail("control hints are empty")
-
-	if _failed:
-		print("[smoke] FAILED")
-		quit(1)
-	else:
-		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
-		quit(0)
 
 func _fail(p_message: String) -> void:
 	_failed = true

@@ -25,6 +25,12 @@ jobs:
           path: addons/gut
           key: gut-${{ hashFiles('tools/gut.version.json') }}
 
+      - name: Cache the Godot import cache
+        uses: actions/cache@v4
+        with:
+          path: .godot
+          key: godot-import-${{ hashFiles('project.godot', 'scenes/**', 'scripts/**') }}
+
       - name: Install Godot 4.6
         uses: chickensoft-games/setup-godot@v2
         with:

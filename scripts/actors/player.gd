@@ -39,6 +39,7 @@ var _progress := 1.0
 var _moving := false
 var _attack_timer := 0.0
 var _sprite: Sprite2D = null
+var _light: PointLight2D = null
 
 func setup(
 	p_stats: CombatStats,
@@ -51,12 +52,22 @@ func setup(
 	view = p_view
 	occupancy = p_occupancy
 	position = view.tile_to_world(grid_pos)
+	_teardown_visuals()
 	_sprite = Sprite2D.new()
 	_sprite.texture = TileArt.entity_texture(&"player")
 	_sprite.centered = true
 	add_child(_sprite)
 	_add_light()
 	emit_hud()
+
+## Removes the old sprite and light before a new floor reuses this node.
+func _teardown_visuals() -> void:
+	if _sprite != null:
+		_sprite.queue_free()
+		_sprite = null
+	if _light != null:
+		_light.queue_free()
+		_light = null
 
 func _physics_process(p_delta: float) -> void:
 	if view == null or stats == null:
@@ -145,6 +156,13 @@ func spend_key() -> void:
 	keys_held -= 1
 	keys_changed.emit(keys_held)
 
+## Drops all held keys, used when the hero descends to a new floor.
+func reset_keys() -> void:
+	if keys_held <= 0:
+		return
+	keys_held = 0
+	keys_changed.emit(0)
+
 func add_key() -> void:
 	apply_pickup(&"key", 1)
 
@@ -160,13 +178,13 @@ func _flash() -> void:
 	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.12)
 
 func _add_light() -> void:
-	var light := PointLight2D.new()
-	light.texture = _soft_light_texture()
-	light.energy = 1.5
-	light.texture_scale = 8.0
-	light.color = Color(1.0, 0.94, 0.8)
-	light.shadow_enabled = false
-	add_child(light)
+	_light = PointLight2D.new()
+	_light.texture = _soft_light_texture()
+	_light.energy = 1.5
+	_light.texture_scale = 8.0
+	_light.color = Color(1.0, 0.94, 0.8)
+	_light.shadow_enabled = false
+	add_child(_light)
 
 func _soft_light_texture() -> Texture2D:
 	var size := 64

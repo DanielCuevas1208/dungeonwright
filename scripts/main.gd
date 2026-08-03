@@ -17,6 +17,7 @@ signal run_started(seed_value: int)
 @onready var camera: Camera2D = $Camera
 @onready var hud: Hud = $UI/HUD
 @onready var menu_overlay: MenuOverlay = $UI/MenuOverlay
+@onready var descend_overlay: DescendOverlay = $UI/DescendOverlay
 @onready var result_overlay: ResultOverlay = $UI/ResultOverlay
 @onready var ambient: CanvasModulate = $Ambient
 
@@ -27,8 +28,10 @@ var run: DungeonResult = null
 var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
+var current_floor: int = 0
 var monster_index := 0
 var _ended := false
+var _at_exit := false
 var _beacon_phase := 0.0
 var _beacon: Sprite2D = null
 
@@ -46,6 +49,8 @@ func _wire_signals() -> void:
 	player.moved.connect(_on_player_moved)
 	menu_overlay.start_requested.connect(_on_start_requested)
 	menu_overlay.continue_requested.connect(_resume)
+	descend_overlay.descend_requested.connect(_on_descend_requested)
+	descend_overlay.stay_requested.connect(_on_stay_requested)
 	result_overlay.new_run_requested.connect(_on_new_run_requested)
 
 func _unhandled_input(p_event: InputEvent) -> void:
@@ -55,7 +60,8 @@ func _unhandled_input(p_event: InputEvent) -> void:
 	if p_event.is_action_pressed("toggle_minimap") and run != null:
 		hud.toggle_minimap()
 		return
-	if p_event.is_action_pressed("pause") and run != null and not result_overlay.visible:
+	if p_event.is_action_pressed("pause") and run != null \
+			and not result_overlay.visible and not descend_overlay.visible:
 		_toggle_pause()
 
 func _physics_process(p_delta: float) -> void:
@@ -65,8 +71,12 @@ func _physics_process(p_delta: float) -> void:
 	hud.update_marker(player.grid_pos)
 	_collect_pickups()
 	_pulse_beacon(p_delta)
-	if not _ended and player.grid_pos == run.exit_pos:
-		_on_victory()
+	if _at_exit:
+		if player.grid_pos != run.exit_pos:
+			_at_exit = false
+	elif player.grid_pos == run.exit_pos:
+		_at_exit = true
+		_on_reach_exit()
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -92,20 +102,43 @@ func start_run(p_seed_value: int) -> void:
 
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
-	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
-	run = DungeonGenerator.new().generate(biome, p_seed_value)
+	current_floor = 0
+	descend_overlay.hide_descend()
+	result_overlay.hide_result()
+	_begin_floor(false)
+
+## Descends to the next floor. Public entry point for tooling.
+func descend() -> void:
+	if _ended or current_floor >= RunProgression.TOTAL_FLOORS - 1:
+		return
+	descend_overlay.hide_descend()
+	current_floor += 1
+	_begin_floor(true)
+
+## Builds the world for the current floor. Keeps the hero's progress
+## when p_keep_progress is true, otherwise starts a fresh hero.
+func _begin_floor(p_keep_progress: bool) -> void:
+	biome = RunProgression.biome_for_floor(run_seed, current_floor)
+	var floor_seed := RunProgression.floor_seed(run_seed, current_floor)
+	run = DungeonGenerator.new().generate(biome, floor_seed, current_floor)
 
 	_clear_world()
 	occupancy.clear()
 	_ended = false
+	_at_exit = false
 
 	dungeon_view.configure(run.map, biome)
-	var stats := CombatStats.make({
-		"max_health": biome.starting_health,
-		"health": biome.starting_health,
-		"damage": biome.player_damage,
-	})
-	player.setup(stats, run.start_pos, dungeon_view, occupancy)
+	if p_keep_progress and player.stats != null:
+		player.stats.heal(RunProgression.DESCEND_HEAL)
+		player.reset_keys()
+		player.setup(player.stats, run.start_pos, dungeon_view, occupancy)
+	else:
+		var stats := CombatStats.make({
+			"max_health": biome.starting_health,
+			"health": biome.starting_health,
+			"damage": biome.player_damage,
+		})
+		player.setup(stats, run.start_pos, dungeon_view, occupancy)
 	occupancy[run.start_pos] = player
 	player.can_enter = _hero_can_enter
 
@@ -123,25 +156,44 @@ func _start_run(p_seed_value: int) -> void:
 	_apply_camera_limits()
 	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(p_seed_value), run.depth)
+	var exit_is_goal := RunProgression.is_final_floor(current_floor)
+	hud.set_run(
+		current_floor,
+		RunProgression.TOTAL_FLOORS,
+		biome.display_name,
+		SeededRng.encode_seed(run_seed),
+		run.depth,
+		exit_is_goal
+	)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
 
-	RunState.seed_value = p_seed_value
-	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
+	RunState.seed_value = run_seed
+	RunState.seed_string = SeededRng.encode_seed(run_seed)
 	RunState.biome_id = biome.id
+	RunState.floor = current_floor
+	RunState.total_floors = RunProgression.TOTAL_FLOORS
 	RunState.status = RunState.RunStatus.ACTIVE
-	RunState.started_at = Time.get_ticks_msec() / 1000.0
+	if not p_keep_progress:
+		RunState.started_at = Time.get_ticks_msec() / 1000.0
 
 	menu_overlay.hide_menu()
-	result_overlay.hide_result()
+	descend_overlay.hide_descend()
 	get_tree().paused = false
-	run_started.emit(p_seed_value)
+	run_started.emit(run_seed)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	var spec := MonsterSpecs.by_id(p_monster_id)
 	var monster: MonsterActor = MONSTER_SCENE.instantiate()
 	monsters_root.add_child(monster)
-	monster.setup(spec, p_position, dungeon_view, occupancy, player)
+	monster.setup(
+		spec,
+		p_position,
+		dungeon_view,
+		occupancy,
+		player,
+		RunProgression.monster_health_scale(current_floor),
+		RunProgression.monster_damage_scale(current_floor)
+	)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
 	monster.died.connect(_on_monster_died)
@@ -201,26 +253,50 @@ func _on_player_died() -> void:
 	if _ended:
 		return
 	_ended = true
+	_at_exit = false
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
 		false,
 		SeededRng.encode_seed(run_seed),
+		current_floor,
+		RunProgression.TOTAL_FLOORS,
 		run.depth,
 		player.coins,
 		RunState.elapsed()
 	)
 	get_tree().paused = true
 
+## Called when the hero steps on the exit tile of a floor.
+func _on_reach_exit() -> void:
+	if _ended:
+		return
+	if RunProgression.is_final_floor(current_floor):
+		_on_victory()
+		return
+	get_tree().paused = true
+	descend_overlay.show_descend(current_floor, RunProgression.TOTAL_FLOORS, RunProgression.DESCEND_HEAL)
+
+func _on_descend_requested() -> void:
+	descend()
+
+## The hero chooses to stay. Let them step off and return later.
+func _on_stay_requested() -> void:
+	descend_overlay.hide_descend()
+	get_tree().paused = false
+
 func _on_victory() -> void:
 	if _ended:
 		return
 	_ended = true
+	_at_exit = false
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
 		true,
 		SeededRng.encode_seed(run_seed),
+		current_floor,
+		RunProgression.TOTAL_FLOORS,
 		run.depth,
 		player.coins,
 		RunState.elapsed()
@@ -247,7 +323,8 @@ func _apply_camera_limits() -> void:
 func _spawn_exit_beacon() -> void:
 	_beacon = Sprite2D.new()
 	_beacon.texture = _beacon_texture()
-	_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
+	var key: StringName = &"glow" if RunProgression.is_final_floor(current_floor) else &"rune"
+	_beacon.modulate = Color(biome.palette.get(key, Color.WHITE))
 	_beacon.scale = Vector2(0.5, 0.5)
 	_beacon.position = dungeon_view.tile_to_world(run.exit_pos)
 	effects_root.add_child(_beacon)

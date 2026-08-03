@@ -11,6 +11,8 @@ static var seed_value: int = 0
 static var seed_string: String = ""
 static var biome_id: StringName = &""
 static var status: RunStatus = RunStatus.IDLE
+static var floor: int = 0
+static var total_floors: int = RunProgression.TOTAL_FLOORS
 static var started_at: float = 0.0
 static var finished_at: float = 0.0
 
