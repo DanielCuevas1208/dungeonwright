@@ -9,6 +9,7 @@ signal new_run_requested(same_seed: bool)
 
 var _title: Label = null
 var _summary: Label = null
+var _new_button: Button = null
 var _same_seed_button: Button = null
 
 func _ready() -> void:
@@ -26,6 +27,7 @@ func show_result(p_won: bool, p_seed: String, p_depth: int, p_coins: int, p_time
 		p_seed, p_depth, p_coins, minutes, seconds,
 	]
 	_same_seed_button.visible = p_won
+	_new_button.grab_focus()
 
 func hide_result() -> void:
 	visible = false
@@ -63,6 +65,7 @@ func _build() -> void:
 	_same_seed_button = Button.new()
 	_same_seed_button.text = "Replay this seed"
 	_same_seed_button.custom_minimum_size = Vector2(0, 36)
+	_new_button = new_button
 
 	box.add_child(_title)
 	box.add_child(_summary)

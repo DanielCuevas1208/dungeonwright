@@ -11,11 +11,13 @@ signal continue_requested
 var _seed_edit: LineEdit = null
 var _continue_button: Button = null
 var _error_label: Label = null
+var _hint_label: Label = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_build()
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 
 func show_menu(p_can_continue: bool) -> void:
 	visible = true
@@ -35,6 +37,11 @@ func _unhandled_input(p_event: InputEvent) -> void:
 	if visible and p_event.is_action_pressed("pause"):
 		continue_requested.emit()
 		get_viewport().set_input_as_handled()
+
+## Refreshes the control hints when a gamepad connects or disconnects.
+func _on_joy_connection_changed(_p_device: int, _p_connected: bool) -> void:
+	if _hint_label != null:
+		_hint_label.text = Controls.hint_text()
 
 func _build() -> void:
 	var dim := ColorRect.new()
@@ -83,11 +90,11 @@ func _build() -> void:
 	_continue_button.text = "Continue"
 	_continue_button.custom_minimum_size = Vector2(0, 36)
 
-	var hint := Label.new()
-	hint.text = "Move: WASD or arrows   Attack: Space, J, or click\nOpen doors: walk in with a key   New run: N   Pause: Escape"
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", 13)
+	_hint_label = Label.new()
+	_hint_label.text = Controls.hint_text()
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label.add_theme_font_size_override("font_size", 13)
 
 	box.add_child(title)
 	box.add_child(subtitle)
@@ -95,7 +102,7 @@ func _build() -> void:
 	box.add_child(_error_label)
 	box.add_child(start_button)
 	box.add_child(_continue_button)
-	box.add_child(hint)
+	box.add_child(_hint_label)
 
 	margin.add_child(box)
 	panel.add_child(margin)

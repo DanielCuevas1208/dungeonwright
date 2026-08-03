@@ -47,6 +47,19 @@ func _verify() -> void:
 		_fail("exit is not reachable from the start")
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
+	_verify_input_bindings()
+
+func _verify_input_bindings() -> void:
+	for action in Controls.ACTIONS:
+		var has_joypad := false
+		for event in InputMap.action_get_events(action):
+			if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+				has_joypad = true
+				break
+		if not has_joypad:
+			_fail("action %s has no gamepad binding" % action)
+	if Controls.hint_for(false).is_empty() or Controls.hint_for(true).is_empty():
+		_fail("control hints are empty")
 
 	if _failed:
 		print("[smoke] FAILED")

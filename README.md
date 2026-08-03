@@ -29,6 +29,7 @@ The same seed always builds the same dungeon.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
+- Full gamepad support with analog movement.
 
 ## First release
 
@@ -36,6 +37,14 @@ This release ships a playable demo.
 The generator guarantees the exit is always reachable.
 You can walk, fight, collect loot, and finish a run.
 You can replay any run from its seed.
+
+## This release
+
+This release adds full gamepad support.
+Every action has a gamepad binding.
+Movement uses the left stick or the d-pad.
+Analog input gets a deadzone and a diagonal speed cap.
+Menus show the controls for the active device.
 
 ## Requirements
 
@@ -63,6 +72,13 @@ Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
 
+A gamepad works too.
+Move with the left stick or the d-pad.
+Attack with A or the right shoulder button.
+Press Y for a new run.
+Press Select to toggle the minimap.
+Press Start to pause.
+
 ## Run the tests
 
 Run `tools/run_tests.ps1` on Windows.
@@ -74,9 +90,9 @@ Tests run headless, so no window opens.
 ## Install the test framework
 
 GUT is a test addon for Godot.
-The tool scripts download and install it.
+The tool scripts can download and install it.
 The version and checksum are pinned in `tools/gut.version.json`.
-The addon is not committed to the repository.
+The tests run from the copy in `addons/gut`.
 
 ## How it works
 
@@ -94,6 +110,7 @@ The scene controller turns the map into a live game.
 
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/input` holds the controls helper.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, and pickups.
 - `scripts/ui` builds the HUD and overlays.
@@ -110,18 +127,22 @@ Monsters never cross a locked door.
 
 ## Evaluation evidence
 
-The suite has 56 tests.
-It covers generation, biomes, combat, drops, and pathfinding.
-All 56 tests pass in a headless run.
+The suite has 68 tests.
+It covers generation, biomes, combat, drops, pathfinding, and input.
+All 68 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
+The smoke test also checks every action has a gamepad binding.
 
 ## Roadmap
 
-- Add multi-floor descent and a depth counter.
-- Add ranged monsters and projectiles.
-- Add sound and music.
-- Add more biomes and items.
-- Add controller support.
+Done in this release:
+- Full gamepad support.
+
+Next up:
+- Multi-floor descent and a depth counter.
+- Ranged monsters and projectiles.
+- Sound and music.
+- More biomes and items.
 
 ## Limitations
 
