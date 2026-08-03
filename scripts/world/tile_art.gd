@@ -20,6 +20,8 @@ const TILE_EXIT := &"exit"
 const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
+	&"archer", &"sporecaster", &"hellion",
+	&"bone_spike", &"spore_bolt", &"ember_bolt",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -90,6 +92,18 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _SHAMBLER
 		&"golem":
 			return _GOLEM
+		&"archer":
+			return _ARCHER
+		&"sporecaster":
+			return _SPORECASTER
+		&"hellion":
+			return _HELLION
+		&"bone_spike":
+			return _BONE_SPIKE
+		&"spore_bolt":
+			return _SPORE_BOLT
+		&"ember_bolt":
+			return _EMBER_BOLT
 		&"key":
 			return _KEY
 		&"potion":
@@ -116,6 +130,18 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#4f7a3f"), &"*": Color("#16240f"), &"+": Color("#6f9a58") }
 		&"golem":
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
+		&"archer":
+			return { &"@": Color("#d9d2c0"), &"*": Color("#1a1a1a"), &"+": Color("#6f7a4a") }
+		&"sporecaster":
+			return { &"@": Color("#8fb06a"), &"*": Color("#1a2413"), &"+": Color("#e8d08a") }
+		&"hellion":
+			return { &"@": Color("#d97a4a"), &"*": Color("#2a1008"), &"+": Color("#ffcf6a") }
+		&"bone_spike":
+			return { &"@": Color("#d9d2c0"), &"*": Color("#6a5a3a") }
+		&"spore_bolt":
+			return { &"@": Color("#8fb06a"), &"*": Color("#3a5a2a") }
+		&"ember_bolt":
+			return { &"@": Color("#ff8c5a"), &"*": Color("#e07030") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"potion":
@@ -270,6 +296,72 @@ const _GOLEM := [
 	".@@@.@@.",
 	".@@.@.@.",
 	"........",
+	"........",
+]
+
+const _ARCHER := [
+	"..@@@...",
+	".@@*@@..",
+	"...@@...",
+	"..@@@@..",
+	".@..@@..",
+	".@...@+.",
+	"........",
+	"........",
+]
+
+const _SPORECASTER := [
+	"..+@+...",
+	".+@@@+..",
+	"..@@@...",
+	".@@@@@..",
+	".@@@@@..",
+	"..@@@...",
+	"...@....",
+	"........",
+]
+
+const _HELLION := [
+	"...@....",
+	"..@@@...",
+	"..@@@+..",
+	".@@@@@..",
+	".@.*.@..",
+	"..@.@...",
+	"...@....",
+	"........",
+]
+
+const _BONE_SPIKE := [
+	"........",
+	"..@.....",
+	".@@@....",
+	".@@*@...",
+	"..@@@...",
+	"..@.....",
+	"........",
+	"........",
+]
+
+const _SPORE_BOLT := [
+	"........",
+	"..@@@...",
+	".@@@@@..",
+	".@@*@@..",
+	".@@@@@..",
+	"..@@@...",
+	"........",
+	"........",
+]
+
+const _EMBER_BOLT := [
+	"........",
+	"...@@...",
+	"..@@@@..",
+	".@*@@*@.",
+	".@@@@@@.",
+	"..@@@@..",
+	"...@@...",
 	"........",
 ]
 

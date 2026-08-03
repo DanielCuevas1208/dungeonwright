@@ -66,3 +66,37 @@ func test_nearest_walkable_recovers_inside_room() -> void:
 	assert_eq(map.nearest_walkable(Vector2i(2, 2)), Vector2i(2, 2))
 	var rescued := map.nearest_walkable(Vector2i(0, 0))
 	assert_true(map.is_walkable_cell(rescued))
+
+func _build_open_hall() -> DungeonMap:
+	var map := DungeonMap.new(11, 5)
+	for x in range(11):
+		for y in range(5):
+			map.set_tile(x, y, DungeonMap.Tile.FLOOR)
+	return map
+
+func test_line_of_sight_is_clear_across_floor() -> void:
+	var map := _build_open_hall()
+	assert_true(Pathfinding.line_of_sight(map, Vector2i(1, 2), Vector2i(9, 2)))
+
+func test_line_of_sight_is_blocked_by_wall() -> void:
+	var map := _build_open_hall()
+	map.set_tile(5, 2, DungeonMap.Tile.WALL)
+	assert_false(Pathfinding.line_of_sight(map, Vector2i(1, 2), Vector2i(9, 2)))
+
+func test_line_of_sight_is_blocked_by_locked_door() -> void:
+	var map := _build_open_hall()
+	map.set_tile(5, 2, DungeonMap.Tile.DOOR_LOCKED)
+	assert_false(Pathfinding.line_of_sight(map, Vector2i(1, 2), Vector2i(9, 2)))
+
+func test_line_of_sight_passes_over_open_door() -> void:
+	var map := _build_open_hall()
+	map.set_tile(5, 2, DungeonMap.Tile.DOOR_OPEN)
+	assert_true(Pathfinding.line_of_sight(map, Vector2i(1, 2), Vector2i(9, 2)))
+
+func test_line_of_sight_same_cell_is_clear() -> void:
+	var map := _build_open_hall()
+	assert_true(Pathfinding.line_of_sight(map, Vector2i(4, 4), Vector2i(4, 4)))
+
+func test_line_of_sight_diagonal_crosses_open_floor() -> void:
+	var map := _build_open_hall()
+	assert_true(Pathfinding.line_of_sight(map, Vector2i(1, 1), Vector2i(9, 3)))

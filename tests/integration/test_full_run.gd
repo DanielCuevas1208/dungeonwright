@@ -56,3 +56,24 @@ func test_custom_seed_string_matches_run_seed() -> void:
 	var biome := Biomes.crypt()
 	var result := DungeonGenerator.new().generate(biome, seed)
 	assert_eq(result.seed_value, SeededRng.decode_seed(SeededRng.encode_seed(seed)))
+
+func test_ranged_monsters_spawn_in_every_biome() -> void:
+	var generator := DungeonGenerator.new()
+	var seen := {}
+	for biome in Biomes.all():
+		for seed in range(1, 61):
+			var result := generator.generate(biome, seed)
+			for spawn in result.monster_spawns:
+				var spec := MonsterSpecs.by_id(spawn.monster)
+				if spec.ai == MonsterSpec.AI.shooter:
+					seen[spec.id] = true
+					assert_true(
+						result.map.is_walkable_cell(spawn.position),
+						"shooter %s off the floor for %s seed %d" % [spec.id, biome.id, seed]
+					)
+	for biome in Biomes.all():
+		var biome_has_shooter := false
+		for entry in biome.monster_table:
+			if MonsterSpecs.by_id(entry.monster).ai == MonsterSpec.AI.shooter:
+				biome_has_shooter = true
+		assert_true(biome_has_shooter, "%s has no ranged monster" % biome.id)

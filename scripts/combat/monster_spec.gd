@@ -10,6 +10,7 @@ const AI := {
 	"chaser": &"chaser",
 	"stalker": &"stalker",
 	"sentry": &"sentry",
+	"shooter": &"shooter",
 }
 
 var id: StringName = &""
@@ -19,7 +20,17 @@ var sprite_key: String = ""
 var aggro_range: float = 8.0
 var stats: CombatStats = null
 var drop_table: DropTable = null
+## The projectile id fired by shooter monsters.
+var projectile: StringName = &""
+## The distance in tiles at which shooters prefer to fire.
+var preferred_range: float = 5.0
+## The distance in tiles at which shooters start to retreat.
+var min_range: float = 2.0
 
 ## True when this spec is valid for spawning.
 func is_valid() -> bool:
-	return id != &"" and stats != null and drop_table != null
+	if id == &"" or stats == null or drop_table == null:
+		return false
+	if ai == AI.shooter and (projectile == &"" or preferred_range <= 0.0):
+		return false
+	return true

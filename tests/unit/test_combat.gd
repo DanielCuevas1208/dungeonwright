@@ -52,3 +52,23 @@ func test_stats_make_copies_values() -> void:
 	first.take_damage(10)
 	assert_eq(second.health, 40)
 	assert_eq(first.health, 30)
+
+func test_can_fire_at_requires_range_and_los() -> void:
+	assert_true(Combat.can_fire_at(16.0, 6.0, true))
+	assert_false(Combat.can_fire_at(49.0, 6.0, true))
+	assert_false(Combat.can_fire_at(16.0, 6.0, false))
+
+func test_should_retreat_when_target_is_close() -> void:
+	assert_true(Combat.should_retreat(1.0, 2.0))
+	assert_true(Combat.should_retreat(3.9, 2.0))
+	assert_false(Combat.should_retreat(5.0, 2.0))
+
+func test_shooter_specs_are_valid() -> void:
+	for spec in MonsterSpecs.all():
+		if spec.ai != MonsterSpec.AI.shooter:
+			continue
+		assert_true(spec.is_valid(), "%s is not valid" % spec.id)
+		assert_ne(spec.projectile, &"")
+		assert_gt(spec.preferred_range, 0.0)
+		assert_gte(spec.min_range, 0.0)
+		assert_true(ProjectileSpecs.by_id(spec.projectile).is_valid())

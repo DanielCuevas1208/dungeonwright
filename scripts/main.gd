@@ -13,6 +13,7 @@ signal run_started(seed_value: int)
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
 @onready var effects_root: Node2D = $World/Effects
+@onready var projectiles_root: Node2D = $World/Projectiles
 @onready var player: Player = $World/Player
 @onready var camera: Camera2D = $Camera
 @onready var hud: Hud = $UI/HUD
@@ -22,6 +23,7 @@ signal run_started(seed_value: int)
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
 
 var run: DungeonResult = null
 var biome: DungeonConfig = null
@@ -144,8 +146,20 @@ func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	monster.setup(spec, p_position, dungeon_view, occupancy, player)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
+	monster.fire_projectile.connect(_on_monster_fire)
 	monster.died.connect(_on_monster_died)
 	monster_index += 1
+
+func _on_monster_fire(p_origin: Vector2i, p_target: Vector2i, p_projectile: StringName) -> void:
+	var projectile_spec := ProjectileSpecs.by_id(p_projectile)
+	var projectile: ProjectileActor = PROJECTILE_SCENE.instantiate()
+	projectiles_root.add_child(projectile)
+	projectile.setup(projectile_spec, p_origin, p_target, dungeon_view, player)
+	projectile.hit_player.connect(_on_projectile_hit)
+
+func _on_projectile_hit(p_damage: int) -> void:
+	player.take_damage(p_damage)
+	_spawn_slash(player.grid_pos)
 
 func _spawn_pickup(p_kind: StringName, p_count: int, p_position: Vector2i) -> void:
 	var pickup: Pickup = PICKUP_SCENE.instantiate()
@@ -289,5 +303,7 @@ func _clear_world() -> void:
 	for child in pickups_root.get_children():
 		child.queue_free()
 	for child in effects_root.get_children():
+		child.queue_free()
+	for child in projectiles_root.get_children():
 		child.queue_free()
 	_beacon = null

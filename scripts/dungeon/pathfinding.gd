@@ -78,6 +78,29 @@ static func find_path(
 		path.append(current)
 	return path
 
+## True when the straight line between two cells crosses no walls and no
+## locked doors. The endpoints themselves may be any tile.
+static func line_of_sight(
+	p_map: DungeonMap,
+	p_from: Vector2i,
+	p_to: Vector2i
+) -> bool:
+	if p_from == p_to:
+		return true
+	var delta_x := absi(p_to.x - p_from.x)
+	var delta_y := absi(p_to.y - p_from.y)
+	var steps := maxi(delta_x, delta_y)
+	var fx := p_from.x + 0.5
+	var fy := p_from.y + 0.5
+	var tx := p_to.x + 0.5
+	var ty := p_to.y + 0.5
+	for step in range(1, steps):
+		var t := float(step) / float(steps)
+		var cell := Vector2i(int(floor(fx + (tx - fx) * t)), int(floor(fy + (ty - fy) * t)))
+		if not _is_open(p_map, cell, false):
+			return false
+	return true
+
 static func _is_open(p_map: DungeonMap, p_cell: Vector2i, p_open_doors: bool) -> bool:
 	if not p_map.in_bounds_cell(p_cell):
 		return false

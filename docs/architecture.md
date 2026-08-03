@@ -80,8 +80,34 @@ Attack range and facing arcs use tile math, not physics.
 
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
+Shooter monsters hold a range, fire on line of sight, and retreat.
 Each monster rolls loot from a weighted `DropTable`.
 Coins drop often, shards sometimes, potions rarely.
+
+### Projectiles
+
+Shooter monsters fire projectiles at the hero.
+A `ProjectileSpec` defines the speed, damage, range, and sprite.
+A `ProjectileSpecs` registry stores one spec per biome.
+
+The `Projectile` class models the flight.
+It tracks the origin, the direction, and the distance flown.
+Its math is pure data, so tests run fast and deterministic.
+
+A `ProjectileActor` renders the model each frame.
+It stops on walls and locked doors.
+It expires at the end of its range.
+It reports a hit when it reaches the hero.
+
+The scene controller owns the projectile root.
+It spawns actors, forwards hits, and clears them on a new run.
+
+### Line of sight
+
+A ranged monster fires only when it can see the hero.
+`Pathfinding.line_of_sight` walks the straight line between two cells.
+Walls and locked doors break the line.
+The check uses only tile math, so it is deterministic.
 
 ## Scene flow
 
@@ -90,6 +116,7 @@ It generates a map and spawns the world.
 The hero, monsters, and pickups are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
+Projectiles fly in straight lines from ranged monsters.
 
 The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
@@ -98,7 +125,8 @@ The biome palette recolors the tiles at run time.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops,
+pathfinding, and projectiles.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
 

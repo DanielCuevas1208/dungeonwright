@@ -13,6 +13,9 @@ static func all() -> Array[MonsterSpec]:
 		wisp(),
 		shambler(),
 		golem(),
+		archer(),
+		sporecaster(),
+		hellion(),
 	]
 
 static func by_id(p_id: StringName) -> MonsterSpec:
@@ -64,6 +67,42 @@ static func golem() -> MonsterSpec:
 		"speed": 1.2, "attack_range": 1.4, "attack_cooldown": 1.6,
 	})
 	spec.drop_table = DropTable.from_entries(_entries([4.0, 3.0, 2.0]), null)
+	return spec
+
+static func archer() -> MonsterSpec:
+	var spec := _base(&"archer", "Bone Archer", MonsterSpec.AI.shooter, "archer", 10.0)
+	spec.projectile = &"bone_spike"
+	spec.preferred_range = 6.0
+	spec.min_range = 2.0
+	spec.stats = CombatStats.make({
+		"max_health": 20, "health": 20, "damage": 8,
+		"speed": 2.4, "attack_range": 1.0, "attack_cooldown": 1.6,
+	})
+	spec.drop_table = DropTable.from_entries(_entries([6.0, 2.0, 0.5]), null)
+	return spec
+
+static func sporecaster() -> MonsterSpec:
+	var spec := _base(&"sporecaster", "Sporecaster", MonsterSpec.AI.shooter, "sporecaster", 9.0)
+	spec.projectile = &"spore_bolt"
+	spec.preferred_range = 5.0
+	spec.min_range = 2.0
+	spec.stats = CombatStats.make({
+		"max_health": 16, "health": 16, "damage": 6,
+		"speed": 2.0, "attack_range": 1.0, "attack_cooldown": 2.0,
+	})
+	spec.drop_table = DropTable.from_entries(_entries([3.0, 3.0, 1.0]), null)
+	return spec
+
+static func hellion() -> MonsterSpec:
+	var spec := _base(&"hellion", "Ember Hellion", MonsterSpec.AI.shooter, "hellion", 9.0)
+	spec.projectile = &"ember_bolt"
+	spec.preferred_range = 5.0
+	spec.min_range = 2.5
+	spec.stats = CombatStats.make({
+		"max_health": 26, "health": 26, "damage": 10,
+		"speed": 2.2, "attack_range": 1.0, "attack_cooldown": 1.8,
+	})
+	spec.drop_table = DropTable.from_entries(_entries([5.0, 3.0, 1.5]), null)
 	return spec
 
 static func _base(

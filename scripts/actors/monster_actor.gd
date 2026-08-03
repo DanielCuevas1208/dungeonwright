@@ -8,6 +8,7 @@ extends Node2D
 ## a short flood-fill path so monsters rarely get stuck on walls.
 
 signal attack_player(damage: int)
+signal fire_projectile(origin: Vector2i, target: Vector2i, projectile: StringName)
 signal hp_changed(current: int, max: int)
 signal died(monster)
 
@@ -66,6 +67,9 @@ func _physics_process(p_delta: float) -> void:
 		return
 
 	var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
+	if spec.ai == MonsterSpec.AI.shooter:
+		_handle_shooter(distance_sq, p_delta)
+		return
 	if Combat.within_attack_range(distance_sq, stats.attack_range):
 		_try_attack()
 		return
@@ -75,9 +79,66 @@ func _physics_process(p_delta: float) -> void:
 	if distance_sq > spec.aggro_range * spec.aggro_range:
 		return
 
+	_approach(p_delta)
+
+## Shooter behaviour: hold a firing range, fire on line of sight, and
+## fall back when the hero closes in. Strays never cross a locked door.
+func _handle_shooter(p_distance_sq: float, p_delta: float) -> void:
+	if _moving:
+		_advance_movement(p_delta)
+		return
+	var has_los := Pathfinding.line_of_sight(view.map, grid_pos, target.grid_pos)
+	if Combat.can_fire_at(p_distance_sq, spec.preferred_range, has_los):
+		_try_fire()
+		return
+	if Combat.should_retreat(p_distance_sq, spec.min_range):
+		_retreat()
+		return
+	if p_distance_sq > spec.aggro_range * spec.aggro_range:
+		return
+	_approach(p_delta)
+
+func _try_fire() -> void:
+	if _attack_timer > 0.0:
+		return
+	_attack_timer = stats.attack_cooldown
+	fire_projectile.emit(grid_pos, target.grid_pos, spec.projectile)
+	_lunge()
+
+## Walks one tile away from the hero along the best open neighbour.
+func _retreat() -> void:
+	var best_cell := grid_pos
+	var best_distance := p_distance_to_player(grid_pos)
+	for offset: Vector2i in Pathfinding.ORTHO:
+		var candidate := grid_pos + offset
+		if not view.map.is_walkable_cell(candidate):
+			continue
+		if view.map.get_tile_cell(candidate) == DungeonMap.Tile.DOOR_LOCKED:
+			continue
+		if occupancy.has(candidate):
+			continue
+		var candidate_distance := p_distance_to_player(candidate)
+		if candidate_distance > best_distance:
+			best_distance = candidate_distance
+			best_cell = candidate
+	if best_cell == grid_pos:
+		return
+	_from = grid_pos
+	_to = best_cell
+	_progress = 0.0
+	_moving = true
+
+## Starts or advances a path toward the hero.
+func _approach(p_delta: float) -> void:
 	if _repath_timer <= 0.0:
 		_repath_timer = REPATH_INTERVAL
 		_path = Pathfinding.find_path(view.map, grid_pos, target.grid_pos, false)
+	if not _moving:
+		_step_along_path()
+	_advance_movement(p_delta)
+
+## Advances an in-flight step and updates the sprite bob.
+func _advance_movement(p_delta: float) -> void:
 	if _moving:
 		_progress += p_delta * stats.speed
 		if _progress >= 1.0:
@@ -86,9 +147,10 @@ func _physics_process(p_delta: float) -> void:
 			_moving = false
 			occupancy.erase(_from)
 			occupancy[grid_pos] = self
-	else:
-		_step_along_path()
 	_sprite.position.y = -2.0 if _moving else 0.0
+
+func p_distance_to_player(p_cell: Vector2i) -> float:
+	return Vector2(p_cell).distance_squared_to(Vector2(target.grid_pos))
 
 ## Applies damage. Returns true when the monster died.
 func take_damage(p_amount: int) -> bool:

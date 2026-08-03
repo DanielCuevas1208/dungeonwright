@@ -15,7 +15,7 @@ Every run builds a new dungeon that you can explore and finish.
 
 ## What it is
 
-Dungeonwright generates a connected dungeon on every run.
+Dungeonwright builds a connected dungeon on every run.
 You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
 The same seed always builds the same dungeon.
@@ -25,17 +25,19 @@ The same seed always builds the same dungeon.
 - A new map for every run, driven by a seed.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
-- Monsters with simple combat and balanced drops.
+- Melee monsters with simple combat and balanced drops.
+- Ranged monsters that fire projectiles from a distance.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 
-## First release
+## This release
 
-This release ships a playable demo.
-The generator guarantees the exit is always reachable.
-You can walk, fight, collect loot, and finish a run.
-You can replay any run from its seed.
+This release adds ranged monsters and projectiles.
+Shooter monsters hold a firing range and attack on line of sight.
+Their projectiles travel in straight lines and stop at walls.
+The hero can dodge a projectile or block it with a wall.
+Each biome has its own shooter and its own projectile.
 
 ## Requirements
 
@@ -59,6 +61,7 @@ Leave the field empty for a random seed.
 
 Move with WASD or the arrow keys.
 Attack with Space, J, or a mouse click.
+Dodge projectiles by stepping off their line.
 Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
@@ -86,6 +89,11 @@ It picks the farthest room as the exit.
 It places doors on corridors and puts each key on the safe side.
 A solver then proves the dungeon can be completed.
 
+Ranged monsters use line-of-sight checks.
+A shooter fires only when it can see the hero.
+Walls and locked doors block the line of sight.
+Projectile flight is pure math, so it stays deterministic.
+
 The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
@@ -93,9 +101,9 @@ The scene controller turns the map into a live game.
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
-- `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/combat` holds stats, monsters, projectiles, and loot.
 - `scripts/world` renders tiles and builds the minimap.
-- `scripts/actors` holds the hero, monsters, and pickups.
+- `scripts/actors` holds the hero, monsters, pickups, and projectiles.
 - `scripts/ui` builds the HUD and overlays.
 - `scenes` holds the scene tree.
 - `tests` holds the GUT suite.
@@ -107,18 +115,27 @@ A seed always produces the same map.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+Shooters only fire when a clear line of sight exists.
 
 ## Evaluation evidence
 
-The suite has 56 tests.
-It covers generation, biomes, combat, drops, and pathfinding.
-All 56 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 77 tests.
+It covers generation, biomes, combat, drops, pathfinding,
+projectiles, and ranged behaviour.
+All 77 tests pass in a headless run.
+A smoke test loads the game, spawns a fixed-seed run, and fires
+a projectile at the hero.
 
 ## Roadmap
 
+Complete:
+
+- Ranged monsters and projectiles.
+- Line-of-sight checks for ranged attacks.
+
+Next:
+
 - Add multi-floor descent and a depth counter.
-- Add ranged monsters and projectiles.
 - Add sound and music.
 - Add more biomes and items.
 - Add controller support.
@@ -127,7 +144,7 @@ A smoke test loads the game and spawns a fixed-seed run.
 
 The demo has three biomes.
 Each run is a single floor.
-All monsters use melee attacks.
+Projectiles follow straight lines only.
 The game has no audio yet.
 
 ## License
