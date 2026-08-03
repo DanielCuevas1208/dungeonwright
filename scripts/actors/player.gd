@@ -40,6 +40,8 @@ var _moving := false
 var _attack_timer := 0.0
 var _sprite: Sprite2D = null
 
+## Prepares the hero for a floor. Call once per floor; the hero keeps
+## its coins and shards, and its visuals are created only once.
 func setup(
 	p_stats: CombatStats,
 	p_start: Vector2i,
@@ -51,11 +53,12 @@ func setup(
 	view = p_view
 	occupancy = p_occupancy
 	position = view.tile_to_world(grid_pos)
-	_sprite = Sprite2D.new()
-	_sprite.texture = TileArt.entity_texture(&"player")
-	_sprite.centered = true
-	add_child(_sprite)
-	_add_light()
+	if _sprite == null:
+		_create_visuals()
+	_from = grid_pos
+	_to = grid_pos
+	_progress = 1.0
+	_moving = false
 	emit_hud()
 
 func _physics_process(p_delta: float) -> void:
@@ -158,6 +161,13 @@ func _flash() -> void:
 	var tween := create_tween()
 	tween.tween_property(_sprite, "modulate", Color(3.0, 0.4, 0.4), 0.08)
 	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.12)
+
+func _create_visuals() -> void:
+	_sprite = Sprite2D.new()
+	_sprite.texture = TileArt.entity_texture(&"player")
+	_sprite.centered = true
+	add_child(_sprite)
+	_add_light()
 
 func _add_light() -> void:
 	var light := PointLight2D.new()

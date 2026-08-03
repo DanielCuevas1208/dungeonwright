@@ -84,7 +84,7 @@ func _build() -> void:
 	_continue_button.custom_minimum_size = Vector2(0, 36)
 
 	var hint := Label.new()
-	hint.text = "Move: WASD or arrows   Attack: Space, J, or click\nOpen doors: walk in with a key   New run: N   Pause: Escape"
+	hint.text = "Move: WASD or arrows   Attack: Space, J, or click\nOpen doors: walk in with a key   Reach the exit to descend\nNew run: N   Pause: Escape"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 13)

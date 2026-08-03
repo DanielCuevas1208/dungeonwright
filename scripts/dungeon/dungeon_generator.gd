@@ -1,6 +1,6 @@
 class_name DungeonGenerator
 extends RefCounted
-## Builds a solvable dungeon from a seed and a biome.
+## Builds one floor of a solvable dungeon from a seed and a biome.
 ##
 ## The generator follows a fixed pipeline:
 ##   1. Place rooms without overlaps.
@@ -13,11 +13,18 @@ extends RefCounted
 ##   7. Scatter monsters in the rooms.
 ##
 ## Every step uses the same SeededRng, so a seed always produces the
-## same dungeon.
-
-func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
+## same dungeon. Multi-floor runs pass p_floor and the base run seed so
+## the result can report which floor it describes.
+func generate(
+	p_config: DungeonConfig,
+	p_seed: int,
+	p_floor: int = 1,
+	p_run_seed: int = -1
+) -> DungeonResult:
 	var result := DungeonResult.new()
 	result.seed_value = p_seed
+	result.run_seed = p_seed if p_run_seed < 0 else p_run_seed
+	result.floor = p_floor
 	result.config = p_config
 
 	var rng := SeededRng.new(p_seed)

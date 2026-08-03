@@ -6,6 +6,7 @@ extends Control
 ## and a minimap with the hero position.
 
 var biome_label: Label = null
+var floor_label: Label = null
 var seed_label: Label = null
 var depth_label: Label = null
 var hp_fill: ColorRect = null
@@ -27,8 +28,15 @@ func _ready() -> void:
 	_build_bottom_panel()
 	_build_minimap()
 
-func set_run(p_biome: String, p_seed: String, p_depth: int) -> void:
+func set_run(
+	p_biome: String,
+	p_seed: String,
+	p_depth: int,
+	p_floor: int = 1,
+	p_max_floors: int = 1
+) -> void:
 	biome_label.text = "Biome: " + p_biome
+	floor_label.text = "Floor %d / %d" % [p_floor, p_max_floors]
 	seed_label.text = "Seed: " + p_seed
 	depth_label.text = "Exit at depth " + str(p_depth)
 
@@ -71,9 +79,11 @@ func _build_top_panel() -> void:
 	box.add_theme_constant_override("separation", 2)
 	panel.add_child(box)
 	biome_label = _label("", 15)
+	floor_label = _label("", 15)
 	seed_label = _label("", 15)
 	depth_label = _label("", 15)
 	box.add_child(biome_label)
+	box.add_child(floor_label)
 	box.add_child(seed_label)
 	box.add_child(depth_label)
 	add_child(panel)

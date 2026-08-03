@@ -31,9 +31,13 @@ var monster_index := 0
 var _ended := false
 var _beacon_phase := 0.0
 var _beacon: Sprite2D = null
+var _transition_layer: CanvasLayer = null
 
 func _ready() -> void:
 	_wire_signals()
+	_transition_layer = CanvasLayer.new()
+	_transition_layer.layer = 100
+	add_child(_transition_layer)
 	get_tree().paused = true
 	menu_overlay.show_menu(false)
 
@@ -66,7 +70,7 @@ func _physics_process(p_delta: float) -> void:
 	_collect_pickups()
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos:
-		_on_victory()
+		_on_floor_exit()
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -93,7 +97,14 @@ func start_run(p_seed_value: int) -> void:
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
 	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
-	run = DungeonGenerator.new().generate(biome, p_seed_value)
+	player.coins = 0
+	player.shards = 0
+	_start_floor(1)
+
+## Starts the given floor of the current run. Floors start at 1.
+func _start_floor(p_floor: int) -> void:
+	var floor_seed := Descent.floor_seed(run_seed, p_floor)
+	run = DungeonGenerator.new().generate(biome, floor_seed, p_floor, run_seed)
 
 	_clear_world()
 	occupancy.clear()
@@ -105,6 +116,7 @@ func _start_run(p_seed_value: int) -> void:
 		"health": biome.starting_health,
 		"damage": biome.player_damage,
 	})
+	player.keys_held = 0
 	player.setup(stats, run.start_pos, dungeon_view, occupancy)
 	occupancy[run.start_pos] = player
 	player.can_enter = _hero_can_enter
@@ -123,19 +135,29 @@ func _start_run(p_seed_value: int) -> void:
 	_apply_camera_limits()
 	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(p_seed_value), run.depth)
+	hud.set_run(
+		biome.display_name,
+		SeededRng.encode_seed(run_seed),
+		run.depth,
+		p_floor,
+		Descent.floor_count(biome),
+	)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
 
-	RunState.seed_value = p_seed_value
-	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
+	RunState.seed_value = run_seed
+	RunState.seed_string = SeededRng.encode_seed(run_seed)
 	RunState.biome_id = biome.id
+	RunState.floor = p_floor
+	RunState.max_floors = Descent.floor_count(biome)
+	if p_floor == 1:
+		RunState.floors_cleared = 0
+		RunState.started_at = Time.get_ticks_msec() / 1000.0
 	RunState.status = RunState.RunStatus.ACTIVE
-	RunState.started_at = Time.get_ticks_msec() / 1000.0
 
 	menu_overlay.hide_menu()
 	result_overlay.hide_result()
 	get_tree().paused = false
-	run_started.emit(p_seed_value)
+	run_started.emit(run_seed)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	var spec := MonsterSpecs.by_id(p_monster_id)
@@ -208,22 +230,48 @@ func _on_player_died() -> void:
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		RunState.floors_cleared,
+		RunState.max_floors
 	)
 	get_tree().paused = true
+
+## Called when the hero reaches a floor exit.
+## The run ends only when the hero clears the final floor.
+func _on_floor_exit() -> void:
+	if _ended:
+		return
+	if run.is_final_floor():
+		_on_victory()
+	else:
+		_descend()
+
+## Moves the hero down to the next floor of the same run.
+func _descend() -> void:
+	RunState.floors_cleared = run.floor
+	var next_floor := run.floor + 1
+	TransitionOverlay.play(
+		_transition_layer,
+		"Floor cleared",
+		"Descending to floor %d of %d" % [next_floor, RunState.max_floors]
+	)
+	_start_floor(next_floor)
 
 func _on_victory() -> void:
 	if _ended:
 		return
 	_ended = true
 	RunState.status = RunState.RunStatus.WON
+	RunState.floors_cleared = RunState.max_floors
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
 		true,
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		RunState.floors_cleared,
+		RunState.max_floors
 	)
 	get_tree().paused = true
 

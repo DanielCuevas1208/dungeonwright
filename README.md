@@ -15,14 +15,15 @@ Every run builds a new dungeon that you can explore and finish.
 
 ## What it is
 
-Dungeonwright generates a connected dungeon on every run.
+Dungeonwright builds a connected dungeon on every run.
 You explore rooms and corridors.
-You find keys, open locked doors, and reach the exit.
+You find keys, open locked doors, and descend.
 The same seed always builds the same dungeon.
 
 ## Features
 
 - A new map for every run, driven by a seed.
+- Multi-floor runs that end in victory or defeat.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
@@ -30,12 +31,14 @@ The same seed always builds the same dungeon.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 
-## First release
+## This release
 
-This release ships a playable demo.
-The generator guarantees the exit is always reachable.
-You can walk, fight, collect loot, and finish a run.
-You can replay any run from its seed.
+This release adds multi-floor descent.
+The hero clears a floor, then moves down to the next one.
+Coins and shards carry over between floors.
+The run ends when the hero dies or clears the final floor.
+Each biome has its own number of floors.
+One seed replays the whole run.
 
 ## Requirements
 
@@ -59,6 +62,8 @@ Leave the field empty for a random seed.
 
 Move with WASD or the arrow keys.
 Attack with Space, J, or a mouse click.
+Walk into a locked door to open it with a key.
+Reach the exit to descend to the next floor.
 Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
@@ -86,6 +91,10 @@ It picks the farthest room as the exit.
 It places doors on corridors and puts each key on the safe side.
 A solver then proves the dungeon can be completed.
 
+A run owns one seed.
+Each floor uses a child seed derived from that run seed.
+The descent chain is deterministic, so replays work.
+
 The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
@@ -93,6 +102,7 @@ The scene controller turns the map into a live game.
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
+- `scripts/core` holds run state and the descent chain.
 - `scripts/combat` holds stats, monsters, and loot tables.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, and pickups.
@@ -107,17 +117,25 @@ A seed always produces the same map.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+Every floor of a run is solvable.
+One seed replays every floor in order.
 
 ## Evaluation evidence
 
-The suite has 56 tests.
-It covers generation, biomes, combat, drops, and pathfinding.
-All 56 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 69 tests.
+It covers generation, biomes, combat, drops, pathfinding, and descent.
+All 69 tests pass in a headless run.
+A smoke test loads the game, spawns a run, and descends a floor.
 
 ## Roadmap
 
-- Add multi-floor descent and a depth counter.
+Complete:
+
+- Multi-floor descent and a floor counter.
+- Seeded replay across every floor.
+
+Next:
+
 - Add ranged monsters and projectiles.
 - Add sound and music.
 - Add more biomes and items.
@@ -126,7 +144,7 @@ A smoke test loads the game and spawns a fixed-seed run.
 ## Limitations
 
 The demo has three biomes.
-Each run is a single floor.
+Runs are capped at a few floors.
 All monsters use melee attacks.
 The game has no audio yet.
 
