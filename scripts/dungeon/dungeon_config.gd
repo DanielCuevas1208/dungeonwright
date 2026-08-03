@@ -28,6 +28,8 @@ var door_count_max: int = 3
 var monster_density: float = 0.5
 var monster_cap: int = 10
 var monster_table: Array = []
+var monster_health_scale: float = 1.0
+var monster_damage_scale: float = 1.0
 var starting_health: int = 100
 var player_damage: int = 12
 var palette: Dictionary = {}
@@ -45,6 +47,10 @@ func validate() -> Array[String]:
 		problems.append("door count is negative")
 	if monster_density < 0.0 or monster_density > 1.0:
 		problems.append("monster density must be between 0 and 1")
+	if monster_health_scale < 1.0:
+		problems.append("monster health scale is below 1")
+	if monster_damage_scale < 1.0:
+		problems.append("monster damage scale is below 1")
 	if loop_chance < 0.0 or loop_chance > 1.0:
 		problems.append("loop chance must be between 0 and 1")
 	if monster_table.is_empty():

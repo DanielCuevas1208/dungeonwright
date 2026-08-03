@@ -92,20 +92,58 @@ func start_run(p_seed_value: int) -> void:
 
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
-	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
-	run = DungeonGenerator.new().generate(biome, p_seed_value)
+	RunState.floor = 1
+	RunState.floor_count = FloorRules.FLOOR_COUNT
+	_generate_floor(1)
+	_setup_world(false)
 
+	RunState.seed_value = p_seed_value
+	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
+	RunState.status = RunState.RunStatus.ACTIVE
+	RunState.started_at = Time.get_ticks_msec() / 1000.0
+
+	menu_overlay.hide_menu()
+	result_overlay.hide_result()
+	get_tree().paused = false
+	run_started.emit(p_seed_value)
+
+## Starts the next floor of the current run. Public entry point for
+## tooling. Mirrors reaching the exit on a non-final floor.
+func advance_floor() -> void:
+	if run == null or _ended:
+		return
+	_descend()
+
+func _descend() -> void:
+	if RunState.floor >= FloorRules.FLOOR_COUNT:
+		return
+	RunState.floor += 1
+	_generate_floor(RunState.floor)
+	_setup_world(true)
+
+func _generate_floor(p_floor: int) -> void:
+	var floor_seed := FloorRules.seed_for(run_seed, p_floor)
+	biome = Biomes.random(SeededRng.new(floor_seed ^ 0x5EED))
+	var config := FloorRules.scaled(biome, p_floor)
+	run = DungeonGenerator.new().generate(config, floor_seed)
+	run.floor = p_floor
+	run.floor_count = FloorRules.FLOOR_COUNT
+
+func _setup_world(p_keep_stats: bool) -> void:
 	_clear_world()
 	occupancy.clear()
 	_ended = false
 
 	dungeon_view.configure(run.map, biome)
-	var stats := CombatStats.make({
-		"max_health": biome.starting_health,
-		"health": biome.starting_health,
-		"damage": biome.player_damage,
-	})
-	player.setup(stats, run.start_pos, dungeon_view, occupancy)
+	if p_keep_stats:
+		player.relocate(run.start_pos, dungeon_view, occupancy)
+	else:
+		var stats := CombatStats.make({
+			"max_health": biome.starting_health,
+			"health": biome.starting_health,
+			"damage": biome.player_damage,
+		})
+		player.setup(stats, run.start_pos, dungeon_view, occupancy)
 	occupancy[run.start_pos] = player
 	player.can_enter = _hero_can_enter
 
@@ -123,25 +161,24 @@ func _start_run(p_seed_value: int) -> void:
 	_apply_camera_limits()
 	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(p_seed_value), run.depth)
+	hud.set_run(
+		biome.display_name,
+		SeededRng.encode_seed(run_seed),
+		run.depth,
+		RunState.floor,
+		RunState.floor_count
+	)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
-
-	RunState.seed_value = p_seed_value
-	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
 	RunState.biome_id = biome.id
-	RunState.status = RunState.RunStatus.ACTIVE
-	RunState.started_at = Time.get_ticks_msec() / 1000.0
-
-	menu_overlay.hide_menu()
-	result_overlay.hide_result()
-	get_tree().paused = false
-	run_started.emit(p_seed_value)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	var spec := MonsterSpecs.by_id(p_monster_id)
 	var monster: MonsterActor = MONSTER_SCENE.instantiate()
 	monsters_root.add_child(monster)
-	monster.setup(spec, p_position, dungeon_view, occupancy, player)
+	monster.setup(
+		spec, p_position, dungeon_view, occupancy, player,
+		run.config.monster_health_scale, run.config.monster_damage_scale
+	)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
 	monster.died.connect(_on_monster_died)
@@ -208,12 +245,16 @@ func _on_player_died() -> void:
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		RunState.floor
 	)
 	get_tree().paused = true
 
 func _on_victory() -> void:
 	if _ended:
+		return
+	if not FloorRules.is_final(RunState.floor):
+		_descend()
 		return
 	_ended = true
 	RunState.status = RunState.RunStatus.WON
@@ -223,7 +264,8 @@ func _on_victory() -> void:
 		SeededRng.encode_seed(run_seed),
 		run.depth,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		RunState.floor
 	)
 	get_tree().paused = true
 

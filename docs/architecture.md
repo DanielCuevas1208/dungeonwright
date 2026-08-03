@@ -95,6 +95,24 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Floor progression
+
+A run spans five floors.
+Each floor is its own generated dungeon.
+`FloorRules` derives a floor seed from the run seed.
+The whole descent replays from the single run seed.
+
+The hero reaches the exit on a lower floor and descends.
+The `Main` scene keeps the hero health and loot.
+Keys reset, because every floor has its own locks.
+The final floor ends the run with a victory summary.
+
+Deeper floors scale the monster pressure.
+`FloorRules.scaled` returns a copy of the biome.
+Monster health and damage rise each floor.
+Monster density, monster cap, and door counts also rise.
+The run summary shows the floor count reached.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -111,9 +129,10 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops, and floors.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+Every floor of a run must replay from its run seed.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

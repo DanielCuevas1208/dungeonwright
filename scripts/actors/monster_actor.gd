@@ -37,13 +37,15 @@ func setup(
 	p_start: Vector2i,
 	p_view: DungeonView,
 	p_occupancy: Dictionary,
-	p_target: Node2D
+	p_target: Node2D,
+	p_health_scale: float = 1.0,
+	p_damage_scale: float = 1.0
 ) -> void:
 	spec = p_spec
 	stats = CombatStats.make({
-		"max_health": p_spec.stats.max_health,
-		"health": p_spec.stats.max_health,
-		"damage": p_spec.stats.damage,
+		"max_health": maxi(1, roundi(p_spec.stats.max_health * p_health_scale)),
+		"health": maxi(1, roundi(p_spec.stats.max_health * p_health_scale)),
+		"damage": maxi(1, roundi(p_spec.stats.damage * p_damage_scale)),
 		"speed": p_spec.stats.speed,
 		"attack_range": p_spec.stats.attack_range,
 		"attack_cooldown": p_spec.stats.attack_cooldown,

@@ -8,6 +8,10 @@ extends RefCounted
 var seed_value: int = 0
 var config: DungeonConfig = null
 var map: DungeonMap = null
+## One-based floor number inside the run that owns this map.
+var floor: int = 1
+## Total number of floors in the run.
+var floor_count: int = 1
 var rooms: Array[Room] = []
 var corridors: Array[Corridor] = []
 var start_room: int = -1

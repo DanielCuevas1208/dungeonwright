@@ -1,7 +1,7 @@
 # Dungeonwright
 
 A seeded dungeon crawler built with Godot and GDScript.
-Every run builds a new dungeon that you can explore and finish.
+Every run builds new dungeons that you explore floor by floor.
 
 ```
 ####.D.############
@@ -15,14 +15,15 @@ Every run builds a new dungeon that you can explore and finish.
 
 ## What it is
 
-Dungeonwright generates a connected dungeon on every run.
+Dungeonwright generates a connected dungeon for every floor.
 You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
-The same seed always builds the same dungeon.
+The same seed always replays the same descent.
 
 ## Features
 
 - A new map for every run, driven by a seed.
+- Multi-floor descents with five floors per run.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
@@ -40,11 +41,14 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds full gamepad support.
-Every action has a gamepad binding.
-Movement uses the left stick or the d-pad.
-Analog input gets a deadzone and a diagonal speed cap.
-Menus show the controls for the active device.
+This release adds multi-floor descent.
+Each run spans five floors.
+Reaching the exit on a lower floor descends to the next one.
+Deeper floors grow harder.
+Monsters gain health and damage.
+They spawn more often and in greater numbers.
+The HUD shows the current floor.
+The full descent replays from one seed.
 
 ## Requirements
 
@@ -106,6 +110,13 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+Floors use the same pipeline.
+Each floor derives its seed from the run seed.
+The full descent then replays from one seed.
+
+Monster stats scale with the floor number.
+Deeper floors also add more monsters and doors.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
@@ -121,33 +132,37 @@ The scene controller turns the map into a live game.
 ## Design guarantees
 
 A seed always produces the same map.
+A run seed replays every floor of the descent.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
 
 ## Evaluation evidence
 
-The suite has 68 tests.
-It covers generation, biomes, combat, drops, pathfinding, and input.
-All 68 tests pass in a headless run.
+The suite has 77 tests.
+It covers generation, biomes, floors, combat, drops, pathfinding, and input.
+All 77 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
-The smoke test also checks every action has a gamepad binding.
+The smoke test also descends one floor and re-verifies the world.
+It also checks every action has a gamepad binding.
 
 ## Roadmap
 
 Done in this release:
-- Full gamepad support.
+- Multi-floor descent and a depth counter.
+- Per-floor monster scaling.
 
 Next up:
-- Multi-floor descent and a depth counter.
 - Ranged monsters and projectiles.
 - Sound and music.
 - More biomes and items.
 
+See `docs/roadmap.md` for the full plan.
+
 ## Limitations
 
 The demo has three biomes.
-Each run is a single floor.
+Each run spans five floors.
 All monsters use melee attacks.
 The game has no audio yet.
 

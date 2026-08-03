@@ -4,6 +4,19 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor descent with five floors per run.
+- A floor counter in the HUD.
+- Reaching the exit on a lower floor descends to the next floor.
+- Per-floor monster scaling for health and damage.
+- Deeper floors raise monster density and door counts.
+- Deterministic floor seeds derived from the run seed.
+- A floors total in the run summary.
+- Unit tests for floor rules and multi-floor replay.
+
 ## [0.2.0] - 2026-08-03
 
 Added

@@ -56,3 +56,16 @@ func test_custom_seed_string_matches_run_seed() -> void:
 	var biome := Biomes.crypt()
 	var result := DungeonGenerator.new().generate(biome, seed)
 	assert_eq(result.seed_value, SeededRng.decode_seed(SeededRng.encode_seed(seed)))
+
+func test_every_floor_of_a_run_stays_solvable() -> void:
+	var generator := DungeonGenerator.new()
+	for run_seed in [1, 7, 42, 818]:
+		for floor in range(1, FloorRules.FLOOR_COUNT + 1):
+			var floor_seed := FloorRules.seed_for(run_seed, floor)
+			var biome := Biomes.random(SeededRng.new(floor_seed ^ 0x5EED))
+			var result := generator.generate(FloorRules.scaled(biome, floor), floor_seed)
+			assert_true(result.solvable, "run %d floor %d is not solvable" % [run_seed, floor])
+			assert_true(
+				Pathfinding.reaches(result.map, result.start_pos, result.exit_pos, true),
+				"run %d floor %d exit unreachable" % [run_seed, floor]
+			)

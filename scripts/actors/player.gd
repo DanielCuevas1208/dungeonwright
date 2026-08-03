@@ -58,6 +58,19 @@ func setup(
 	_add_light()
 	emit_hud()
 
+## Repositions the hero for a new floor. Keeps health, coins, and
+## shards. Keys reset, because every floor has its own locks.
+func relocate(p_start: Vector2i, p_view: DungeonView, p_occupancy: Dictionary) -> void:
+	view = p_view
+	occupancy = p_occupancy
+	grid_pos = p_start
+	position = view.tile_to_world(grid_pos)
+	keys_held = 0
+	_moving = false
+	_progress = 1.0
+	_attack_timer = 0.0
+	emit_hud()
+
 func _physics_process(p_delta: float) -> void:
 	if view == null or stats == null:
 		return
