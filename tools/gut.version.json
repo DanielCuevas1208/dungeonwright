@@ -1,0 +1,10 @@
+{
+  "name": "Gut",
+  "repository": "https://github.com/bitwes/Gut",
+  "version": "9.6.1",
+  "archive_url": "https://github.com/bitwes/Gut/archive/refs/tags/v9.6.1.zip",
+  "sha256": "3901C72603B7573D7772CAD2462F50A0F50BA8748E38F8727599344CE3AADFEF",
+  "addon_path_in_archive": "Gut-9.6.1/addons/gut",
+  "install_path": "addons/gut",
+  "notes": "Gut is installed into addons/gut and is not committed. The checksum pins the exact version."
+}

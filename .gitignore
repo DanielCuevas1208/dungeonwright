@@ -1,0 +1,17 @@
+# Godot 4 editor import cache.
+.godot/
+
+# Vendored dependencies (installed by tools/install_gut.*).
+addons/
+
+# Tool caches and downloads.
+tools/cache/
+
+# OS and editor noise.
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/

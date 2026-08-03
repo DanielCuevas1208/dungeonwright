@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.6
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.1
+
+      - name: Install GUT addon
+        run: bash tools/install_gut.sh
+
+      - name: Import project resources
+        run: godot --headless --import
+
+      - name: Run the GUT test suite
+        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+
+      - name: Run the headless smoke test
+        run: godot --headless --path . -s tools/smoke.gd
