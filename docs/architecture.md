@@ -95,6 +95,19 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Input handling
+
+A `Controls` class reads all movement input.
+It combines the keyboard and the first connected gamepad.
+It applies a deadzone so a resting stick stays still.
+It caps diagonal speed at one.
+The hero reads its movement from this class.
+
+Every action has a keyboard and a gamepad binding.
+The input map in `project.godot` holds both sets.
+Menus ask `Controls` for the correct labels.
+The hints update when a gamepad connects or disconnects.
+
 ## Testing
 
 The suite runs headless with GUT.

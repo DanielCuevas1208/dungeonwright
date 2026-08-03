@@ -70,7 +70,7 @@ func _physics_process(p_delta: float) -> void:
 	_handle_attack()
 
 func _wait_for_input() -> void:
-	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var input := Controls.movement_vector()
 	if input == Vector2.ZERO:
 		return
 	facing = _dominant_axis(input)
