@@ -29,6 +29,22 @@ func test_biomes_use_different_generation_rules() -> void:
 	assert_ne(crypt.room_count_max, ember.room_count_max)
 	assert_ne(crypt.loop_chance, forest.loop_chance)
 
+func test_sunken_ruins_is_a_distinct_biome() -> void:
+	var ruins := Biomes.sunken_ruins()
+	assert_true(ruins.is_valid())
+	assert_eq(ruins.id, &"sunken_ruins")
+	assert_eq(ruins.corridor_style, DungeonConfig.CorridorStyle.winding)
+	assert_ne(ruins.loop_chance, Biomes.crypt().loop_chance)
+	assert_ne(ruins.room_max, Biomes.ember_stronghold().room_max)
+	assert_gte(Biomes.all().size(), 4)
+
+func test_sunken_ruins_builds_solvable_dungeons() -> void:
+	var generator := DungeonGenerator.new()
+	for seed in [601, 602, 603, 604, 605]:
+		var result := generator.generate(Biomes.sunken_ruins(), seed)
+		assert_true(result.solvable, "seed %d is not solvable" % seed)
+		assert_true(result.depth > 0)
+
 func test_same_seed_different_biome_differs() -> void:
 	var seed := 2468
 	var crypt_map := DungeonGenerator.new().generate(Biomes.crypt(), seed)

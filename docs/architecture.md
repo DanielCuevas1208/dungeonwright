@@ -39,6 +39,12 @@ Each biome picks a carving style.
 - Winding: a path of short, jittered runs.
 - Straight: a path that favors one axis at a time.
 
+Four biomes share these three styles.
+The crypt uses elbows, the drowned forest and the sunken ruins
+use winding paths, and the ember stronghold uses straight halls.
+Each biome also sets its own room sizes, door counts, monster
+pressure, and palette.
+
 All carvers keep every carved cell orthogonally adjacent to the path.
 This rule prevents floating single-cell islands.
 
@@ -83,6 +89,20 @@ Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
 Coins drop often, shards sometimes, potions rarely.
 
+## Items
+
+Every collectible lives in a small registry.
+`ItemSpec` holds the id, name, description, and category.
+The `Items` class is the single source of truth for ids.
+Treasure, consumables, and upgrades share the same table.
+
+Upgrade items use one pure function.
+`Items.apply_upgrade` mutates a `CombatStats` block and returns the change.
+A whetstone adds 2 to damage.
+A relic adds 10 to max health and heals toward the new maximum.
+The hero tracks the bonuses so the HUD can show them.
+The registry keeps loot logic testable and consistent.
+
 ## Scene flow
 
 The `Main` scene owns the game loop.
@@ -98,7 +118,8 @@ The biome palette recolors the tiles at run time.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops,
+and the item registry.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
 

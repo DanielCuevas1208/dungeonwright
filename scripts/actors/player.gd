@@ -11,6 +11,7 @@ signal hp_changed(current: int, max: int)
 signal coins_changed(count: int)
 signal shards_changed(count: int)
 signal keys_changed(count: int)
+signal upgrades_changed(bonus_damage: int, bonus_max_health: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
 signal moved(grid: Vector2i)
 signal died
@@ -26,6 +27,10 @@ var facing: Vector2i = Vector2i.DOWN
 var coins := 0
 var shards := 0
 var keys_held := 0
+## Permanent damage bonus from picked-up upgrades.
+var damage_bonus := 0
+## Permanent max-health bonus from picked-up upgrades.
+var max_health_bonus := 0
 
 var view: DungeonView = null
 var occupancy: Dictionary = {}
@@ -137,6 +142,13 @@ func apply_pickup(p_item: StringName, p_count: int) -> void:
 		&"key":
 			keys_held += p_count
 			keys_changed.emit(keys_held)
+		&"whetstone", &"relic":
+			for i in p_count:
+				var change := Items.apply_upgrade(p_item, stats)
+				damage_bonus += int(change.get("damage", 0))
+				max_health_bonus += int(change.get("max_health", 0))
+			hp_changed.emit(stats.health, stats.max_health)
+			upgrades_changed.emit(damage_bonus, max_health_bonus)
 
 ## Consumes one key, used when the hero opens a locked door.
 func spend_key() -> void:
@@ -153,6 +165,7 @@ func emit_hud() -> void:
 	coins_changed.emit(coins)
 	shards_changed.emit(shards)
 	keys_changed.emit(keys_held)
+	upgrades_changed.emit(damage_bonus, max_health_bonus)
 
 func _flash() -> void:
 	var tween := create_tween()

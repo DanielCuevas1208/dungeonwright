@@ -47,12 +47,33 @@ func _verify() -> void:
 		_fail("exit is not reachable from the start")
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
+	else:
+		_verify_sunken_ruins()
+		_verify_upgrades()
+
+func _verify_sunken_ruins() -> void:
+	var result := DungeonGenerator.new().generate(Biomes.sunken_ruins(), 77)
+	if result == null or not result.solvable:
+		_fail("sunken_ruins seed 77 is not solvable")
+	elif result.map == null:
+		_fail("sunken_ruins produced no map")
+
+func _verify_upgrades() -> void:
+	var stats := CombatStats.make({ "max_health": 40, "health": 30, "damage": 8 })
+	Items.apply_upgrade(&"whetstone", stats)
+	Items.apply_upgrade(&"relic", stats)
+	if stats.damage != 10:
+		_fail("whetstone did not raise damage")
+	elif stats.max_health != 50:
+		_fail("relic did not raise max health")
+	elif stats.health != 40:
+		_fail("relic did not heal toward the new max")
 
 	if _failed:
 		print("[smoke] FAILED")
 		quit(1)
 	else:
-		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
+		print("Smoke test passed: seed 12345 spawned a solvable dungeon, sunken ruins solvable, upgrades apply.")
 		quit(0)
 
 func _fail(p_message: String) -> void:

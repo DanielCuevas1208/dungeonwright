@@ -18,8 +18,9 @@ const TILE_START := &"start"
 const TILE_EXIT := &"exit"
 
 const ENTITY_KEYS := [
-	&"player", &"key", &"potion", &"coin",
-	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
+	&"player", &"key", &"potion", &"coin", &"shard",
+	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem", &"brine",
+	&"whetstone", &"relic",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -90,12 +91,20 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _SHAMBLER
 		&"golem":
 			return _GOLEM
+		&"brine":
+			return _BRINE
 		&"key":
 			return _KEY
 		&"potion":
 			return _POTION
 		&"coin":
 			return _COIN
+		&"shard":
+			return _SHARD
+		&"whetstone":
+			return _WHETSTONE
+		&"relic":
+			return _RELIC
 		_:
 			return _PLAYER
 
@@ -116,12 +125,20 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#4f7a3f"), &"*": Color("#16240f"), &"+": Color("#6f9a58") }
 		&"golem":
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
+		&"brine":
+			return { &"@": Color("#4f9e9e"), &"*": Color("#1a2a2e"), &"+": Color("#a5e8e8"), &"o": Color("#e8e8c0") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"potion":
 			return { &"@": Color("#c94a4a"), &"+": Color("#e88a7a"), &"o": Color("#3a1a1a") }
 		&"coin":
 			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
+		&"shard":
+			return { &"@": Color("#7fd0ff"), &"+": Color("#d0f4ff"), &"*": Color("#274a5e") }
+		&"whetstone":
+			return { &"@": Color("#9aa4b8"), &"*": Color("#4a5268"), &"+": Color("#d6dce8") }
+		&"relic":
+			return { &"@": Color("#9fe8d9"), &"*": Color("#2a6a5e"), &"+": Color("#e8fff8"), &"o": Color("#e8b84c") }
 		_:
 			return { &"@": Color.WHITE }
 
@@ -303,5 +320,49 @@ const _COIN := [
 	".@+@@+@.",
 	".@@@@@@.",
 	".@@@@@@.",
+	"........",
+]
+
+const _SHARD := [
+	"........",
+	"....*...",
+	"..*@@...",
+	"..@@@@..",
+	"..@@@@@.",
+	"..@@@@..",
+	"....*...",
+	"........",
+]
+
+const _BRINE := [
+	"........",
+	"..@@@...",
+	".@*o*@..",
+	"@@@@@@@.",
+	".@@@@@@.",
+	".@.+..@.",
+	".@.+.@..",
+	"........",
+]
+
+const _WHETSTONE := [
+	"........",
+	"...++++.",
+	"..@@@@@.",
+	"..@@*@@.",
+	"..@@@*@.",
+	"..@@@@*.",
+	"........",
+	"........",
+]
+
+const _RELIC := [
+	"........",
+	".@@o@@..",
+	".@*+*@..",
+	".@+o+@..",
+	".@@o@@..",
+	".@o@o@..",
+	"........",
 	"........",
 ]

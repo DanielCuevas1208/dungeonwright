@@ -24,18 +24,23 @@ The same seed always builds the same dungeon.
 
 - A new map for every run, driven by a seed.
 - Rooms, corridors, locked doors, and keys.
-- Three biomes with different generation rules.
+- Four biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
+- Permanent upgrade items dropped by monsters.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 
-## First release
+## This release
 
-This release ships a playable demo.
-The generator guarantees the exit is always reachable.
-You can walk, fight, collect loot, and finish a run.
-You can replay any run from its seed.
+This release adds a fourth biome and permanent upgrades.
+The Sunken Ruins flood the map with wide winding corridors.
+Riptides, a new fast monster, patrol the flooded halls.
+
+Monsters rarely drop upgrade items.
+A whetstone raises your attack damage by 2.
+A relic raises your max health by 10 and heals you.
+The HUD shows the bonuses you have collected.
 
 ## Requirements
 
@@ -90,10 +95,16 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+Items use a small registry.
+Each item has an id, a name, and a category.
+Loot tables roll a weighted entry.
+Upgrades mutate the hero stats through one pure function.
+The same seed always produces the same drops.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
-- `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/combat` holds stats, monsters, items, and loot tables.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, and pickups.
 - `scripts/ui` builds the HUD and overlays.
@@ -107,25 +118,32 @@ A seed always produces the same map.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+Upgrade items never change the generated map.
 
 ## Evaluation evidence
 
-The suite has 56 tests.
-It covers generation, biomes, combat, drops, and pathfinding.
-All 56 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 70 tests.
+It covers generation, biomes, combat, drops, pathfinding,
+and the item registry.
+All 70 tests pass in a headless run.
+A smoke test loads the game, spawns a fixed-seed run,
+and checks the Sunken Ruins and the upgrade effects.
 
 ## Roadmap
 
-- Add multi-floor descent and a depth counter.
-- Add ranged monsters and projectiles.
-- Add sound and music.
-- Add more biomes and items.
+Complete:
+
+- More biomes and items.
+- The Sunken Ruins biome and the Riptide monster.
+- Whetstone and relic permanent upgrades.
+
+Next:
+
 - Add controller support.
 
 ## Limitations
 
-The demo has three biomes.
+The demo has four biomes.
 Each run is a single floor.
 All monsters use melee attacks.
 The game has no audio yet.

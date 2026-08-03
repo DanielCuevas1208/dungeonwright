@@ -52,3 +52,14 @@ func test_every_monster_drop_table_is_balanced() -> void:
 		var table := spec.drop_table
 		assert_gt(table.probability_of(&"coin"), table.probability_of(&"potion"), spec.id)
 		assert_lte(table.probability_of(&"potion"), 0.35, spec.id)
+
+func test_upgrade_items_are_rarer_than_coins() -> void:
+	for spec in MonsterSpecs.all():
+		var coin_prob := spec.drop_table.probability_of(&"coin")
+		assert_gt(coin_prob, spec.drop_table.probability_of(&"whetstone"), spec.id)
+		assert_gt(coin_prob, spec.drop_table.probability_of(&"relic"), spec.id)
+
+func test_brine_drop_table_carries_both_upgrades() -> void:
+	var table := MonsterSpecs.by_id(&"brine").drop_table
+	assert_gt(table.probability_of(&"relic"), 0.0)
+	assert_gt(table.probability_of(&"whetstone"), 0.0)

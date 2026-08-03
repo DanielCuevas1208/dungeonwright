@@ -12,6 +12,7 @@ var hp_fill: ColorRect = null
 var hp_label: Label = null
 var coin_label: Label = null
 var key_label: Label = null
+var upgrade_label: Label = null
 var minimap_texture: TextureRect = null
 var minimap_marker: ColorRect = null
 var _minimap_frame: PanelContainer = null
@@ -44,6 +45,18 @@ func set_coins(p_count: int) -> void:
 
 func set_keys(p_count: int) -> void:
 	key_label.text = "x " + str(p_count)
+
+## Shows the permanent stat bonuses from picked-up upgrades.
+func set_upgrades(p_bonus_damage: int, p_bonus_max_health: int) -> void:
+	if p_bonus_damage == 0 and p_bonus_max_health == 0:
+		upgrade_label.text = ""
+		return
+	var parts := PackedStringArray()
+	if p_bonus_damage > 0:
+		parts.append("Atk +%d" % p_bonus_damage)
+	if p_bonus_max_health > 0:
+		parts.append("HP +%d" % p_bonus_max_health)
+	upgrade_label.text = "   ".join(parts)
 
 func set_minimap(p_image: Image, p_width: int, p_height: int) -> void:
 	_map_width = p_width
@@ -107,6 +120,9 @@ func _build_bottom_panel() -> void:
 	loot_row.add_child(_icon_counter(&"coin"))
 	loot_row.add_child(_icon_counter(&"key"))
 	hp_box.add_child(loot_row)
+
+	upgrade_label = _label("", 13)
+	hp_box.add_child(upgrade_label)
 	add_child(hp_panel)
 
 func _build_minimap() -> void:

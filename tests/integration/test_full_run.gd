@@ -56,3 +56,20 @@ func test_custom_seed_string_matches_run_seed() -> void:
 	var biome := Biomes.crypt()
 	var result := DungeonGenerator.new().generate(biome, seed)
 	assert_eq(result.seed_value, SeededRng.decode_seed(SeededRng.encode_seed(seed)))
+
+func test_sunken_ruins_stays_solvable_across_seeds() -> void:
+	var generator := DungeonGenerator.new()
+	for seed in range(1, 31):
+		var result := generator.generate(Biomes.sunken_ruins(), seed)
+		assert_true(result.solvable, "sunken_ruins seed %d is not solvable" % seed)
+
+func test_upgrade_items_roll_from_monster_drops() -> void:
+	var rng := SeededRng.new(31337)
+	var found := { &"whetstone": false, &"relic": false }
+	for i in 400:
+		for spec in MonsterSpecs.all():
+			for drop in MonsterSpecs.roll_drops(spec, rng):
+				if Items.is_upgrade(drop.item):
+					found[drop.item] = true
+	assert_true(found[&"whetstone"], "whetstone never rolled")
+	assert_true(found[&"relic"], "relic never rolled")

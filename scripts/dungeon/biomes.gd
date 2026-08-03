@@ -7,7 +7,7 @@ extends RefCounted
 
 ## Returns every biome in a stable order.
 static func all() -> Array[DungeonConfig]:
-	return [crypt(), drowned_forest(), ember_stronghold()]
+	return [crypt(), drowned_forest(), ember_stronghold(), sunken_ruins()]
 
 ## Returns a copy of the biome with the given id.
 static func by_id(p_id: StringName) -> DungeonConfig:
@@ -100,6 +100,33 @@ static func ember_stronghold() -> DungeonConfig:
 	config.palette = _ember_palette()
 	return config
 
+static func sunken_ruins() -> DungeonConfig:
+	var config := DungeonConfig.new()
+	config.id = &"sunken_ruins"
+	config.display_name = "Sunken Ruins"
+	config.description = "Flooded halls of old stone. Wide winding routes cross dark, drowned chambers."
+	config.width = 54
+	config.height = 34
+	config.room_count_min = 6
+	config.room_count_max = 9
+	config.room_min = 7
+	config.room_max = 12
+	config.corridor_style = DungeonConfig.CorridorStyle.winding
+	config.loop_chance = 0.45
+	config.door_count_min = 2
+	config.door_count_max = 3
+	config.monster_density = 0.55
+	config.monster_cap = 11
+	config.monster_table = [
+		{ "monster": &"brine", "weight": 2.0 },
+		{ "monster": &"shambler", "weight": 1.5 },
+		{ "monster": &"crawler", "weight": 1.0 },
+	]
+	config.starting_health = 100
+	config.player_damage = 13
+	config.palette = _sunken_palette()
+	return config
+
 static func _crypt_palette() -> Dictionary:
 	return {
 		&"wall_outline": Color("#14161d"),
@@ -149,4 +176,21 @@ static func _ember_palette() -> Dictionary:
 		&"rune": Color("#ff8c5a"),
 		&"glow": Color("#ffcf6a"),
 		&"accent": Color("#e8b84c"),
+	}
+
+static func _sunken_palette() -> Dictionary:
+	return {
+		&"wall_outline": Color("#0a1a1c"),
+		&"wall_fill": Color("#173a3e"),
+		&"wall_shade": Color("#112c2f"),
+		&"wall_highlight": Color("#20545a"),
+		&"floor_base": Color("#143236"),
+		&"floor_dark": Color("#10282b"),
+		&"floor_light": Color("#1a4045"),
+		&"door_bar": Color("#2c5a5e"),
+		&"door_lock": Color("#9fe8d9"),
+		&"door_open": Color("#050f10"),
+		&"rune": Color("#7fd0ff"),
+		&"glow": Color("#9fe8ff"),
+		&"accent": Color("#9fe8d9"),
 	}

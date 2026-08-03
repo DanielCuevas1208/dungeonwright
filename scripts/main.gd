@@ -41,6 +41,7 @@ func _wire_signals() -> void:
 	player.hp_changed.connect(hud.set_hp)
 	player.coins_changed.connect(hud.set_coins)
 	player.keys_changed.connect(hud.set_keys)
+	player.upgrades_changed.connect(hud.set_upgrades)
 	player.attacked.connect(_on_player_attack)
 	player.died.connect(_on_player_died)
 	player.moved.connect(_on_player_moved)
