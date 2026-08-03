@@ -1,7 +1,21 @@
 # Architecture
 
 This document explains the design of Dungeonwright.
-It covers the generation pipeline, the combat model, and the scene flow.
+It covers the run structure, the generation pipeline, the combat model,
+and the scene flow.
+
+## Run structure
+
+A run descends through a fixed number of floors.
+The `RunPlan` class turns the run seed into a floor plan.
+Every floor keeps the same base seed, so a seed replays the whole run.
+The floor index mixes into the seed, so each floor differs.
+Each floor also picks a fresh biome from a seeded roll.
+
+The plan is pure data.
+The generator never sees the plan.
+It still builds one floor from a seed and a biome.
+The scene controller decides when a floor ends and the next begins.
 
 ## Generation pipeline
 
@@ -86,7 +100,14 @@ Coins drop often, shards sometimes, potions rarely.
 ## Scene flow
 
 The `Main` scene owns the game loop.
-It generates a map and spawns the world.
+It reads the run plan and builds each floor in turn.
+When the hero reaches an exit, the controller descends.
+A short flash masks the switch to the next floor.
+The hero keeps health, coins, and shards on descent.
+Keys reset, because every floor has its own doors.
+The last floor ends the run instead of descending.
+
+Each floor generates a map and spawns the world.
 The hero, monsters, and pickups are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
@@ -111,9 +132,11 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, the run plan, the generator, biomes, combat,
+and drops.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+Scene-level tests prove a run descends and keeps the hero state.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

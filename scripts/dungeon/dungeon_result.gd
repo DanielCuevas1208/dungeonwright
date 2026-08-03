@@ -23,6 +23,10 @@ var monster_spawns: Array = []
 var depth: int = 0
 ## True when the exit is reachable by collecting keys in order.
 var solvable: bool = true
+## The one-based index of this floor inside the run. Set by the controller.
+var floor: int = 1
+## The number of floors in the run. Set by the controller.
+var floors_total: int = 1
 
 ## The number of rooms in the dungeon.
 func room_count() -> int:

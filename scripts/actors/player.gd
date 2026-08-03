@@ -32,6 +32,8 @@ var occupancy: Dictionary = {}
 ## Optional gate set by the controller. Called before entering a cell.
 ## A locked door without a key blocks the hero.
 var can_enter: Callable = Callable()
+## Set false to freeze the hero, used while the run descends.
+var input_enabled := true
 
 var _from: Vector2i = Vector2i.ZERO
 var _to: Vector2i = Vector2i.ZERO
@@ -51,6 +53,7 @@ func setup(
 	view = p_view
 	occupancy = p_occupancy
 	position = view.tile_to_world(grid_pos)
+	_clear_drawn_children()
 	_sprite = Sprite2D.new()
 	_sprite.texture = TileArt.entity_texture(&"player")
 	_sprite.centered = true
@@ -65,7 +68,7 @@ func _physics_process(p_delta: float) -> void:
 	_sprite.position.y = -2.0 if _moving else 0.0
 	if _moving:
 		_advance_move(p_delta)
-	else:
+	elif input_enabled:
 		_wait_for_input()
 	_handle_attack()
 
@@ -145,6 +148,12 @@ func spend_key() -> void:
 	keys_held -= 1
 	keys_changed.emit(keys_held)
 
+## Drops every key. Doors belong to one floor, so the hero starts each
+## floor with an empty key ring.
+func reset_keys() -> void:
+	keys_held = 0
+	keys_changed.emit(keys_held)
+
 func add_key() -> void:
 	apply_pickup(&"key", 1)
 
@@ -158,6 +167,12 @@ func _flash() -> void:
 	var tween := create_tween()
 	tween.tween_property(_sprite, "modulate", Color(3.0, 0.4, 0.4), 0.08)
 	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.12)
+
+## Removes previously drawn children before a fresh setup, so repeated
+## runs and floor descents never stack sprites or lights.
+func _clear_drawn_children() -> void:
+	for child in get_children():
+		child.free()
 
 func _add_light() -> void:
 	var light := PointLight2D.new()

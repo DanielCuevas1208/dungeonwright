@@ -35,6 +35,15 @@ func _run() -> void:
 		quit(1)
 		return
 	_verify()
+	if _failed:
+		quit(1)
+		return
+	await _verify_descent()
+	if _failed:
+		quit(1)
+		return
+	print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
+	quit(0)
 
 func _verify() -> void:
 	if _main.run == null:
@@ -49,6 +58,28 @@ func _verify() -> void:
 		_fail("dungeon is not solvable")
 	_verify_input_bindings()
 
+func _verify_descent() -> void:
+	if _main.plan == null:
+		_fail("no run plan was built")
+		return
+	if _main.run.floor != 1 or _main.run.floors_total != _main.plan.floors_total:
+		_fail("floor counter is wrong")
+		return
+	_main.descend_delay = 0.0
+	_main.player.grid_pos = _main.run.exit_pos
+	for i in 10:
+		await physics_frame
+	if _main.run.floor != 2:
+		_fail("hero did not descend to floor 2")
+		return
+	if _main.player.grid_pos != _main.run.start_pos:
+		_fail("hero is not at the new floor start")
+		return
+	if not _main.run.solvable:
+		_fail("floor 2 dungeon is not solvable")
+		return
+	print("[smoke] descent to floor 2 verified")
+
 func _verify_input_bindings() -> void:
 	for action in Controls.ACTIONS:
 		var has_joypad := false
@@ -60,13 +91,6 @@ func _verify_input_bindings() -> void:
 			_fail("action %s has no gamepad binding" % action)
 	if Controls.hint_for(false).is_empty() or Controls.hint_for(true).is_empty():
 		_fail("control hints are empty")
-
-	if _failed:
-		print("[smoke] FAILED")
-		quit(1)
-	else:
-		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
-		quit(0)
 
 func _fail(p_message: String) -> void:
 	_failed = true
