@@ -56,3 +56,28 @@ func test_custom_seed_string_matches_run_seed() -> void:
 	var biome := Biomes.crypt()
 	var result := DungeonGenerator.new().generate(biome, seed)
 	assert_eq(result.seed_value, SeededRng.decode_seed(SeededRng.encode_seed(seed)))
+
+func test_full_run_descends_through_solvable_floors() -> void:
+	var plan := RunPlan.new(4)
+	var floors := plan.floors(20260803)
+	for i in floors.size():
+		var exit_tile := DungeonMap.Tile.EXIT if plan.is_final(i) else DungeonMap.Tile.STAIRS
+		var biome: DungeonConfig = floors[i].biome
+		var result := DungeonGenerator.new().generate(biome, floors[i].seed, exit_tile)
+		assert_true(result.solvable, "floor %d not solvable" % i)
+		assert_true(
+			Pathfinding.reaches(result.map, result.start_pos, result.exit_pos, true),
+			"floor %d exit unreachable" % i
+		)
+		assert_eq(result.map.get_tile_cell(result.exit_pos), exit_tile)
+
+func test_only_final_floor_has_a_true_exit() -> void:
+	var plan := RunPlan.new(5)
+	var floors := plan.floors(909)
+	for i in floors.size():
+		var biome: DungeonConfig = floors[i].biome
+		var result := DungeonGenerator.new().generate(biome, floors[i].seed, DungeonMap.Tile.EXIT if plan.is_final(i) else DungeonMap.Tile.STAIRS)
+		if plan.is_final(i):
+			assert_eq(result.map.get_tile_cell(result.exit_pos), DungeonMap.Tile.EXIT)
+		else:
+			assert_eq(result.map.get_tile_cell(result.exit_pos), DungeonMap.Tile.STAIRS)

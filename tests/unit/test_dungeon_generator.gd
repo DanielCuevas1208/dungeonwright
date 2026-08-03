@@ -89,3 +89,25 @@ func test_monsters_spawn_on_walkable_cells() -> void:
 func test_monster_specs_are_valid() -> void:
 	for spec in MonsterSpecs.all():
 		assert_true(spec.is_valid(), "monster %s is invalid" % spec.id)
+
+func test_generator_places_stairs_when_asked() -> void:
+	var biome := Biomes.crypt()
+	var result := generator.generate(biome, 777, DungeonMap.Tile.STAIRS)
+	assert_eq(result.map.get_tile_cell(result.exit_pos), DungeonMap.Tile.STAIRS)
+	assert_true(result.map.is_walkable_cell(result.exit_pos))
+	assert_true(result.solvable)
+
+func test_generator_places_exit_by_default() -> void:
+	var biome := Biomes.crypt()
+	var result := generator.generate(biome, 777)
+	assert_eq(result.map.get_tile_cell(result.exit_pos), DungeonMap.Tile.EXIT)
+
+func test_stairs_floor_stays_solvable_across_seeds() -> void:
+	var biome := Biomes.drowned_forest()
+	for seed in [51, 52, 53, 54, 55]:
+		var result := generator.generate(biome, seed, DungeonMap.Tile.STAIRS)
+		assert_true(result.solvable, "stairs floor not solvable for seed %d" % seed)
+		assert_true(
+			Pathfinding.reaches(result.map, result.start_pos, result.exit_pos, true),
+			"stairs exit unreachable for seed %d" % seed
+		)

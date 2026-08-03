@@ -2,8 +2,9 @@ extends SceneTree
 ## Headless smoke test for CI.
 ##
 ## Loads the main scene, starts a fixed-seed run, lets the engine run a
-## few frames, then verifies the world is live and solvable. Exits with
-## code 0 on success and code 1 on failure.
+## few frames, then verifies the world is live and solvable. It also
+## proves the run descends to a second floor. Exits with code 0 on
+## success and code 1 on failure.
 
 var _main: Main = null
 var _failed := false
@@ -36,18 +37,57 @@ func _run() -> void:
 		return
 	_verify()
 
+	if _failed:
+		quit(1)
+		return
+	_verify_descend()
+
+	if _failed:
+		print("[smoke] FAILED")
+		quit(1)
+	else:
+		print("Smoke test passed: seed 12345 spawned a solvable multi-floor run.")
+		quit(0)
+
 func _verify() -> void:
 	if _main.run == null:
 		_fail("no run was generated")
-	elif _main.player == null:
+		return
+	if _main.player == null:
 		_fail("player was not spawned")
-	elif _main.player.grid_pos != _main.run.start_pos:
+		return
+	if _main.player.grid_pos != _main.run.start_pos:
 		_fail("player is not at the start tile")
-	elif not Pathfinding.reaches(_main.run.map, _main.run.start_pos, _main.run.exit_pos, true):
+		return
+	if not Pathfinding.reaches(_main.run.map, _main.run.start_pos, _main.run.exit_pos, true):
 		_fail("exit is not reachable from the start")
-	elif not _main.run.solvable:
+		return
+	if not _main.run.solvable:
 		_fail("dungeon is not solvable")
+		return
 	_verify_input_bindings()
+
+func _verify_descend() -> void:
+	if _main.run_plan == null or _main.floors.is_empty():
+		_fail("no run plan was built")
+		return
+	if _main.run_plan.floor_count < 2:
+		_fail("run does not span multiple floors")
+		return
+	if _main.run.map.get_tile_cell(_main.run.exit_pos) != DungeonMap.Tile.STAIRS:
+		_fail("first floor exit is not stairs")
+		return
+
+	_main.player.grid_pos = _main.run.exit_pos
+	for i in 5:
+		await physics_frame
+
+	if _main.floor_index != 1:
+		_fail("descending did not advance to floor 1")
+		return
+	if not _main.run.solvable:
+		_fail("second floor is not solvable")
+		return
 
 func _verify_input_bindings() -> void:
 	for action in Controls.ACTIONS:
@@ -60,13 +100,6 @@ func _verify_input_bindings() -> void:
 			_fail("action %s has no gamepad binding" % action)
 	if Controls.hint_for(false).is_empty() or Controls.hint_for(true).is_empty():
 		_fail("control hints are empty")
-
-	if _failed:
-		print("[smoke] FAILED")
-		quit(1)
-	else:
-		print("Smoke test passed: seed 12345 spawned a solvable dungeon.")
-		quit(0)
 
 func _fail(p_message: String) -> void:
 	_failed = true

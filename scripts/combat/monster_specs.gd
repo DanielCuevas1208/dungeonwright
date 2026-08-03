@@ -92,3 +92,27 @@ static func _entries(p_weights: Array) -> Array:
 ## Rolls a monster's drop table with a deterministic RNG.
 static func roll_drops(p_spec: MonsterSpec, p_rng: SeededRng, p_times: int = 1) -> Array[Drop]:
 	return p_spec.drop_table.roll_many(p_times, p_rng)
+
+## Returns a copy of the spec with stats scaled for a floor index.
+## Deeper floors grow health and damage. The first floor keeps the base
+## spec, and the source spec is never mutated.
+static func scaled(p_spec: MonsterSpec, p_floor_index: int) -> MonsterSpec:
+	if p_floor_index <= 0:
+		return p_spec
+	var factor := 1.0 + p_floor_index * 0.15
+	var copy := MonsterSpec.new()
+	copy.id = p_spec.id
+	copy.display_name = p_spec.display_name
+	copy.ai = p_spec.ai
+	copy.sprite_key = p_spec.sprite_key
+	copy.aggro_range = p_spec.aggro_range
+	copy.stats = CombatStats.make({
+		"max_health": roundi(p_spec.stats.max_health * factor),
+		"health": roundi(p_spec.stats.max_health * factor),
+		"damage": roundi(p_spec.stats.damage * factor),
+		"speed": p_spec.stats.speed,
+		"attack_range": p_spec.stats.attack_range,
+		"attack_cooldown": p_spec.stats.attack_cooldown,
+	})
+	copy.drop_table = p_spec.drop_table
+	return copy

@@ -20,6 +20,22 @@ static func by_id(p_id: StringName) -> DungeonConfig:
 static func random(p_rng: SeededRng) -> DungeonConfig:
 	return all()[p_rng.next_int(all().size())]
 
+## Returns the biome at the given index, cycling when the index is large.
+static func by_index(p_index: int) -> DungeonConfig:
+	return all()[p_index % all().size()]
+
+## Returns a copy of the biome scaled for a floor index.
+## The floor index sets the monster pressure; the biome keeps its flavor.
+## Deeper floors add monster cap and density, so every descent is harder
+## than the last, even when the biome cycles back to a lighter one.
+static func scaled(p_biome: DungeonConfig, p_floor_index: int) -> DungeonConfig:
+	if p_floor_index <= 0:
+		return p_biome
+	var config := p_biome.copy()
+	config.monster_cap = p_biome.monster_cap + p_floor_index * 4
+	config.monster_density = clampf(p_biome.monster_density + p_floor_index * 0.3, 0.0, 0.9)
+	return config
+
 static func crypt() -> DungeonConfig:
 	var config := DungeonConfig.new()
 	config.id = &"crypt"

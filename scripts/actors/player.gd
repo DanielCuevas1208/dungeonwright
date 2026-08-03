@@ -46,6 +46,7 @@ func setup(
 	p_view: DungeonView,
 	p_occupancy: Dictionary
 ) -> void:
+	_clear_children()
 	stats = p_stats
 	grid_pos = p_start
 	view = p_view
@@ -57,6 +58,11 @@ func setup(
 	add_child(_sprite)
 	_add_light()
 	emit_hud()
+
+## Removes the previous sprite and light before a new setup.
+func _clear_children() -> void:
+	for child in get_children():
+		child.free()
 
 func _physics_process(p_delta: float) -> void:
 	if view == null or stats == null:
@@ -144,6 +150,18 @@ func spend_key() -> void:
 		return
 	keys_held -= 1
 	keys_changed.emit(keys_held)
+
+## Drops every held key. Doors do not carry across floors.
+func reset_keys() -> void:
+	keys_held = 0
+	keys_changed.emit(keys_held)
+
+## Restores health without consuming a potion.
+func heal(p_amount: int) -> void:
+	if stats == null:
+		return
+	stats.heal(p_amount)
+	hp_changed.emit(stats.health, stats.max_health)
 
 func add_key() -> void:
 	apply_pickup(&"key", 1)

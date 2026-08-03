@@ -81,6 +81,17 @@ func shuffle(p_array: Array) -> Array:
 		p_array[j] = tmp
 	return p_array
 
+## Derives a new seed from a base seed and a salt value.
+## The result depends only on the inputs, never on the platform.
+## Run planners use this to give every floor its own seed.
+static func derive(p_seed: int, p_salt: int) -> int:
+	var state := (p_seed + p_salt * 0x6D2B79F5) & U32_MAX
+	state = state ^ (state >> 15)
+	state = (state * (state | 1)) & U32_MAX
+	state = state ^ (state >> 13)
+	state = state ^ (state >> 16)
+	return state & SEED_MASK
+
 ## Encodes a seed as a fixed-width base-36 string.
 static func encode_seed(p_seed: int, p_width: int = 6) -> String:
 	var chars := PackedStringArray()

@@ -10,6 +10,8 @@ enum RunStatus { IDLE, ACTIVE, WON, LOST }
 static var seed_value: int = 0
 static var seed_string: String = ""
 static var biome_id: StringName = &""
+static var floor_index: int = 0
+static var floor_count: int = 1
 static var status: RunStatus = RunStatus.IDLE
 static var started_at: float = 0.0
 static var finished_at: float = 0.0

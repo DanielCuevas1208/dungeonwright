@@ -95,6 +95,25 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Multi-floor runs
+
+A run spans several floors.
+A `RunPlan` decides the floor sequence from the run seed.
+Each floor gets its own derived seed and biome.
+The generator places a `STAIRS` tile as the exit of every floor
+except the last one.
+The bottom floor uses the true `EXIT` tile.
+
+The floor index drives difficulty.
+Deeper floors raise the monster cap and the monster density.
+The `MonsterSpecs` class scales health and damage with depth.
+The biome still sets the map shape, corridor style, and palette.
+
+The hero keeps health, coins, and shards between floors.
+Keys reset on descent because doors are per floor.
+Reaching the stairs moves the run down one floor.
+Reaching the true exit wins the run.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -111,9 +130,13 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops, and run plan.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+A full-run test proves every planned floor stays solvable.
+
+A static check loads every GDScript file and verifies the registries.
+The smoke test loads the main scene and descends to the second floor.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

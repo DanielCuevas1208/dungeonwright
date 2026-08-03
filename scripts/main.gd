@@ -24,6 +24,10 @@ const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
 
 var run: DungeonResult = null
+var run_plan: RunPlan = null
+var floors: Array[Dictionary] = []
+var floor_index: int = 0
+var floor_seed: int = 0
 var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
@@ -66,7 +70,10 @@ func _physics_process(p_delta: float) -> void:
 	_collect_pickups()
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos:
-		_on_victory()
+		if run_plan.is_final(floor_index):
+			_on_victory()
+		else:
+			_descend()
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -92,22 +99,36 @@ func start_run(p_seed_value: int) -> void:
 
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
-	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
-	run = DungeonGenerator.new().generate(biome, p_seed_value)
+	run_plan = RunPlan.new()
+	floors = run_plan.floors(p_seed_value)
+	_build_floor(0)
+
+	RunState.seed_value = p_seed_value
+	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
+	RunState.status = RunState.RunStatus.ACTIVE
+	RunState.started_at = Time.get_ticks_msec() / 1000.0
+
+	menu_overlay.hide_menu()
+	result_overlay.hide_result()
+	get_tree().paused = false
+	run_started.emit(p_seed_value)
+
+## Builds one floor of the run and wires the world to it.
+## The hero keeps health, coins, and shards; keys reset every floor.
+func _build_floor(p_floor_index: int) -> void:
+	var entry: Dictionary = floors[p_floor_index]
+	floor_index = p_floor_index
+	floor_seed = entry.seed
+	biome = entry.biome
+	var exit_tile := DungeonMap.Tile.EXIT if run_plan.is_final(p_floor_index) else DungeonMap.Tile.STAIRS
+	run = DungeonGenerator.new().generate(biome, floor_seed, exit_tile)
 
 	_clear_world()
 	occupancy.clear()
 	_ended = false
 
 	dungeon_view.configure(run.map, biome)
-	var stats := CombatStats.make({
-		"max_health": biome.starting_health,
-		"health": biome.starting_health,
-		"damage": biome.player_damage,
-	})
-	player.setup(stats, run.start_pos, dungeon_view, occupancy)
-	occupancy[run.start_pos] = player
-	player.can_enter = _hero_can_enter
+	_setup_player()
 
 	monster_index = 0
 	for spawn in run.monster_spawns:
@@ -123,22 +144,41 @@ func _start_run(p_seed_value: int) -> void:
 	_apply_camera_limits()
 	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(p_seed_value), run.depth)
+	hud.set_run(biome.display_name, SeededRng.encode_seed(run_seed), floor_index + 1, run_plan.floor_count, run.depth)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
 
-	RunState.seed_value = p_seed_value
-	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
 	RunState.biome_id = biome.id
-	RunState.status = RunState.RunStatus.ACTIVE
-	RunState.started_at = Time.get_ticks_msec() / 1000.0
+	RunState.floor_index = floor_index
+	RunState.floor_count = run_plan.floor_count
 
-	menu_overlay.hide_menu()
-	result_overlay.hide_result()
-	get_tree().paused = false
-	run_started.emit(p_seed_value)
+## Places the hero on the new floor, carrying the run forward.
+func _setup_player() -> void:
+	var max_health := biome.starting_health
+	var health := max_health
+	if player.stats != null:
+		max_health = player.stats.max_health
+		health = player.stats.health
+	if floor_index > 0:
+		health = mini(max_health, health + roundi(max_health * 0.2))
+	var stats := CombatStats.make({
+		"max_health": max_health,
+		"health": health,
+		"damage": biome.player_damage,
+	})
+	player.reset_keys()
+	player.setup(stats, run.start_pos, dungeon_view, occupancy)
+	occupancy[run.start_pos] = player
+	player.can_enter = _hero_can_enter
+
+## Moves the run down one floor.
+func _descend() -> void:
+	if _ended or run_plan == null or run_plan.is_final(floor_index):
+		return
+	_build_floor(floor_index + 1)
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
-	var spec := MonsterSpecs.by_id(p_monster_id)
+	var base := MonsterSpecs.by_id(p_monster_id)
+	var spec := MonsterSpecs.scaled(base, floor_index)
 	var monster: MonsterActor = MONSTER_SCENE.instantiate()
 	monsters_root.add_child(monster)
 	monster.setup(spec, p_position, dungeon_view, occupancy, player)
@@ -206,6 +246,8 @@ func _on_player_died() -> void:
 	result_overlay.show_result(
 		false,
 		SeededRng.encode_seed(run_seed),
+		floor_index + 1,
+		run_plan.floor_count,
 		run.depth,
 		player.coins,
 		RunState.elapsed()
@@ -221,6 +263,8 @@ func _on_victory() -> void:
 	result_overlay.show_result(
 		true,
 		SeededRng.encode_seed(run_seed),
+		floor_index + 1,
+		run_plan.floor_count,
 		run.depth,
 		player.coins,
 		RunState.elapsed()

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Dungeonwright"
-config/description="A seeded dungeon crawler that builds a new, solvable map every run."
+config/description="A seeded dungeon crawler. Each run descends four floors of generated, solvable maps."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"

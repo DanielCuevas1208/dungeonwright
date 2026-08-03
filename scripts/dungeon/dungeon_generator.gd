@@ -15,7 +15,11 @@ extends RefCounted
 ## Every step uses the same SeededRng, so a seed always produces the
 ## same dungeon.
 
-func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
+func generate(
+	p_config: DungeonConfig,
+	p_seed: int,
+	p_exit_tile: int = DungeonMap.Tile.EXIT
+) -> DungeonResult:
 	var result := DungeonResult.new()
 	result.seed_value = p_seed
 	result.config = p_config
@@ -34,7 +38,7 @@ func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
 	result.start_pos = result.rooms[result.start_room].center()
 	result.exit_pos = result.rooms[result.exit_room].center()
 	result.map.set_tile_cell(result.start_pos, DungeonMap.Tile.START)
-	result.map.set_tile_cell(result.exit_pos, DungeonMap.Tile.EXIT)
+	result.map.set_tile_cell(result.exit_pos, p_exit_tile)
 
 	_place_doors_and_keys(rng, p_config, result)
 	_place_monsters(rng, p_config, result)

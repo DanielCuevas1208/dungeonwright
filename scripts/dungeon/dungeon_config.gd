@@ -56,3 +56,29 @@ func validate() -> Array[String]:
 ## True when the config can generate a valid dungeon.
 func is_valid() -> bool:
 	return validate().is_empty()
+
+## Returns a copy of this config with independent tables.
+## The copy keeps the same rules, so it can be scaled without
+## changing the shared biome definitions.
+func copy() -> DungeonConfig:
+	var clone := DungeonConfig.new()
+	clone.id = id
+	clone.display_name = display_name
+	clone.description = description
+	clone.width = width
+	clone.height = height
+	clone.room_count_min = room_count_min
+	clone.room_count_max = room_count_max
+	clone.room_min = room_min
+	clone.room_max = room_max
+	clone.corridor_style = corridor_style
+	clone.loop_chance = loop_chance
+	clone.door_count_min = door_count_min
+	clone.door_count_max = door_count_max
+	clone.monster_density = monster_density
+	clone.monster_cap = monster_cap
+	clone.monster_table = monster_table
+	clone.starting_health = starting_health
+	clone.player_damage = player_damage
+	clone.palette = palette
+	return clone

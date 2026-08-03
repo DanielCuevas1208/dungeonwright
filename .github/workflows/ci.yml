@@ -41,3 +41,6 @@ jobs:
 
       - name: Run the headless smoke test
         run: godot --headless --path . -s tools/smoke.gd
+
+      - name: Run static checks
+        run: godot --headless --path . -s tools/check_scripts.gd

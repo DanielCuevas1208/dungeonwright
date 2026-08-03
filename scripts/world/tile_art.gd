@@ -9,6 +9,7 @@ extends RefCounted
 const SIZE := 16
 const SOURCE := 8
 
+const TILE_STAIRS := &"stairs"
 const TILE_WALL := &"wall"
 const TILE_FLOOR_A := &"floor_a"
 const TILE_FLOOR_B := &"floor_b"
@@ -45,6 +46,7 @@ static func build_tile_textures(p_palette: Dictionary) -> Dictionary:
 		TILE_DOOR_OPEN: _from_pattern(_DOOR_OPEN, p_palette, palette_roles),
 		TILE_START: _from_pattern(_START, p_palette, palette_roles),
 		TILE_EXIT: _from_pattern(_EXIT, p_palette, palette_roles),
+		TILE_STAIRS: _from_pattern(_STAIRS, p_palette, palette_roles),
 	}
 	_tile_cache[key] = textures
 	return textures
@@ -204,6 +206,17 @@ const _EXIT := [
 	".g0..0g.",
 	".g'00'g.",
 	"..gggg..",
+	"........",
+]
+
+const _STAIRS := [
+	"........",
+	"..####..",
+	".#++++#.",
+	".#0000#.",
+	".#0..0#.",
+	".#.0..0.",
+	".#..0...",
 	"........",
 ]
 

@@ -65,3 +65,16 @@ func test_decode_rejects_garbage() -> void:
 func test_encode_is_case_insensitive_when_decoding() -> void:
 	var encoded := SeededRng.encode_seed(543210).to_lower()
 	assert_eq(SeededRng.decode_seed(encoded), 543210)
+
+func test_derive_is_deterministic() -> void:
+	assert_eq(SeededRng.derive(12345, 3), SeededRng.derive(12345, 3))
+
+func test_derive_changes_with_salt() -> void:
+	assert_ne(SeededRng.derive(12345, 0), SeededRng.derive(12345, 1))
+
+func test_derive_changes_with_seed() -> void:
+	assert_ne(SeededRng.derive(100, 2), SeededRng.derive(200, 2))
+
+func test_derive_stays_in_seed_mask() -> void:
+	var derived := SeededRng.derive(999999, 5)
+	assert_eq(derived & SeededRng.SEED_MASK, derived)
