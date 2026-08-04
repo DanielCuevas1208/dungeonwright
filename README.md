@@ -21,6 +21,7 @@ You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
 Some monsters fight from a distance.
 You can throw bombs you loot from monsters.
+Sound and music are generated in code.
 The exit leads to the next floor.
 After three floors, the run ends in victory.
 The same seed always builds the same dungeon.
@@ -36,6 +37,7 @@ The same seed always builds the same dungeon.
 - A bomb item that blasts a crowd of monsters.
 - Monsters grow stronger on deeper floors.
 - Procedural pixel art with no bundled image files.
+- Procedural sound and music with no bundled audio files.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 - Full gamepad support with analog movement.
@@ -49,7 +51,17 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds a fourth biome and a bomb item.
+This release adds procedural audio.
+Every sound effect is generated in code at run time.
+Sword swings, hits, deaths, and explosions all have cues.
+Each pickup has a distinct sound.
+Every biome has its own looping music theme.
+The menu plays a quiet theme of its own.
+No audio files ship with the game.
+
+## Earlier releases
+
+Release 0.5 added a fourth biome and a bomb item.
 The Frost Vault is a hall of blue ice.
 Its corridors wind between vast frozen chambers.
 A new monster, the Hollow Wraith, rushes the hero with speed.
@@ -58,8 +70,6 @@ Monsters can now drop bombs.
 A thrown bomb lands, waits, and then blasts every monster in a radius.
 The blast never hurts the hero.
 The HUD shows the shards and bombs you carry.
-
-## Earlier releases
 
 Release 0.4 added ranged combat.
 The Bone Archer fires bolts at the hero.
@@ -161,10 +171,21 @@ Walls stop a thrown bomb.
 After a short fuse, the bomb blasts every monster in a square radius.
 The blast damage scales with the hero's sword.
 
+Audio is generated, never recorded.
+The `Waveform` class synthesizes tones and noise bursts.
+It applies attack and release so sounds do not click.
+The `SoundBank` class builds every effect cue from these parts.
+The `MusicTheme` class builds a looping pad for each biome.
+An `AudioController` node plays effects and music.
+It reuses a small pool of effect players.
+Every stream is cached after its first build.
+The same cue always produces the same sound.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
+- `scripts/audio` holds the sound synthesis and music themes.
 - `scripts/core` holds run rules and shared run state.
 - `scripts/input` holds the controls helper.
 - `scripts/world` renders tiles and builds the minimap.
@@ -183,32 +204,36 @@ Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
 Bolts stop at walls and locked doors.
 Monsters never fire through a solid wall.
+A cue always produces the same sound.
+Every biome has a music theme.
 
 ## Evaluation evidence
 
-The suite has 137 tests.
-It covers generation, biomes, combat, drops, pathfinding, input, floors, projectiles, and bombs.
-All 137 tests pass in a headless run.
+The suite has 169 tests.
+It covers generation, biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
+All 169 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test checks the hero descends after reaching the exit.
 The smoke test checks every action has a gamepad binding.
 The smoke test checks every monster and every drop item has art.
+The smoke test checks every sound cue and every music theme builds audio.
 
 ## Roadmap
 
 Done in this release:
+- Procedural sound effects for combat, pickups, doors, and results.
+- A distinct looping music theme for every biome.
+- A menu theme that plays before a run starts.
+
+Done in an earlier release:
 - A fourth biome, the Frost Vault.
 - The Hollow Wraith monster.
 - A bomb item with a blast radius.
-- HUD counters for shards and bombs.
-
-Done in an earlier release:
 - Ranged monsters and dodgeable projectiles.
 - Multi-floor descent with a depth counter.
 - Full gamepad support.
 
 Next up:
-- Sound and music.
 - More items and a boss floor.
 
 ## Limitations
@@ -216,7 +241,7 @@ Next up:
 The demo has four biomes.
 Each run spans three floors.
 The hero has one melee attack and one thrown item.
-The game has no audio yet.
+Audio is instrumental, with no voice lines.
 
 ## License
 

@@ -21,6 +21,7 @@ signal run_started(seed_value: int)
 @onready var menu_overlay: MenuOverlay = $UI/MenuOverlay
 @onready var result_overlay: ResultOverlay = $UI/ResultOverlay
 @onready var ambient: CanvasModulate = $Ambient
+@onready var audio: AudioController = $Audio
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
@@ -42,6 +43,7 @@ func _ready() -> void:
 	_wire_signals()
 	get_tree().paused = true
 	menu_overlay.show_menu(false)
+	audio.play_music(&"menu")
 
 func _wire_signals() -> void:
 	player.hp_changed.connect(hud.set_hp)
@@ -170,6 +172,7 @@ func _begin_floor() -> void:
 	menu_overlay.hide_menu()
 	result_overlay.hide_result()
 	get_tree().paused = false
+	audio.play_music(biome.id)
 
 ## Builds the hero stats for this floor.
 func _player_stats() -> CombatStats:
@@ -195,6 +198,7 @@ func _on_exit_reached() -> void:
 
 func _descend() -> void:
 	floor_index += 1
+	audio.play_sfx(&"descend")
 	_begin_floor()
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName, p_scale: float = 1.0) -> void:
@@ -219,6 +223,7 @@ func _on_player_moved(p_grid: Vector2i) -> void:
 		run.map.set_tile_cell(p_grid, DungeonMap.Tile.DOOR_OPEN)
 		dungeon_view.refresh_cell(p_grid)
 		player.spend_key()
+		audio.play_sfx(&"door_open")
 
 func _collect_pickups() -> void:
 	for pickup: Pickup in pickups_root.get_children():
@@ -235,9 +240,12 @@ func _hero_can_enter(p_cell: Vector2i) -> bool:
 
 func _on_pickup_taken(p_pickup: Pickup) -> void:
 	player.apply_pickup(p_pickup.kind, p_pickup.count)
+	audio.play_sfx(StringName("pickup_" + p_pickup.kind))
 	p_pickup.queue_free()
 
 func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p_damage: int) -> void:
+	audio.play_sfx(&"swing")
+	var hit_any := false
 	for monster: MonsterActor in monsters_root.get_children():
 		var distance_sq := Vector2(p_origin).distance_squared_to(Vector2(monster.grid_pos))
 		if not Combat.within_attack_range(distance_sq, p_range):
@@ -246,12 +254,17 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 			continue
 		monster.take_damage(p_damage)
 		_spawn_slash(monster.grid_pos)
+		hit_any = true
+	if hit_any:
+		audio.play_sfx(&"hit")
 
 func _on_monster_attack(p_damage: int) -> void:
+	audio.play_sfx(&"hurt")
 	player.take_damage(p_damage)
 
 ## A ranged monster reported a shot. Spawn the bolt for the hero to dodge.
 func _on_ranged_fired(p_monster: MonsterActor, p_direction: Vector2i) -> void:
+	audio.play_sfx(&"shoot")
 	spawn_projectile(
 		p_monster.stats.damage,
 		p_monster.spec.projectile_speed,
@@ -275,6 +288,7 @@ func spawn_projectile(
 	projectile.on_hit = func() -> void:
 		player.take_damage(projectile.damage)
 		_spawn_impact(projectile.grid_pos)
+		audio.play_sfx(&"impact")
 	projectile.expired.connect(_on_projectile_expired)
 	return projectile
 
@@ -288,6 +302,7 @@ func _on_bomb_thrown(p_origin: Vector2i, p_facing: Vector2i) -> void:
 
 ## Spawns a thrown bomb and returns it. Public entry point for tooling.
 func spawn_bomb(p_origin: Vector2i, p_facing: Vector2i) -> Bomb:
+	audio.play_sfx(&"throw")
 	var bomb: Bomb = BOMB_SCENE.instantiate()
 	bombs_root.add_child(bomb)
 	var damage := maxi(10, player.stats.damage * 2)
@@ -299,6 +314,7 @@ func spawn_bomb(p_origin: Vector2i, p_facing: Vector2i) -> Bomb:
 
 ## A bomb detonated. Damage every monster inside the blast radius.
 func _explode_bomb(p_bomb: Bomb) -> void:
+	audio.play_sfx(&"explosion")
 	for monster: MonsterActor in monsters_root.get_children():
 		if Combat.in_blast_radius(p_bomb.grid_pos, monster.grid_pos, p_bomb.blast_radius):
 			monster.take_damage(p_bomb.damage)
@@ -340,6 +356,7 @@ func _spawn_explosion(p_cell: Vector2i) -> void:
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
 	occupancy.erase(p_monster.grid_pos)
+	audio.play_sfx(&"death")
 	var drop_rng := SeededRng.new(run_seed ^ (monster_index * 0x9E37))
 	var drops := MonsterSpecs.roll_drops(p_monster.spec, drop_rng)
 	for drop in drops:
@@ -350,6 +367,8 @@ func _on_player_died() -> void:
 	if _ended:
 		return
 	_ended = true
+	audio.play_sfx(&"defeat")
+	audio.stop_music()
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
@@ -366,6 +385,8 @@ func _on_victory() -> void:
 	if _ended:
 		return
 	_ended = true
+	audio.play_sfx(&"victory")
+	audio.stop_music()
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(

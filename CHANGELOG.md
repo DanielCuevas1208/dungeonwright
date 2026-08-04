@@ -4,6 +4,29 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.6.0] - 2026-08-04
+
+Added
+
+- Procedural sound effects generated entirely in code.
+- Cues for attacks, hits, damage, deaths, shots, and impacts.
+- Cues for bomb throws, bomb blasts, and door opens.
+- A distinct pickup sound for every loot item.
+- Stings for descent, victory, and defeat.
+- A looping music theme for every biome.
+- A menu theme that plays before a run starts.
+- An audio controller with a pooled set of effect players.
+- A waveform synthesis core with deterministic output.
+- Unit tests for waveform math, the sound bank, and music themes.
+- Smoke-test checks that every cue and every theme builds audio.
+
+Changed
+
+- The main scene now owns an audio controller node.
+- The scene controller plays cues from its combat handlers.
+- Music switches to the biome theme when a floor starts.
+- Music stops when a run ends.
+
 ## [0.5.0] - 2026-08-04
 
 Added

@@ -131,6 +131,34 @@ A `Combat` helper checks the square radius around the blast center.
 The blast damage scales with the hero's sword damage.
 The blast never hurts the hero.
 
+## Audio
+
+All audio is generated in code at run time.
+The game ships no sound files, matching the art pipeline.
+
+The `Waveform` class in `scripts/audio` is the synthesis core.
+It builds tones, glides, noise, envelopes, and mixing.
+Every function takes explicit inputs and returns a sample buffer.
+The output is deterministic, so tests can compare buffers exactly.
+The `pack_wav` helper turns a buffer into a 16-bit mono stream.
+
+The `SoundBank` class builds every effect cue.
+Each cue layers short tones and noise bursts into one stream.
+Cues exist for attacks, hits, deaths, shots, bombs, pickups, doors, and results.
+The bank caches every stream after its first build.
+
+The `MusicTheme` class builds a looping theme for each biome.
+A theme is a chord pad with a bass line and a soft arpeggio.
+Each biome has its own note and level table.
+The menu plays its own quiet theme.
+
+The `AudioController` node owns the players.
+It keeps a small pool of effect players and one music player.
+The players keep running while the game is paused.
+The controller switches music on each descent.
+The music stops when a run ends.
+The scene controller calls the audio cues from the same handlers that drive combat.
+
 ## Scene flow
 
 The `Main` scene owns the game loop.
@@ -188,6 +216,7 @@ The hints update when a gamepad connects or disconnects.
 The suite runs headless with GUT.
 Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
 Unit tests also cover line of sight, projectile flight, and bomb flight.
+Unit tests also cover waveform math, every sound cue, and every music theme.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.

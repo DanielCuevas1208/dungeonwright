@@ -36,13 +36,15 @@ func _run() -> void:
 		return
 	_verify()
 	await _verify_descent()
+	_main.audio.stop_all()
+	for i in 5:
+		await physics_frame
 	if _failed:
 		print("[smoke] FAILED")
 		quit(1)
 	else:
 		print("Smoke test passed: seed 12345 spawned a solvable dungeon across floors.")
 		quit(0)
-
 func _verify() -> void:
 	if _main.run == null:
 		_fail("no run was generated")
@@ -56,6 +58,7 @@ func _verify() -> void:
 		_fail("dungeon is not solvable")
 	_verify_input_bindings()
 	_verify_specs()
+	_verify_audio()
 
 ## Every monster must resolve and have art. Every biome must reference
 ## a monster that exists. This guards against content drift.
@@ -73,6 +76,24 @@ func _verify_specs() -> void:
 			var spec := MonsterSpecs.by_id(entry.monster)
 			if spec.id != entry.monster:
 				_fail("biome %s references unknown monster %s" % [biome.id, entry.monster])
+
+## Every sound cue and music theme must resolve to audio.
+## This guards against content drift in the audio bank.
+func _verify_audio() -> void:
+	if _main.audio == null:
+		_fail("audio controller is missing")
+		return
+	for cue in SoundBank.ids():
+		var stream := SoundBank.cue(cue)
+		if stream == null or stream.data.is_empty():
+			_fail("cue %s produced no audio" % cue)
+	for biome in Biomes.all():
+		var theme := MusicTheme.theme(biome.id)
+		if theme == null or theme.data.is_empty() or theme.loop_mode == AudioStreamWAV.LOOP_DISABLED:
+			_fail("theme %s is invalid" % biome.id)
+	var menu := MusicTheme.theme(&"menu")
+	if menu == null or menu.data.is_empty():
+		_fail("menu theme is invalid")
 
 ## Reaching the exit must start the next floor, not end the run.
 func _verify_descent() -> void:
