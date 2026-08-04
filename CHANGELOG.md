@@ -4,6 +4,25 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.5.0] - 2026-08-04
+
+Added
+
+- A fourth biome, the Frost Vault, with icy generation rules.
+- A new monster, the Hollow Wraith, that rushes the hero.
+- A bomb consumable that monsters can drop.
+- A thrown bomb with a fuse and a square blast radius.
+- Bomb blast damage that scales with the hero's sword.
+- HUD counters for shards and bombs.
+- Art for the shard item.
+- Unit tests for bomb flight and blast radius.
+- Integration tests for bomb combat.
+
+Changed
+
+- Every monster drop table now includes a rare bomb entry.
+- The input map has a throw action for keyboard and gamepad.
+
 ## [0.4.0] - 2026-08-04
 
 Added

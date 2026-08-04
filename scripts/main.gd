@@ -13,6 +13,7 @@ signal run_started(seed_value: int)
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
 @onready var projectiles_root: Node2D = $World/Projectiles
+@onready var bombs_root: Node2D = $World/Bombs
 @onready var effects_root: Node2D = $World/Effects
 @onready var player: Player = $World/Player
 @onready var camera: Camera2D = $Camera
@@ -24,6 +25,7 @@ signal run_started(seed_value: int)
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
 const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
+const BOMB_SCENE := preload("res://scenes/actors/bomb.tscn")
 
 var run: DungeonResult = null
 var run_rules: RunRules = null
@@ -44,8 +46,11 @@ func _ready() -> void:
 func _wire_signals() -> void:
 	player.hp_changed.connect(hud.set_hp)
 	player.coins_changed.connect(hud.set_coins)
+	player.shards_changed.connect(hud.set_shards)
+	player.bombs_changed.connect(hud.set_bombs)
 	player.keys_changed.connect(hud.set_keys)
 	player.attacked.connect(_on_player_attack)
+	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
 	player.moved.connect(_on_player_moved)
 	menu_overlay.start_requested.connect(_on_start_requested)
@@ -69,6 +74,7 @@ func _physics_process(p_delta: float) -> void:
 	hud.update_marker(player.grid_pos)
 	_collect_pickups()
 	_update_projectiles(p_delta)
+	_update_bombs(p_delta)
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos:
 		_on_exit_reached()
@@ -78,6 +84,11 @@ func _update_projectiles(p_delta: float) -> void:
 	for projectile: Projectile in projectiles_root.get_children():
 		projectile.target_grid = player.grid_pos
 		projectile.tick(p_delta)
+
+## Advances every live bomb.
+func _update_bombs(p_delta: float) -> void:
+	for bomb: Bomb in bombs_root.get_children():
+		bomb.tick(p_delta)
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -271,6 +282,32 @@ func _on_projectile_expired(p_projectile: Projectile) -> void:
 	if not p_projectile.is_queued_for_deletion():
 		p_projectile.queue_free()
 
+## The hero threw a bomb. Spawn it in front of the hero.
+func _on_bomb_thrown(p_origin: Vector2i, p_facing: Vector2i) -> void:
+	spawn_bomb(p_origin, p_facing)
+
+## Spawns a thrown bomb and returns it. Public entry point for tooling.
+func spawn_bomb(p_origin: Vector2i, p_facing: Vector2i) -> Bomb:
+	var bomb: Bomb = BOMB_SCENE.instantiate()
+	bombs_root.add_child(bomb)
+	var damage := maxi(10, player.stats.damage * 2)
+	bomb.setup(damage, 5.0, p_facing, p_origin, dungeon_view, 2, 0.8, 2)
+	bomb.on_explode = func() -> void:
+		_explode_bomb(bomb)
+	bomb.expired.connect(_on_bomb_expired)
+	return bomb
+
+## A bomb detonated. Damage every monster inside the blast radius.
+func _explode_bomb(p_bomb: Bomb) -> void:
+	for monster: MonsterActor in monsters_root.get_children():
+		if Combat.in_blast_radius(p_bomb.grid_pos, monster.grid_pos, p_bomb.blast_radius):
+			monster.take_damage(p_bomb.damage)
+	_spawn_explosion(p_bomb.grid_pos)
+
+func _on_bomb_expired(p_bomb: Bomb) -> void:
+	if not p_bomb.is_queued_for_deletion():
+		p_bomb.queue_free()
+
 ## A brief flash where a bolt lands, so hits read clearly.
 func _spawn_impact(p_cell: Vector2i) -> void:
 	var impact := ColorRect.new()
@@ -284,6 +321,21 @@ func _spawn_impact(p_cell: Vector2i) -> void:
 	var tween := wrapper.create_tween()
 	tween.tween_property(impact, "scale", Vector2(1.8, 1.8), 0.1)
 	tween.parallel().tween_property(impact, "modulate:a", 0.0, 0.1)
+	tween.tween_callback(wrapper.queue_free)
+
+## A wide ring where a bomb goes off, so the blast reads clearly.
+func _spawn_explosion(p_cell: Vector2i) -> void:
+	var burst := ColorRect.new()
+	burst.color = Color(biome.palette.get(&"glow", Color.WHITE))
+	burst.size = Vector2(16, 16)
+	burst.position = Vector2(-8, -8)
+	var wrapper := Node2D.new()
+	wrapper.position = dungeon_view.tile_to_world(p_cell)
+	wrapper.add_child(burst)
+	effects_root.add_child(wrapper)
+	var tween := wrapper.create_tween()
+	tween.tween_property(burst, "scale", Vector2(5.0, 5.0), 0.22)
+	tween.parallel().tween_property(burst, "modulate:a", 0.0, 0.22)
 	tween.tween_callback(wrapper.queue_free)
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
@@ -388,6 +440,8 @@ func _clear_world() -> void:
 	for child in pickups_root.get_children():
 		child.queue_free()
 	for child in projectiles_root.get_children():
+		child.queue_free()
+	for child in bombs_root.get_children():
 		child.queue_free()
 	for child in effects_root.get_children():
 		child.queue_free()

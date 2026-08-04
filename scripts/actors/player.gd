@@ -11,7 +11,9 @@ signal hp_changed(current: int, max: int)
 signal coins_changed(count: int)
 signal shards_changed(count: int)
 signal keys_changed(count: int)
+signal bombs_changed(count: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
+signal bomb_thrown(origin: Vector2i, facing: Vector2i)
 signal moved(grid: Vector2i)
 signal died
 
@@ -19,6 +21,7 @@ const MOVE_SPEED := 5.0
 const ATTACK_COOLDOWN := 0.35
 const ATTACK_RANGE := 1.5
 const POTION_HEAL := 25
+const BOMB_COOLDOWN := 0.6
 
 var stats: CombatStats = null
 var grid_pos: Vector2i = Vector2i.ZERO
@@ -26,6 +29,7 @@ var facing: Vector2i = Vector2i.DOWN
 var coins := 0
 var shards := 0
 var keys_held := 0
+var bombs := 0
 
 var view: DungeonView = null
 var occupancy: Dictionary = {}
@@ -38,6 +42,7 @@ var _to: Vector2i = Vector2i.ZERO
 var _progress := 1.0
 var _moving := false
 var _attack_timer := 0.0
+var _bomb_timer := 0.0
 var _sprite: Sprite2D = null
 
 func setup(
@@ -63,12 +68,14 @@ func _physics_process(p_delta: float) -> void:
 	if view == null or stats == null:
 		return
 	_attack_timer = maxf(0.0, _attack_timer - p_delta)
+	_bomb_timer = maxf(0.0, _bomb_timer - p_delta)
 	_sprite.position.y = -2.0 if _moving else 0.0
 	if _moving:
 		_advance_move(p_delta)
 	else:
 		_wait_for_input()
 	_handle_attack()
+	_handle_throw_bomb()
 
 func _wait_for_input() -> void:
 	var input := Controls.movement_vector()
@@ -107,6 +114,25 @@ func _handle_attack() -> void:
 	_attack_timer = ATTACK_COOLDOWN
 	attacked.emit(grid_pos, facing, ATTACK_RANGE, stats.damage)
 
+## Throws a bomb when the hero has one and the button is pressed.
+func _handle_throw_bomb() -> void:
+	if not Input.is_action_just_pressed("throw_bomb"):
+		return
+	try_throw_bomb()
+
+## Throws a bomb in the facing direction. Public so tests can drive it.
+## Returns true when a bomb was thrown.
+func try_throw_bomb() -> bool:
+	if stats == null or stats.is_dead():
+		return false
+	if bombs <= 0 or _bomb_timer > 0.0:
+		return false
+	_bomb_timer = BOMB_COOLDOWN
+	bombs -= 1
+	bombs_changed.emit(bombs)
+	bomb_thrown.emit(grid_pos + facing, facing)
+	return true
+
 func _dominant_axis(p_input: Vector2) -> Vector2i:
 	if absf(p_input.x) >= absf(p_input.y):
 		return Vector2i(signi(p_input.x), 0)
@@ -135,6 +161,9 @@ func apply_pickup(p_item: StringName, p_count: int) -> void:
 		&"potion":
 			stats.heal(POTION_HEAL * p_count)
 			hp_changed.emit(stats.health, stats.max_health)
+		&"bomb":
+			bombs += p_count
+			bombs_changed.emit(bombs)
 		&"key":
 			keys_held += p_count
 			keys_changed.emit(keys_held)
@@ -154,6 +183,7 @@ func start_run() -> void:
 	coins = 0
 	shards = 0
 	keys_held = 0
+	bombs = 0
 	if stats != null:
 		emit_hud()
 
@@ -168,6 +198,7 @@ func emit_hud() -> void:
 	coins_changed.emit(coins)
 	shards_changed.emit(shards)
 	keys_changed.emit(keys_held)
+	bombs_changed.emit(bombs)
 
 func _flash() -> void:
 	var tween := create_tween()

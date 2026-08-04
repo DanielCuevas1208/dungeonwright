@@ -52,3 +52,13 @@ func test_every_monster_drop_table_is_balanced() -> void:
 		var table := spec.drop_table
 		assert_gt(table.probability_of(&"coin"), table.probability_of(&"potion"), spec.id)
 		assert_lte(table.probability_of(&"potion"), 0.35, spec.id)
+
+func test_every_monster_can_drop_a_bomb() -> void:
+	for spec in MonsterSpecs.all():
+		var table := spec.drop_table
+		assert_gt(table.probability_of(&"bomb"), 0.0, spec.id)
+
+func test_bombs_drop_less_often_than_potions() -> void:
+	for spec in MonsterSpecs.all():
+		var table := spec.drop_table
+		assert_lt(table.probability_of(&"bomb"), table.probability_of(&"potion"), spec.id)

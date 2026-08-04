@@ -46,6 +46,26 @@ func test_facing_arc_misses_behind() -> void:
 	var origin := Vector2i(5, 5)
 	assert_false(Combat.in_facing_arc(origin, Vector2i.UP, Vector2i(6, 7)))
 
+func test_blast_radius_hits_the_center_cell() -> void:
+	assert_true(Combat.in_blast_radius(Vector2i(5, 5), Vector2i(5, 5), 2))
+
+func test_blast_radius_covers_the_square_ring() -> void:
+	var center := Vector2i(5, 5)
+	assert_true(Combat.in_blast_radius(center, Vector2i(7, 5), 2))
+	assert_true(Combat.in_blast_radius(center, Vector2i(7, 7), 2))
+	assert_true(Combat.in_blast_radius(center, Vector2i(3, 5), 2))
+	assert_true(Combat.in_blast_radius(center, Vector2i(5, 3), 2))
+
+func test_blast_radius_misses_cells_outside() -> void:
+	var center := Vector2i(5, 5)
+	assert_false(Combat.in_blast_radius(center, Vector2i(8, 5), 2))
+	assert_false(Combat.in_blast_radius(center, Vector2i(8, 8), 2))
+	assert_false(Combat.in_blast_radius(center, Vector2i(2, 2), 2))
+
+func test_zero_blast_radius_only_hits_the_center() -> void:
+	assert_true(Combat.in_blast_radius(Vector2i(3, 3), Vector2i(3, 3), 0))
+	assert_false(Combat.in_blast_radius(Vector2i(3, 3), Vector2i(4, 3), 0))
+
 func test_stats_make_copies_values() -> void:
 	var first := CombatStats.make({ "max_health": 40, "health": 40, "damage": 9 })
 	var second := CombatStats.make({ "max_health": 40, "health": 40, "damage": 9 })

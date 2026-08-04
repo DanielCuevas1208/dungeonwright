@@ -29,6 +29,22 @@ func test_biomes_use_different_generation_rules() -> void:
 	assert_ne(crypt.room_count_max, ember.room_count_max)
 	assert_ne(crypt.loop_chance, forest.loop_chance)
 
+func test_fourth_biome_frost_vault_is_distinct() -> void:
+	var frost := Biomes.frost_vault()
+	assert_eq(frost.id, &"frost_vault")
+	assert_ne(frost.palette, Biomes.crypt().palette)
+	assert_ne(frost.palette, Biomes.ember_stronghold().palette)
+	assert_gt(frost.loop_chance, Biomes.crypt().loop_chance)
+	assert_true(frost.is_valid())
+
+func test_frost_vault_references_existing_monsters() -> void:
+	for entry in Biomes.frost_vault().monster_table:
+		var spec := MonsterSpecs.by_id(entry.monster)
+		assert_eq(spec.id, entry.monster, "unknown monster %s" % entry.monster)
+
+func test_there_are_four_biomes() -> void:
+	assert_eq(Biomes.all().size(), 4)
+
 func test_same_seed_different_biome_differs() -> void:
 	var seed := 2468
 	var crypt_map := DungeonGenerator.new().generate(Biomes.crypt(), seed)

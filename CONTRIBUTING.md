@@ -40,7 +40,7 @@ Run the full suite before you open a pull request.
 
 Update the README when user-facing behaviour changes.
 Update `docs/architecture.md` when the design changes.
-Add a changelog entry under `[Unreleased]`.
+Add a changelog entry for the next release.
 Write short, active sentences in public docs.
 Do not use emojis in public docs.
 

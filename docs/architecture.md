@@ -42,6 +42,10 @@ Each biome picks a carving style.
 All carvers keep every carved cell orthogonally adjacent to the path.
 This rule prevents floating single-cell islands.
 
+Four biomes ship with the game.
+The Frost Vault uses the winding style and large rooms.
+Each biome defines its own palette, doors, monsters, and pressure.
+
 ### Doors and keys
 
 Doors sit on tree corridors.
@@ -86,7 +90,7 @@ Attack range and facing arcs use tile math, not physics.
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
-Coins drop often, shards sometimes, potions rarely.
+Coins drop often, shards sometimes, potions rarely, bombs rarest.
 
 ## Ranged combat
 
@@ -109,6 +113,23 @@ Bolts take time to arrive, so the hero can dodge.
 An archer holds its ground while it has line of sight.
 Without line of sight, the archer closes the distance.
 A melee monster never fires a bolt.
+
+## Bomb combat
+
+Bombs give the hero an area attack.
+A monster drop can carry a bomb.
+The hero throws a bomb in the facing direction.
+The bomb starts one tile in front of the hero.
+
+A `Bomb` node carries the throw.
+It holds a damage value, a speed, a direction, a throw range, a fuse, and a blast radius.
+The scene controller calls `tick` every frame.
+A bomb travels forward until a wall or the map edge stops it.
+It then sits on that tile while the fuse counts down.
+When the fuse ends, the controller damages every monster in the blast radius.
+A `Combat` helper checks the square radius around the blast center.
+The blast damage scales with the hero's sword damage.
+The blast never hurts the hero.
 
 ## Scene flow
 
@@ -166,10 +187,11 @@ The hints update when a gamepad connects or disconnects.
 
 The suite runs headless with GUT.
 Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
-Unit tests also cover line of sight and projectile flight.
+Unit tests also cover line of sight, projectile flight, and bomb flight.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
+Integration tests verify bombs blast the monsters they should.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 

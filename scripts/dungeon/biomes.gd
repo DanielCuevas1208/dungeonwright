@@ -7,7 +7,7 @@ extends RefCounted
 
 ## Returns every biome in a stable order.
 static func all() -> Array[DungeonConfig]:
-	return [crypt(), drowned_forest(), ember_stronghold()]
+	return [crypt(), drowned_forest(), ember_stronghold(), frost_vault()]
 
 ## Returns a copy of the biome with the given id.
 static func by_id(p_id: StringName) -> DungeonConfig:
@@ -101,6 +101,51 @@ static func ember_stronghold() -> DungeonConfig:
 	config.player_damage = 14
 	config.palette = _ember_palette()
 	return config
+
+static func frost_vault() -> DungeonConfig:
+	var config := DungeonConfig.new()
+	config.id = &"frost_vault"
+	config.display_name = "Frost Vault"
+	config.description = "Chilled halls of blue ice. Long winding corridors link vast frozen chambers."
+	config.width = 50
+	config.height = 32
+	config.room_count_min = 8
+	config.room_count_max = 11
+	config.room_min = 7
+	config.room_max = 11
+	config.corridor_style = DungeonConfig.CorridorStyle.winding
+	config.loop_chance = 0.4
+	config.door_count_min = 2
+	config.door_count_max = 3
+	config.monster_density = 0.5
+	config.monster_cap = 11
+	config.monster_table = [
+		{ "monster": &"wraith", "weight": 2.0 },
+		{ "monster": &"skeleton", "weight": 1.5 },
+		{ "monster": &"crawler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.0 },
+	]
+	config.starting_health = 100
+	config.player_damage = 13
+	config.palette = _frost_palette()
+	return config
+
+static func _frost_palette() -> Dictionary:
+	return {
+		&"wall_outline": Color("#0f1820"),
+		&"wall_fill": Color("#27445c"),
+		&"wall_shade": Color("#1b3144"),
+		&"wall_highlight": Color("#3d6480"),
+		&"floor_base": Color("#1c3247"),
+		&"floor_dark": Color("#152636"),
+		&"floor_light": Color("#2a4a63"),
+		&"door_bar": Color("#4a708f"),
+		&"door_lock": Color("#9fd0e8"),
+		&"door_open": Color("#0a1420"),
+		&"rune": Color("#bfefff"),
+		&"glow": Color("#8fdcff"),
+		&"accent": Color("#9fd0e8"),
+	}
 
 static func _crypt_palette() -> Dictionary:
 	return {

@@ -3,8 +3,8 @@ extends RefCounted
 ## Registry of the game's monster types.
 ##
 ## Drop weights follow a balance rule: every monster drops coins most
-## often, shards sometimes, and potions rarely. The drop table tests
-## check these probabilities.
+## often, shards sometimes, potions rarely, and bombs rarest. The drop
+## table tests check these probabilities.
 
 static func all() -> Array[MonsterSpec]:
 	return [
@@ -14,6 +14,7 @@ static func all() -> Array[MonsterSpec]:
 		shambler(),
 		golem(),
 		archer(),
+		wraith(),
 	]
 
 static func by_id(p_id: StringName) -> MonsterSpec:
@@ -28,7 +29,7 @@ static func skeleton() -> MonsterSpec:
 		"max_health": 26, "health": 26, "damage": 8,
 		"speed": 2.0, "attack_range": 1.2, "attack_cooldown": 1.0,
 	})
-	spec.drop_table = DropTable.from_entries(_entries([6.0, 2.0, 1.0]), null)
+	spec.drop_table = DropTable.from_entries(_entries([6.0, 2.0, 1.0, 0.5]), null)
 	return spec
 
 static func crawler() -> MonsterSpec:
@@ -37,7 +38,7 @@ static func crawler() -> MonsterSpec:
 		"max_health": 14, "health": 14, "damage": 5,
 		"speed": 3.4, "attack_range": 1.0, "attack_cooldown": 0.7,
 	})
-	spec.drop_table = DropTable.from_entries(_entries([4.0, 1.0, 0.5]), null)
+	spec.drop_table = DropTable.from_entries(_entries([4.0, 1.0, 0.5, 0.4]), null)
 	return spec
 
 static func wisp() -> MonsterSpec:
@@ -46,7 +47,7 @@ static func wisp() -> MonsterSpec:
 		"max_health": 20, "health": 20, "damage": 10,
 		"speed": 0.0, "attack_range": 1.2, "attack_cooldown": 1.2,
 	})
-	spec.drop_table = DropTable.from_entries(_entries([2.0, 4.0, 1.0]), null)
+	spec.drop_table = DropTable.from_entries(_entries([2.0, 4.0, 1.0, 0.5]), null)
 	return spec
 
 static func shambler() -> MonsterSpec:
@@ -55,7 +56,7 @@ static func shambler() -> MonsterSpec:
 		"max_health": 38, "health": 38, "damage": 12,
 		"speed": 1.5, "attack_range": 1.4, "attack_cooldown": 1.4,
 	})
-	spec.drop_table = DropTable.from_entries(_entries([5.0, 1.0, 2.0]), null)
+	spec.drop_table = DropTable.from_entries(_entries([5.0, 1.0, 2.0, 0.7]), null)
 	return spec
 
 static func golem() -> MonsterSpec:
@@ -64,7 +65,7 @@ static func golem() -> MonsterSpec:
 		"max_health": 60, "health": 60, "damage": 15,
 		"speed": 1.2, "attack_range": 1.4, "attack_cooldown": 1.6,
 	})
-	spec.drop_table = DropTable.from_entries(_entries([4.0, 3.0, 2.0]), null)
+	spec.drop_table = DropTable.from_entries(_entries([4.0, 3.0, 2.0, 1.0]), null)
 	return spec
 
 ## A ranged monster that fires dodgeable bolts at the hero.
@@ -77,7 +78,18 @@ static func archer() -> MonsterSpec:
 	})
 	spec.projectile_speed = 7.0
 	spec.projectile_range = 9
-	spec.drop_table = DropTable.from_entries(_entries([5.0, 2.0, 1.0]), null)
+	spec.drop_table = DropTable.from_entries(_entries([5.0, 2.0, 1.0, 0.5]), null)
+	return spec
+
+## A fast, frail ghost that rushes the hero in the cold halls.
+## It deals steady damage and falls quickly once cornered.
+static func wraith() -> MonsterSpec:
+	var spec := _base(&"wraith", "Hollow Wraith", MonsterSpec.AI.stalker, "wraith", 7.0)
+	spec.stats = CombatStats.make({
+		"max_health": 18, "health": 18, "damage": 7,
+		"speed": 3.2, "attack_range": 1.0, "attack_cooldown": 0.7,
+	})
+	spec.drop_table = DropTable.from_entries(_entries([4.0, 2.0, 1.0, 0.8]), null)
 	return spec
 
 static func _base(
@@ -95,12 +107,14 @@ static func _base(
 	spec.aggro_range = p_aggro
 	return spec
 
-## Builds the three drop entries. Order: coins, shards, potions.
+## Builds the four drop entries. Order: coins, shards, potions, bombs.
+## Coins drop most often, shards sometimes, potions rarely, bombs rarest.
 static func _entries(p_weights: Array) -> Array:
 	return [
 		{ "item": &"coin", "weight": p_weights[0], "min": 1, "max": 3 },
 		{ "item": &"shard", "weight": p_weights[1], "min": 1, "max": 2 },
 		{ "item": &"potion", "weight": p_weights[2], "min": 1, "max": 1 },
+		{ "item": &"bomb", "weight": p_weights[3], "min": 1, "max": 1 },
 	]
 
 ## Rolls a monster's drop table with a deterministic RNG.

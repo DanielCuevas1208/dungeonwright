@@ -51,6 +51,13 @@ static func has_line_of_sight(p_map: DungeonMap, p_from: Vector2i, p_to: Vector2
 			return false
 	return true
 
+## True when p_cell lies within the square blast of a bomb at p_center.
+## The blast is a square ring, so a radius of one covers every neighbor.
+static func in_blast_radius(p_center: Vector2i, p_cell: Vector2i, p_radius: int) -> bool:
+	if p_radius <= 0:
+		return p_center == p_cell
+	return maxi(absi(p_center.x - p_cell.x), absi(p_center.y - p_cell.y)) <= p_radius
+
 ## Returns the eight-direction step from p_from toward p_to.
 ## A shared cell maps to DOWN, which is never used in practice.
 static func direction_toward(p_from: Vector2i, p_to: Vector2i) -> Vector2i:

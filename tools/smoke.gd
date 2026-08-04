@@ -65,6 +65,9 @@ func _verify_specs() -> void:
 			_fail("monster %s is invalid" % spec.id)
 		if not TileArt.has_entity(StringName(spec.sprite_key)):
 			_fail("monster %s has no art for key %s" % [spec.id, spec.sprite_key])
+		for entry in spec.drop_table.entries:
+			if not TileArt.has_entity(entry.item):
+				_fail("drop item %s has no art" % entry.item)
 	for biome in Biomes.all():
 		for entry in biome.monster_table:
 			var spec := MonsterSpecs.by_id(entry.monster)

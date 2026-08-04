@@ -3,11 +3,11 @@ extends GutTest
 
 const ACTIONS: Array[StringName] = [
 	&"move_left", &"move_right", &"move_up", &"move_down",
-	&"attack", &"new_run", &"toggle_minimap", &"pause",
+	&"attack", &"throw_bomb", &"new_run", &"toggle_minimap", &"pause",
 ]
 
 const LABEL_KEYS: Array[StringName] = [
-	&"move", &"attack", &"new_run", &"toggle_minimap", &"pause",
+	&"move", &"attack", &"throw_bomb", &"new_run", &"toggle_minimap", &"pause",
 ]
 
 func test_every_action_has_a_keyboard_binding() -> void:
@@ -30,6 +30,7 @@ func test_movement_bindings_cover_stick_and_dpad() -> void:
 
 func test_action_buttons_are_bound() -> void:
 	assert_true(_has_button(&"attack", 0))
+	assert_true(_has_button(&"throw_bomb", 2))
 	assert_true(_has_button(&"new_run", 3))
 	assert_true(_has_button(&"toggle_minimap", 6))
 	assert_true(_has_button(&"pause", 7))

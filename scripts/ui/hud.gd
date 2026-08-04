@@ -11,6 +11,8 @@ var floor_label: Label = null
 var hp_fill: ColorRect = null
 var hp_label: Label = null
 var coin_label: Label = null
+var shard_label: Label = null
+var bomb_label: Label = null
 var key_label: Label = null
 var minimap_texture: TextureRect = null
 var minimap_marker: ColorRect = null
@@ -42,6 +44,12 @@ func set_hp(p_current: int, p_max: int) -> void:
 
 func set_coins(p_count: int) -> void:
 	coin_label.text = "x " + str(p_count)
+
+func set_shards(p_count: int) -> void:
+	shard_label.text = "x " + str(p_count)
+
+func set_bombs(p_count: int) -> void:
+	bomb_label.text = "x " + str(p_count)
 
 func set_keys(p_count: int) -> void:
 	key_label.text = "x " + str(p_count)
@@ -106,6 +114,8 @@ func _build_bottom_panel() -> void:
 	var loot_row := HBoxContainer.new()
 	loot_row.add_theme_constant_override("separation", 18)
 	loot_row.add_child(_icon_counter(&"coin"))
+	loot_row.add_child(_icon_counter(&"shard"))
+	loot_row.add_child(_icon_counter(&"bomb"))
 	loot_row.add_child(_icon_counter(&"key"))
 	hp_box.add_child(loot_row)
 	add_child(hp_panel)
@@ -136,10 +146,15 @@ func _icon_counter(p_icon: StringName) -> Control:
 	label.add_theme_font_size_override("font_size", 15)
 	row.add_child(icon)
 	row.add_child(label)
-	if p_icon == &"coin":
-		coin_label = label
-	else:
-		key_label = label
+	match p_icon:
+		&"coin":
+			coin_label = label
+		&"shard":
+			shard_label = label
+		&"bomb":
+			bomb_label = label
+		&"key":
+			key_label = label
 	return row
 
 func _label(p_text: String, p_size: int) -> Label:

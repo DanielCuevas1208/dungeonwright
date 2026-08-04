@@ -38,3 +38,16 @@ func test_every_monster_can_scale() -> void:
 	for spec in MonsterSpecs.all():
 		var scaled := spec.scaled(1.5)
 		assert_true(scaled.is_valid(), "scaled %s is invalid" % spec.id)
+
+func test_wraith_is_registered_and_fast() -> void:
+	var spec := MonsterSpecs.wraith()
+	assert_eq(spec.id, &"wraith")
+	assert_eq(spec.ai, MonsterSpec.AI.stalker)
+	assert_gt(spec.stats.speed, MonsterSpecs.skeleton().stats.speed)
+	assert_lt(spec.stats.max_health, MonsterSpecs.skeleton().stats.max_health)
+
+func test_wraith_is_part_of_the_registry() -> void:
+	var ids: Array[StringName] = []
+	for spec in MonsterSpecs.all():
+		ids.append(spec.id)
+	assert_true(ids.has(&"wraith"))

@@ -18,9 +18,9 @@ const TILE_START := &"start"
 const TILE_EXIT := &"exit"
 
 const ENTITY_KEYS := [
-	&"player", &"key", &"potion", &"coin",
+	&"player", &"key", &"potion", &"coin", &"shard", &"bomb",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
-	&"archer", &"bolt",
+	&"archer", &"wraith", &"bolt",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -93,10 +93,16 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _GOLEM
 		&"archer":
 			return _ARCHER
+		&"wraith":
+			return _WRAITH
 		&"bolt":
 			return _BOLT
 		&"key":
 			return _KEY
+		&"shard":
+			return _SHARD
+		&"bomb":
+			return _BOMB
 		&"potion":
 			return _POTION
 		&"coin":
@@ -123,12 +129,18 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
 		&"archer":
 			return { &"@": Color("#d9d2c0"), &"*": Color("#1a1a1a"), &"+": Color("#5a3a20") }
+		&"wraith":
+			return { &"@": Color("#9fd8ef"), &"*": Color("#dffaff"), &"+": Color("#5a8aa0") }
 		&"bolt":
 			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
+		&"shard":
+			return { &"@": Color("#6ac8ff"), &"+": Color("#dff4ff"), &"*": Color("#2a6a9a") }
 		&"potion":
 			return { &"@": Color("#c94a4a"), &"+": Color("#e88a7a"), &"o": Color("#3a1a1a") }
+		&"bomb":
+			return { &"@": Color("#3a3a44"), &"+": Color("#8a8a94"), &"o": Color("#e8b84c") }
 		&"coin":
 			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
 		_:
@@ -293,6 +305,17 @@ const _ARCHER := [
 	"..@....+",
 ]
 
+const _WRAITH := [
+	"........",
+	"..@@@@..",
+	".@@*@@..",
+	".@***@..",
+	".@@@@@..",
+	".@@.@@..",
+	".@.@.@..",
+	"........",
+]
+
 const _BOLT := [
 	"........",
 	"........",
@@ -323,6 +346,28 @@ const _POTION := [
 	".@@@@@@.",
 	".@@@@@@.",
 	"..@@@@..",
+	"........",
+]
+
+const _SHARD := [
+	"........",
+	"...@@...",
+	"..@@@...",
+	".+@@@+..",
+	"..@@+...",
+	"..@@....",
+	"..@@....",
+	"........",
+]
+
+const _BOMB := [
+	"........",
+	"...oo...",
+	"..oooo..",
+	".o@@@@o.",
+	".o@@@@o.",
+	".o@@o@o.",
+	"..oooo..",
 	"........",
 ]
 

@@ -20,6 +20,7 @@ Dungeonwright generates a connected dungeon on every run.
 You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
 Some monsters fight from a distance.
+You can throw bombs you loot from monsters.
 The exit leads to the next floor.
 After three floors, the run ends in victory.
 The same seed always builds the same dungeon.
@@ -29,9 +30,10 @@ The same seed always builds the same dungeon.
 - A new map for every run, driven by a seed.
 - Three floors per run with a depth counter.
 - Rooms, corridors, locked doors, and keys.
-- Three biomes with different generation rules.
+- Four biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
 - Ranged monsters that fire dodgeable projectiles.
+- A bomb item that blasts a crowd of monsters.
 - Monsters grow stronger on deeper floors.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
@@ -47,16 +49,23 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds ranged combat.
-A new monster, the Bone Archer, fires bolts at the hero.
-Archers hold their ground and shoot when they can see you.
-Line of sight checks walls and locked doors.
-Bolts fly straight until a wall stops them.
-A bolt fades after a fixed travel distance.
-The hero can dodge a bolt by moving off its line.
-The crypt and the ember stronghold now hold archers.
+This release adds a fourth biome and a bomb item.
+The Frost Vault is a hall of blue ice.
+Its corridors wind between vast frozen chambers.
+A new monster, the Hollow Wraith, rushes the hero with speed.
+It falls quickly once cornered.
+Monsters can now drop bombs.
+A thrown bomb lands, waits, and then blasts every monster in a radius.
+The blast never hurts the hero.
+The HUD shows the shards and bombs you carry.
 
 ## Earlier releases
+
+Release 0.4 added ranged combat.
+The Bone Archer fires bolts at the hero.
+Archers hold their ground and shoot when they can see you.
+Bolts fly straight until a wall stops them.
+The hero can dodge a bolt by moving off its line.
 
 Release 0.3 added multi-floor descent.
 A run spans three floors.
@@ -89,6 +98,7 @@ Leave the field empty for a random seed.
 
 Move with WASD or the arrow keys.
 Attack with Space, J, or a mouse click.
+Throw a bomb with B.
 Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
@@ -96,6 +106,7 @@ Press Escape to pause.
 A gamepad works too.
 Move with the left stick or the d-pad.
 Attack with A or the right shoulder button.
+Throw a bomb with X.
 Press Y for a new run.
 Press Select to toggle the minimap.
 Press Start to pause.
@@ -143,6 +154,13 @@ Bolts carry a speed, a direction, and a range.
 Walls and locked doors stop a bolt.
 The hero can sidestep a bolt because bolts take time to arrive.
 
+Bombs give the hero an area attack.
+A monster drop can carry a bomb.
+The hero throws a bomb two tiles ahead.
+Walls stop a thrown bomb.
+After a short fuse, the bomb blasts every monster in a square radius.
+The blast damage scales with the hero's sword.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
@@ -168,32 +186,36 @@ Monsters never fire through a solid wall.
 
 ## Evaluation evidence
 
-The suite has 114 tests.
-It covers generation, biomes, combat, drops, pathfinding, input, floors, and projectiles.
-All 114 tests pass in a headless run.
+The suite has 137 tests.
+It covers generation, biomes, combat, drops, pathfinding, input, floors, projectiles, and bombs.
+All 137 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test checks the hero descends after reaching the exit.
 The smoke test checks every action has a gamepad binding.
-The smoke test checks every monster has art and a valid spec.
+The smoke test checks every monster and every drop item has art.
 
 ## Roadmap
 
 Done in this release:
-- Ranged monsters and dodgeable projectiles.
+- A fourth biome, the Frost Vault.
+- The Hollow Wraith monster.
+- A bomb item with a blast radius.
+- HUD counters for shards and bombs.
 
 Done in an earlier release:
+- Ranged monsters and dodgeable projectiles.
 - Multi-floor descent with a depth counter.
 - Full gamepad support.
 
 Next up:
 - Sound and music.
-- More biomes and items.
+- More items and a boss floor.
 
 ## Limitations
 
-The demo has three biomes.
+The demo has four biomes.
 Each run spans three floors.
-The hero has one melee attack only.
+The hero has one melee attack and one thrown item.
 The game has no audio yet.
 
 ## License
