@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -37,7 +38,15 @@ jobs:
         run: godot --headless --import
 
       - name: Run the GUT test suite
-        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gjunit_xml_file=junit.xml -gexit
 
       - name: Run the headless smoke test
         run: godot --headless --path . -s tools/smoke.gd
+
+      - name: Upload the test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gut-report
+          path: junit.xml
+          if-no-files-found: ignore

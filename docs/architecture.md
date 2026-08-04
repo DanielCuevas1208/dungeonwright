@@ -88,6 +88,28 @@ Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
 Coins drop often, shards sometimes, potions rarely.
 
+## Ranged combat
+
+Archers fire projectiles at the hero.
+The `Combat` class provides two helpers for ranged attacks.
+`has_line_of_sight` checks every tile between two cells.
+A wall or a locked door blocks the line.
+`direction_toward` returns the eight-direction step toward a target.
+
+A `Projectile` node carries the shot.
+It holds a damage value, a speed, a direction, and a range.
+The scene controller calls `tick` every frame.
+A bolt moves one tile at a time toward its direction.
+Walls, locked doors, and the map edge stop a bolt.
+A bolt expires when its range runs out.
+When a bolt reaches the hero's tile, it calls `take_damage`.
+
+Archers aim at the hero's current tile.
+Bolts take time to arrive, so the hero can dodge.
+An archer holds its ground while it has line of sight.
+Without line of sight, the archer closes the distance.
+A melee monster never fires a bolt.
+
 ## Scene flow
 
 The `Main` scene owns the game loop.
@@ -121,6 +143,12 @@ The run ends when the hero clears the final floor.
 `MonsterSpec.scaled` copies a spec with stronger health and damage.
 The generator and the rest of combat stay unchanged.
 
+Ranged monsters share the same scene flow.
+An archer emits `ranged_fired` when it shoots.
+The controller spawns a `Projectile` in the world.
+It refreshes the bolt's target tile to follow the hero.
+A bolt that lands on the hero damages the hero.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -138,8 +166,10 @@ The hints update when a gamepad connects or disconnects.
 
 The suite runs headless with GUT.
 Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
+Unit tests also cover line of sight and projectile flight.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
+Integration tests verify archers fire and bolts damage the hero.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 

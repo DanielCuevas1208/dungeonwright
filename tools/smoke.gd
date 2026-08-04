@@ -55,6 +55,21 @@ func _verify() -> void:
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
 	_verify_input_bindings()
+	_verify_specs()
+
+## Every monster must resolve and have art. Every biome must reference
+## a monster that exists. This guards against content drift.
+func _verify_specs() -> void:
+	for spec in MonsterSpecs.all():
+		if not spec.is_valid():
+			_fail("monster %s is invalid" % spec.id)
+		if not TileArt.has_entity(StringName(spec.sprite_key)):
+			_fail("monster %s has no art for key %s" % [spec.id, spec.sprite_key])
+	for biome in Biomes.all():
+		for entry in biome.monster_table:
+			var spec := MonsterSpecs.by_id(entry.monster)
+			if spec.id != entry.monster:
+				_fail("biome %s references unknown monster %s" % [biome.id, entry.monster])
 
 ## Reaching the exit must start the next floor, not end the run.
 func _verify_descent() -> void:

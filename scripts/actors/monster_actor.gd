@@ -4,10 +4,12 @@ extends Node2D
 ##
 ## Each monster reads its behaviour from a MonsterSpec. Chasers walk
 ## toward the hero, stalkers are fast and aggressive, and sentries hold
-## their ground and lash out at anyone who comes close. Movement follows
+## their ground and lash out at anyone who comes close. Archers fire
+## dodgeable projectiles while they can see the hero. Movement follows
 ## a short flood-fill path so monsters rarely get stuck on walls.
 
 signal attack_player(damage: int)
+signal ranged_fired(monster, direction: Vector2i)
 signal hp_changed(current: int, max: int)
 signal died(monster)
 
@@ -66,15 +68,37 @@ func _physics_process(p_delta: float) -> void:
 		return
 
 	var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
+
+	if spec.ai == MonsterSpec.AI.archer:
+		_act_as_archer(distance_sq, p_delta)
+		return
+
 	if Combat.within_attack_range(distance_sq, stats.attack_range):
 		_try_attack()
 		return
 
 	if spec.ai == MonsterSpec.AI.sentry:
 		return
+
 	if distance_sq > spec.aggro_range * spec.aggro_range:
 		return
 
+	_move_along_path(p_delta)
+
+## Ranged behaviour: fire while the hero is in range and visible.
+## Otherwise close the distance until the hero can be shot again.
+func _act_as_archer(p_distance_sq: float, p_delta: float) -> void:
+	if p_distance_sq > spec.aggro_range * spec.aggro_range:
+		return
+	var can_see := Combat.has_line_of_sight(view.map, grid_pos, target.grid_pos)
+	if can_see and Combat.within_attack_range(p_distance_sq, stats.attack_range):
+		_try_ranged_attack()
+		_sprite.position.y = 0.0
+		return
+	_move_along_path(p_delta)
+
+## Walks the stored path one step toward the target.
+func _move_along_path(p_delta: float) -> void:
 	if _repath_timer <= 0.0:
 		_repath_timer = REPATH_INTERVAL
 		_path = Pathfinding.find_path(view.map, grid_pos, target.grid_pos, false)
@@ -109,6 +133,14 @@ func _try_attack() -> void:
 		return
 	_attack_timer = stats.attack_cooldown
 	attack_player.emit(stats.damage)
+	_lunge()
+
+## Fires a projectile at the hero and reports the shot direction.
+func _try_ranged_attack() -> void:
+	if _attack_timer > 0.0:
+		return
+	_attack_timer = stats.attack_cooldown
+	ranged_fired.emit(self, Combat.direction_toward(grid_pos, target.grid_pos))
 	_lunge()
 
 func _step_along_path() -> void:

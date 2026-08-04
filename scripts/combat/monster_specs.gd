@@ -13,6 +13,7 @@ static func all() -> Array[MonsterSpec]:
 		wisp(),
 		shambler(),
 		golem(),
+		archer(),
 	]
 
 static func by_id(p_id: StringName) -> MonsterSpec:
@@ -64,6 +65,19 @@ static func golem() -> MonsterSpec:
 		"speed": 1.2, "attack_range": 1.4, "attack_cooldown": 1.6,
 	})
 	spec.drop_table = DropTable.from_entries(_entries([4.0, 3.0, 2.0]), null)
+	return spec
+
+## A ranged monster that fires dodgeable bolts at the hero.
+## It holds its ground and shoots while it has line of sight.
+static func archer() -> MonsterSpec:
+	var spec := _base(&"archer", "Bone Archer", MonsterSpec.AI.archer, "archer", 10.0)
+	spec.stats = CombatStats.make({
+		"max_health": 24, "health": 24, "damage": 7,
+		"speed": 2.2, "attack_range": 7.0, "attack_cooldown": 1.6,
+	})
+	spec.projectile_speed = 7.0
+	spec.projectile_range = 9
+	spec.drop_table = DropTable.from_entries(_entries([5.0, 2.0, 1.0]), null)
 	return spec
 
 static func _base(

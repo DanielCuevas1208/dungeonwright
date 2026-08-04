@@ -19,6 +19,7 @@ Descend three floors. Every floor grows harder.
 Dungeonwright generates a connected dungeon on every run.
 You explore rooms and corridors.
 You find keys, open locked doors, and reach the exit.
+Some monsters fight from a distance.
 The exit leads to the next floor.
 After three floors, the run ends in victory.
 The same seed always builds the same dungeon.
@@ -30,6 +31,7 @@ The same seed always builds the same dungeon.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
+- Ranged monsters that fire dodgeable projectiles.
 - Monsters grow stronger on deeper floors.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
@@ -45,15 +47,25 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds multi-floor descent.
-A run now spans three floors.
+This release adds ranged combat.
+A new monster, the Bone Archer, fires bolts at the hero.
+Archers hold their ground and shoot when they can see you.
+Line of sight checks walls and locked doors.
+Bolts fly straight until a wall stops them.
+A bolt fades after a fixed travel distance.
+The hero can dodge a bolt by moving off its line.
+The crypt and the ember stronghold now hold archers.
+
+## Earlier releases
+
+Release 0.3 added multi-floor descent.
+A run spans three floors.
 Each floor is a new solvable dungeon.
 Monsters grow stronger with depth.
 The hero keeps health and loot between floors.
 Keys reset when the hero descends.
 The hero heals a little on each descent.
 The HUD shows the current floor.
-The run ends when the hero clears the final floor.
 
 ## Requirements
 
@@ -124,6 +136,13 @@ The hero keeps health and loot between floors.
 Monsters use scaled stats on deeper floors.
 The run ends on the final floor.
 
+Ranged monsters add a second combat layer.
+An archer fires when the hero is in range and visible.
+A `Combat` helper checks line of sight between tiles.
+Bolts carry a speed, a direction, and a range.
+Walls and locked doors stop a bolt.
+The hero can sidestep a bolt because bolts take time to arrive.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
@@ -131,7 +150,7 @@ The run ends on the final floor.
 - `scripts/core` holds run rules and shared run state.
 - `scripts/input` holds the controls helper.
 - `scripts/world` renders tiles and builds the minimap.
-- `scripts/actors` holds the hero, monsters, and pickups.
+- `scripts/actors` holds the hero, monsters, pickups, and projectiles.
 - `scripts/ui` builds the HUD and overlays.
 - `scenes` holds the scene tree.
 - `tests` holds the GUT suite.
@@ -144,26 +163,29 @@ A seed always produces the same floor sequence.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
+Bolts stop at walls and locked doors.
+Monsters never fire through a solid wall.
 
 ## Evaluation evidence
 
-The suite has 95 tests.
-It covers generation, biomes, combat, drops, pathfinding, input, and floors.
-All 95 tests pass in a headless run.
+The suite has 114 tests.
+It covers generation, biomes, combat, drops, pathfinding, input, floors, and projectiles.
+All 114 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test checks the hero descends after reaching the exit.
-The smoke test also checks every action has a gamepad binding.
+The smoke test checks every action has a gamepad binding.
+The smoke test checks every monster has art and a valid spec.
 
 ## Roadmap
 
 Done in this release:
-- Multi-floor descent with a depth counter.
+- Ranged monsters and dodgeable projectiles.
 
 Done in an earlier release:
+- Multi-floor descent with a depth counter.
 - Full gamepad support.
 
 Next up:
-- Ranged monsters and projectiles.
 - Sound and music.
 - More biomes and items.
 
@@ -171,7 +193,7 @@ Next up:
 
 The demo has three biomes.
 Each run spans three floors.
-All monsters use melee attacks.
+The hero has one melee attack only.
 The game has no audio yet.
 
 ## License

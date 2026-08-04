@@ -20,6 +20,7 @@ const TILE_EXIT := &"exit"
 const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
+	&"archer", &"bolt",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -90,6 +91,10 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _SHAMBLER
 		&"golem":
 			return _GOLEM
+		&"archer":
+			return _ARCHER
+		&"bolt":
+			return _BOLT
 		&"key":
 			return _KEY
 		&"potion":
@@ -116,6 +121,10 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#4f7a3f"), &"*": Color("#16240f"), &"+": Color("#6f9a58") }
 		&"golem":
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
+		&"archer":
+			return { &"@": Color("#d9d2c0"), &"*": Color("#1a1a1a"), &"+": Color("#5a3a20") }
+		&"bolt":
+			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"potion":
@@ -271,6 +280,28 @@ const _GOLEM := [
 	".@@.@.@.",
 	"........",
 	"........",
+]
+
+const _ARCHER := [
+	"..@@@@..",
+	".@@*@@..",
+	"..@@@@..",
+	"...@....",
+	"..@@@@..",
+	".@@..@@.",
+	".@@...+.",
+	"..@....+",
+]
+
+const _BOLT := [
+	"........",
+	"........",
+	"........",
+	"......+.",
+	".....@+.",
+	"....@+..",
+	".....@+.",
+	"......+.",
 ]
 
 const _KEY := [

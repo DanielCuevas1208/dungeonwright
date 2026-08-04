@@ -10,6 +10,7 @@ const AI := {
 	"chaser": &"chaser",
 	"stalker": &"stalker",
 	"sentry": &"sentry",
+	"archer": &"archer",
 }
 
 var id: StringName = &""
@@ -19,6 +20,10 @@ var sprite_key: String = ""
 var aggro_range: float = 8.0
 var stats: CombatStats = null
 var drop_table: DropTable = null
+## Projectile travel speed in tiles per second. Zero means melee only.
+var projectile_speed: float = 0.0
+## Maximum travel distance of a fired projectile, in tiles.
+var projectile_range: int = 0
 
 ## True when this spec is valid for spawning.
 func is_valid() -> bool:
@@ -45,4 +50,6 @@ func scaled(p_scale: float) -> MonsterSpec:
 		"attack_cooldown": stats.attack_cooldown,
 	})
 	copy.drop_table = drop_table
+	copy.projectile_speed = projectile_speed
+	copy.projectile_range = projectile_range
 	return copy

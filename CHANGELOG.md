@@ -4,6 +4,23 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.4.0] - 2026-08-04
+
+Added
+
+- A ranged monster, the Bone Archer, that fires bolts.
+- A projectile system with deterministic tile-based flight.
+- Line of sight checks across walls and locked doors.
+- A bolt impact effect at the point of impact.
+- Unit tests for line of sight and projectile flight.
+- Integration tests for ranged combat.
+- A smoke-test guard that checks monster specs and art exist.
+
+Changed
+
+- The crypt and ember stronghold monster tables now include archers.
+- The world scene has a dedicated projectiles layer.
+
 ## [0.3.0] - 2026-08-03
 
 Added

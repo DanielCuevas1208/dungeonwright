@@ -12,6 +12,7 @@ signal run_started(seed_value: int)
 @onready var dungeon_view: DungeonView = $World/DungeonView
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
+@onready var projectiles_root: Node2D = $World/Projectiles
 @onready var effects_root: Node2D = $World/Effects
 @onready var player: Player = $World/Player
 @onready var camera: Camera2D = $Camera
@@ -22,6 +23,7 @@ signal run_started(seed_value: int)
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
 
 var run: DungeonResult = null
 var run_rules: RunRules = null
@@ -66,9 +68,16 @@ func _physics_process(p_delta: float) -> void:
 	camera.position = player.position
 	hud.update_marker(player.grid_pos)
 	_collect_pickups()
+	_update_projectiles(p_delta)
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos:
 		_on_exit_reached()
+
+## Moves every live projectile and refreshes its target tile.
+func _update_projectiles(p_delta: float) -> void:
+	for projectile: Projectile in projectiles_root.get_children():
+		projectile.target_grid = player.grid_pos
+		projectile.tick(p_delta)
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -184,6 +193,7 @@ func _spawn_monster(p_position: Vector2i, p_monster_id: StringName, p_scale: flo
 	monster.setup(spec, p_position, dungeon_view, occupancy, player)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
+	monster.ranged_fired.connect(_on_ranged_fired)
 	monster.died.connect(_on_monster_died)
 	monster_index += 1
 
@@ -228,6 +238,53 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 
 func _on_monster_attack(p_damage: int) -> void:
 	player.take_damage(p_damage)
+
+## A ranged monster reported a shot. Spawn the bolt for the hero to dodge.
+func _on_ranged_fired(p_monster: MonsterActor, p_direction: Vector2i) -> void:
+	spawn_projectile(
+		p_monster.stats.damage,
+		p_monster.spec.projectile_speed,
+		p_direction,
+		p_monster.grid_pos,
+		p_monster.spec.projectile_range
+	)
+
+## Spawns a projectile and returns it. Public entry point for tooling.
+func spawn_projectile(
+	p_damage: int,
+	p_speed: float,
+	p_direction: Vector2i,
+	p_origin: Vector2i,
+	p_range: int
+) -> Projectile:
+	var projectile: Projectile = PROJECTILE_SCENE.instantiate()
+	projectiles_root.add_child(projectile)
+	projectile.setup(p_damage, p_speed, p_direction, p_origin, dungeon_view, p_range)
+	projectile.target_grid = player.grid_pos
+	projectile.on_hit = func() -> void:
+		player.take_damage(projectile.damage)
+		_spawn_impact(projectile.grid_pos)
+	projectile.expired.connect(_on_projectile_expired)
+	return projectile
+
+func _on_projectile_expired(p_projectile: Projectile) -> void:
+	if not p_projectile.is_queued_for_deletion():
+		p_projectile.queue_free()
+
+## A brief flash where a bolt lands, so hits read clearly.
+func _spawn_impact(p_cell: Vector2i) -> void:
+	var impact := ColorRect.new()
+	impact.color = Color(biome.palette.get(&"glow", Color.WHITE))
+	impact.size = Vector2(10, 10)
+	impact.position = Vector2(-5, -5)
+	var wrapper := Node2D.new()
+	wrapper.position = dungeon_view.tile_to_world(p_cell)
+	wrapper.add_child(impact)
+	effects_root.add_child(wrapper)
+	var tween := wrapper.create_tween()
+	tween.tween_property(impact, "scale", Vector2(1.8, 1.8), 0.1)
+	tween.parallel().tween_property(impact, "modulate:a", 0.0, 0.1)
+	tween.tween_callback(wrapper.queue_free)
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
 	occupancy.erase(p_monster.grid_pos)
@@ -329,6 +386,8 @@ func _clear_world() -> void:
 	for child in monsters_root.get_children():
 		child.queue_free()
 	for child in pickups_root.get_children():
+		child.queue_free()
+	for child in projectiles_root.get_children():
 		child.queue_free()
 	for child in effects_root.get_children():
 		child.queue_free()

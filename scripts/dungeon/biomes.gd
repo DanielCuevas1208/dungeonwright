@@ -40,6 +40,7 @@ static func crypt() -> DungeonConfig:
 	config.monster_table = [
 		{ "monster": &"skeleton", "weight": 3.0 },
 		{ "monster": &"crawler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.5 },
 	]
 	config.starting_health = 100
 	config.player_damage = 12
@@ -94,6 +95,7 @@ static func ember_stronghold() -> DungeonConfig:
 		{ "monster": &"golem", "weight": 2.0 },
 		{ "monster": &"skeleton", "weight": 2.0 },
 		{ "monster": &"shambler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.5 },
 	]
 	config.starting_health = 100
 	config.player_damage = 14
