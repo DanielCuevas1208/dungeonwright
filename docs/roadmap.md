@@ -4,6 +4,13 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Released
 
+### 0.9.0 - Biome Gallery
+
+- Added a browseable gallery to the main menu.
+- Added deterministic map previews for every biome.
+- Added palette swatches and common threat icons.
+- Added tests for stable previews and solvability.
+
 ### 0.8.0 - Tidebound Archive
 
 - Added a fifth biome.
@@ -51,7 +58,6 @@ This roadmap tracks shipped work and the next release slice.
 
 ### Presentation
 
-- Add a short in-game biome gallery.
 - Add a capture-ready showcase scene.
 
 ## Scope rules

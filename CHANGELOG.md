@@ -4,6 +4,16 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.9.0] - 2026-08-04
+
+Added
+
+- A biome gallery in the main menu.
+- Deterministic map previews for all five biomes.
+- Palette swatches and common threat icons.
+- Arrow-key and button navigation.
+- Unit coverage for preview stability and solvability.
+
 ## [0.8.0] - 2026-08-04
 
 Added

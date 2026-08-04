@@ -27,6 +27,9 @@ The exit leads to the next floor.
 After three floors, the run ends in victory.
 The same seed always builds the same dungeon.
 
+The main menu includes a biome gallery.
+It previews real generated maps before you start a run.
+
 ## Features
 
 - A new map for every run, driven by a seed.
@@ -46,6 +49,7 @@ The same seed always builds the same dungeon.
 - A minimap, a health bar, and run summary overlays.
 - Deterministic generation for replayable runs.
 - Full gamepad support with analog movement.
+- An in-game biome gallery for quick visual comparison.
 
 ## First release
 
@@ -61,6 +65,10 @@ Flooded galleries use winding corridors and larger rooms.
 Extra loops create more route choices.
 Teal and amber tiles give the biome a clear identity.
 Its procedural music theme uses a matching chord set.
+
+The menu now includes a biome gallery.
+Each page shows a deterministic map preview.
+Palette swatches and threat icons explain the region.
 
 The final floor still holds the Warden boss.
 
@@ -137,6 +145,10 @@ Press N for a new run.
 Press M to toggle the minimap.
 Press Escape to pause.
 
+Choose Browse biomes in the menu.
+Use the buttons or arrow keys to change pages.
+Press Escape to return to the menu.
+
 A gamepad works too.
 Move with the left stick or the d-pad.
 Attack with A or the right shoulder button.
@@ -171,6 +183,10 @@ A solver then proves the dungeon can be completed.
 The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
+
+The biome gallery uses the same generator.
+Each preview uses a fixed seed.
+The gallery never changes the active run.
 
 Five biomes ship with the demo.
 Each biome changes map dimensions, room rules, monster pressure, palette, and music.
@@ -257,10 +273,10 @@ The Warden always drops a relic when it dies.
 
 ## Evaluation evidence
 
-The suite has 205 tests and 5,004 assertions.
-All 205 tests pass in a headless run.
 It covers generation, all five biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
-It also covers the boss floor, bolt volleys, enrage, and the relic win.
+It covers the boss floor, bolt volleys, enrage, relic victory, and gallery previews.
+The suite has 210 tests and 5,037 assertions.
+All 210 tests pass in a headless run.
 Run the full suite before release.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test passes with seed 12345.
@@ -270,15 +286,22 @@ The smoke test checks every action has a gamepad binding.
 The smoke test checks every monster and every drop item has art.
 The smoke test checks every sound cue and every music theme builds audio.
 
+CI imports the project, runs GUT, runs the smoke test, and uploads the test report.
+Local status depends on the installed Godot version.
+
 ## Sample output
 
 The smoke test prints this success line:
 
 `Smoke test passed: seed 12345 spawned a solvable dungeon across floors.`
 
+The gallery shows one generated map for each biome.
+
 ## Roadmap
 
 Done in this release:
+- The biome gallery with deterministic map previews.
+- Palette swatches and common threat icons.
 - The Tidebound Archive, a fifth biome with winding galleries.
 - A matching procedural music theme.
 - A boss floor that seals the exit.
@@ -299,7 +322,7 @@ Done in an earlier release:
 
 Next up:
 - A new item type with a focused use.
-- A short in-game biome gallery.
+- A capture-ready showcase scene.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 
@@ -310,6 +333,8 @@ Each run spans three floors.
 One boss type guards the final floor.
 The hero has one melee attack and one thrown item.
 Audio is instrumental, with no voice lines.
+Gallery previews use fixed seeds.
+Gallery previews do not replace a live run.
 
 ## License
 

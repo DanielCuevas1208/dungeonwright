@@ -10,8 +10,10 @@ signal continue_requested
 
 var _seed_edit: LineEdit = null
 var _continue_button: Button = null
+var _gallery_button: Button = null
 var _error_label: Label = null
 var _hint_label: Label = null
+var _gallery: BiomeGallery = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -20,6 +22,8 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 
 func show_menu(p_can_continue: bool) -> void:
+	if _gallery != null:
+		_gallery.close()
 	visible = true
 	_continue_button.visible = p_can_continue
 	_seed_edit.text = ""
@@ -27,6 +31,8 @@ func show_menu(p_can_continue: bool) -> void:
 	_seed_edit.grab_focus()
 
 func hide_menu() -> void:
+	if _gallery != null:
+		_gallery.close()
 	visible = false
 
 ## Shows a validation message under the seed field.
@@ -34,6 +40,9 @@ func show_error(p_text: String) -> void:
 	_error_label.text = p_text
 
 func _unhandled_input(p_event: InputEvent) -> void:
+	if _gallery != null:
+		if _gallery.visible:
+			return
 	if visible and p_event.is_action_pressed("pause"):
 		continue_requested.emit()
 		get_viewport().set_input_as_handled()
@@ -87,6 +96,9 @@ func _build() -> void:
 	start_button.custom_minimum_size = Vector2(0, 36)
 
 	_continue_button = Button.new()
+	_gallery_button = Button.new()
+	_gallery_button.text = 'Browse biomes'
+	_gallery_button.custom_minimum_size = Vector2(0, 36)
 	_continue_button.text = "Continue"
 	_continue_button.custom_minimum_size = Vector2(0, 36)
 
@@ -102,6 +114,7 @@ func _build() -> void:
 	box.add_child(_error_label)
 	box.add_child(start_button)
 	box.add_child(_continue_button)
+	box.add_child(_gallery_button)
 	box.add_child(_hint_label)
 
 	margin.add_child(box)
@@ -111,7 +124,13 @@ func _build() -> void:
 
 	start_button.pressed.connect(_on_start_pressed)
 	_continue_button.pressed.connect(func() -> void: continue_requested.emit())
+	_gallery_button.pressed.connect(_open_gallery)
+	_gallery = BiomeGallery.new()
+	add_child(_gallery)
 	_seed_edit.text_submitted.connect(func(_text: String) -> void: _on_start_pressed())
 
 func _on_start_pressed() -> void:
 	start_requested.emit(_seed_edit.text)
+
+func _open_gallery() -> void:
+	_gallery.open()

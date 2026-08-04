@@ -176,6 +176,15 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Biome gallery
+
+The main menu can open the biome gallery while the game is paused.
+`BiomeGallery` uses the same generator as a live run.
+Each biome receives a fixed preview seed.
+The gallery renders the map, palette swatches, and configured monster art.
+This keeps the showcase view aligned with game content.
+The gallery does not modify run state.
+
 ## Floor descent
 
 A run spans three floors.
