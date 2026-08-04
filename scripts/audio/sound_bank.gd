@@ -17,11 +17,14 @@ const CUES: Array[StringName] = [
 	&"impact",
 	&"throw",
 	&"explosion",
+	&"roar",
 	&"pickup_coin",
 	&"pickup_shard",
 	&"pickup_potion",
 	&"pickup_bomb",
 	&"pickup_key",
+	&"pickup_emblem",
+	&"pickup_relic",
 	&"door_open",
 	&"descend",
 	&"victory",
@@ -64,6 +67,8 @@ static func _build(p_id: StringName) -> AudioStreamWAV:
 			return _pack(_throw())
 		&"explosion":
 			return _pack(_explosion())
+		&"roar":
+			return _pack(_roar())
 		&"pickup_coin":
 			return _pack(_pickup_coin())
 		&"pickup_shard":
@@ -74,6 +79,10 @@ static func _build(p_id: StringName) -> AudioStreamWAV:
 			return _pack(_pickup_bomb())
 		&"pickup_key":
 			return _pack(_pickup_key())
+		&"pickup_emblem":
+			return _pack(_pickup_emblem())
+		&"pickup_relic":
+			return _pack(_pickup_relic())
 		&"door_open":
 			return _pack(_door_open())
 		&"descend":
@@ -136,6 +145,14 @@ static func _explosion() -> PackedFloat32Array:
 	var rumble := Waveform.envelope(Waveform.sweep(160, 40, 0.6, MIX_RATE), 0.005, 0.55, MIX_RATE)
 	return Waveform.mix(Waveform.scale(burst, 0.8), Waveform.scale(rumble, 0.8))
 
+## A low roar when the warden enrages.
+static func _roar() -> PackedFloat32Array:
+	var growl := Waveform.envelope(
+		Waveform.sweep(200, 70, 0.7, MIX_RATE, &"saw"), 0.02, 0.6, MIX_RATE
+	)
+	var grit := Waveform.envelope(Waveform.noise(0.65, MIX_RATE), 0.01, 0.55, MIX_RATE)
+	return Waveform.mix(Waveform.scale(growl, 0.6), Waveform.scale(grit, 0.35))
+
 ## Two bright dings for a coin.
 static func _pickup_coin() -> PackedFloat32Array:
 	var first := Waveform.envelope(Waveform.sine(1320, 0.1, MIX_RATE), 0.003, 0.09, MIX_RATE)
@@ -177,6 +194,23 @@ static func _pickup_key() -> PackedFloat32Array:
 	var click := Waveform.envelope(Waveform.noise(0.05, MIX_RATE), 0.002, 0.04, MIX_RATE)
 	var body := Waveform.mix(Waveform.scale(ring, 0.4), Waveform.scale(overtone, 0.2))
 	return Waveform.mix(body, Waveform.scale(click, 0.2))
+
+## A bright power chime for a damage emblem.
+static func _pickup_emblem() -> PackedFloat32Array:
+	var up := Waveform.envelope(
+		Waveform.sweep(440, 880, 0.3, MIX_RATE, &"square"), 0.005, 0.26, MIX_RATE
+	)
+	var sparkle := Waveform.envelope(Waveform.sine(1760, 0.2, MIX_RATE), 0.005, 0.17, MIX_RATE)
+	return Waveform.mix(Waveform.scale(up, 0.4), Waveform.scale(sparkle, 0.25))
+
+## A rising fanfare for the warden's relic.
+static func _pickup_relic() -> PackedFloat32Array:
+	var steps: Array = []
+	for midi in [392, 523, 659, 784]:
+		var note := Waveform.envelope(Waveform.sine(midi, 0.2, MIX_RATE), 0.005, 0.18, MIX_RATE)
+		steps.append(note)
+		steps.append(Waveform.silence(0.03, MIX_RATE))
+	return Waveform.scale(Waveform.concat(steps), 0.45)
 
 ## A low grind as a locked door swings open.
 static func _door_open() -> PackedFloat32Array:

@@ -33,6 +33,19 @@ func test_only_the_last_floor_finishes_the_run() -> void:
 	assert_false(rules.is_final_floor(1))
 	assert_true(rules.is_final_floor(2))
 
+func test_only_the_last_floor_is_a_boss_floor() -> void:
+	var rules := RunRules.new()
+	rules.floor_count = 3
+	assert_false(rules.is_boss_floor(0))
+	assert_false(rules.is_boss_floor(1))
+	assert_true(rules.is_boss_floor(2))
+
+func test_a_single_floor_run_is_always_a_boss_floor() -> void:
+	var rules := RunRules.new()
+	rules.floor_count = 1
+	assert_true(rules.is_boss_floor(0))
+	assert_true(rules.is_final_floor(0))
+
 func test_single_floor_run_finishes_on_floor_one() -> void:
 	var rules := RunRules.new()
 	rules.floor_count = 1

@@ -4,6 +4,36 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.7.0] - 2026-08-04
+
+Added
+
+- A boss floor as the final floor of every run.
+- The Warden, a two-phase boss that guards the exit.
+- Melee slams and a three-bolt volley for the Warden.
+- An enrage phase below half health.
+- A boss health bar at the top of the screen.
+- A relic item that the Warden drops on death.
+- Victory on collecting the relic.
+- An emblem item that boosts the hero's sword damage.
+- A damage bonus that carries between floors.
+- A boss music theme with a tense chord loop.
+- A roar cue for the Warden's enrage.
+- Pickup cues for the relic and the emblem.
+- Art for the Warden, the relic, and the emblem.
+- A sealed exit that opens when the boss falls.
+- A camera shake when the Warden enrages.
+- Unit tests for the boss spec, volley math, and loot items.
+- Integration tests for the boss floor and the relic win.
+
+Changed
+
+- The exit no longer ends the final floor until the Warden dies.
+- The beacon turns red while the Warden guards the exit.
+- Monster drop tables now include a rare emblem entry.
+- Emblems add damage to the hero's sword for the whole run.
+- The boss theme replaces the biome theme on the final floor.
+
 ## [0.6.0] - 2026-08-04
 
 Added

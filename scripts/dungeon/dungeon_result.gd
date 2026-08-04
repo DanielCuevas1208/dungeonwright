@@ -14,6 +14,8 @@ var start_room: int = -1
 var exit_room: int = -1
 var start_pos: Vector2i = Vector2i.ZERO
 var exit_pos: Vector2i = Vector2i.ZERO
+## Where the final-floor boss guards the exit. A walkable cell near it.
+var boss_spawn: Vector2i = Vector2i.ZERO
 var doors: Array = []
 ## One entry per placed door: { position, corridor, key_pos, room }
 var keys: Array = []

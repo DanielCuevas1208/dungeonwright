@@ -33,6 +33,7 @@ func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
 	result.exit_room = selection.y
 	result.start_pos = result.rooms[result.start_room].center()
 	result.exit_pos = result.rooms[result.exit_room].center()
+	result.boss_spawn = _pick_boss_spawn(result.map, result.exit_pos)
 	result.map.set_tile_cell(result.start_pos, DungeonMap.Tile.START)
 	result.map.set_tile_cell(result.exit_pos, DungeonMap.Tile.EXIT)
 
@@ -427,6 +428,23 @@ func _room_at(p_rooms: Array[Room], p_cell: Vector2i) -> int:
 		if room.rect().has_point(p_cell):
 			return room.id
 	return -1
+
+## Picks the tile where the final-floor boss stands guard.
+## It is the nearest walkable neighbor of the exit, found by a spiral
+## search that never returns the exit tile itself.
+func _pick_boss_spawn(p_map: DungeonMap, p_exit: Vector2i) -> Vector2i:
+	var radius := 1
+	var max_radius := maxi(p_map.width, p_map.height)
+	while radius < max_radius:
+		for x in range(p_exit.x - radius, p_exit.x + radius + 1):
+			for y in range(p_exit.y - radius, p_exit.y + radius + 1):
+				var candidate := Vector2i(x, y)
+				if candidate == p_exit:
+					continue
+				if p_map.in_bounds_cell(candidate) and p_map.is_walkable_cell(candidate):
+					return candidate
+		radius += 1
+	return p_exit
 
 ## Floods the room graph without crossing the given tree edge.
 func _rooms_on_start_side(

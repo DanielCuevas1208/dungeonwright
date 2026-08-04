@@ -19,6 +19,9 @@ The pipeline runs in a fixed order.
 6. Place doors and keys.
 7. Scatter monsters in the rooms.
 
+The generator also marks a walkable tile next to the exit.
+This tile holds the final-floor boss and is stored in the result.
+
 ### Room placement
 
 The generator draws random rectangles in the map bounds.
@@ -198,6 +201,37 @@ The controller spawns a `Projectile` in the world.
 It refreshes the bolt's target tile to follow the hero.
 A bolt that lands on the hero damages the hero.
 
+## Boss floor
+
+The final floor is a boss floor.
+`RunRules.is_boss_floor` returns true for the last floor.
+The generator marks a walkable tile next to the exit.
+This tile becomes `boss_spawn` in the result.
+The controller spawns the Warden there.
+
+The Warden is a two-phase boss.
+It chases the hero and slams in melee at close range.
+At range, it fires a fan of three bolts.
+A `Combat.volley_directions` helper spreads the aim line.
+Each bolt is a normal `Projectile` the hero can dodge.
+Below half health, the Warden enrages.
+It moves faster, attacks faster, and turns red.
+The boss bar in the HUD tracks the fight.
+
+The exit stays sealed while the Warden lives.
+`Main._exit_clear` blocks the exit until the boss falls.
+When the Warden dies, it drops a relic.
+The relic is a pickup with its own sound and art.
+Collecting the relic calls the victory flow.
+The run can no longer end by walking to the exit first.
+
+Monsters can drop damage emblems.
+An emblem adds two points to the hero's sword.
+The hero carries the bonus between floors.
+The HUD counts the emblems the hero holds.
+The boss theme plays on the boss floor.
+The beacon turns red while the Warden guards the exit.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -217,12 +251,15 @@ The suite runs headless with GUT.
 Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
 Unit tests also cover line of sight, projectile flight, and bomb flight.
 Unit tests also cover waveform math, every sound cue, and every music theme.
+Unit tests also cover the boss spec, enrage profile, and volley math.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
 Integration tests verify bombs blast the monsters they should.
+Integration tests verify the boss floor seals the exit and drops the relic.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
+The final floor must spawn a boss and a relic.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

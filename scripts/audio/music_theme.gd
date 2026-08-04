@@ -95,5 +95,12 @@ static func _settings(p_id: StringName) -> Dictionary:
 				"bass_gain": 0.26,
 				"arp_gain": 0.2,
 			}
+		&"boss":
+			return {
+				"chords": [[40, 43, 46], [38, 41, 44], [40, 43, 46], [35, 38, 42]],
+				"pad_gain": 0.15,
+				"bass_gain": 0.36,
+				"arp_gain": 0.24,
+			}
 		_:
 			return _settings(&"menu")

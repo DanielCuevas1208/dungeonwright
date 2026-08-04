@@ -20,7 +20,7 @@ const TILE_EXIT := &"exit"
 const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin", &"shard", &"bomb",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
-	&"archer", &"wraith", &"bolt",
+	&"archer", &"wraith", &"warden", &"bolt", &"relic", &"emblem",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -95,8 +95,14 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _ARCHER
 		&"wraith":
 			return _WRAITH
+		&"warden":
+			return _WARDEN
 		&"bolt":
 			return _BOLT
+		&"relic":
+			return _RELIC
+		&"emblem":
+			return _EMBLEM
 		&"key":
 			return _KEY
 		&"shard":
@@ -131,8 +137,14 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#d9d2c0"), &"*": Color("#1a1a1a"), &"+": Color("#5a3a20") }
 		&"wraith":
 			return { &"@": Color("#9fd8ef"), &"*": Color("#dffaff"), &"+": Color("#5a8aa0") }
+		&"warden":
+			return { &"@": Color("#5a2a2a"), &"*": Color("#e8d8b0"), &"o": Color("#e8b84c"), &"+": Color("#8a4a3a") }
 		&"bolt":
 			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
+		&"relic":
+			return { &"@": Color("#8a6ad9"), &"*": Color("#f0e8ff"), &"o": Color("#e8b84c"), &"+": Color("#b49ae8") }
+		&"emblem":
+			return { &"@": Color("#4a7ab5"), &"o": Color("#e8b84c"), &"+": Color("#dff0ff") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"shard":
@@ -316,6 +328,17 @@ const _WRAITH := [
 	"........",
 ]
 
+const _WARDEN := [
+	"..*.....",
+	"..*@@@..",
+	".@@@@@@.",
+	"@@o@@o@@",
+	"@@@@@@@@",
+	".@@@@@@.",
+	".@@..@@.",
+	"..@..@..",
+]
+
 const _BOLT := [
 	"........",
 	"........",
@@ -325,6 +348,28 @@ const _BOLT := [
 	"....@+..",
 	".....@+.",
 	"......+.",
+]
+
+const _RELIC := [
+	"........",
+	"..oooo..",
+	".o@@@@o.",
+	".o@++@o.",
+	".o@**@o.",
+	"..@@@@..",
+	"...@@...",
+	"........",
+]
+
+const _EMBLEM := [
+	"..@@@@..",
+	".@o++o@.",
+	".@o++o@.",
+	".@@@@@@.",
+	".@+@@+@.",
+	"..@@@@..",
+	"...@@...",
+	"........",
 ]
 
 const _KEY := [

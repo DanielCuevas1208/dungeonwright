@@ -38,6 +38,11 @@ var monster_index := 0
 var _ended := false
 var _beacon_phase := 0.0
 var _beacon: Sprite2D = null
+## The living boss of the current floor, null when there is no boss.
+var _boss: MonsterActor = null
+var _boss_defeated := false
+var _shake_time := 0.0
+var _shake_strength := 0.0
 
 func _ready() -> void:
 	_wire_signals()
@@ -51,6 +56,7 @@ func _wire_signals() -> void:
 	player.shards_changed.connect(hud.set_shards)
 	player.bombs_changed.connect(hud.set_bombs)
 	player.keys_changed.connect(hud.set_keys)
+	player.emblems_changed.connect(hud.set_emblems)
 	player.attacked.connect(_on_player_attack)
 	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
@@ -73,13 +79,31 @@ func _physics_process(p_delta: float) -> void:
 	if run == null:
 		return
 	camera.position = player.position
+	_apply_camera_shake(p_delta)
 	hud.update_marker(player.grid_pos)
 	_collect_pickups()
 	_update_projectiles(p_delta)
 	_update_bombs(p_delta)
 	_pulse_beacon(p_delta)
-	if not _ended and player.grid_pos == run.exit_pos:
+	if not _ended and player.grid_pos == run.exit_pos and _exit_clear():
 		_on_exit_reached()
+
+## Offsets the camera while a shake decays. Visual juice only.
+func _apply_camera_shake(p_delta: float) -> void:
+	if _shake_time > 0.0:
+		_shake_time -= p_delta
+		camera.offset = Vector2(
+			randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)
+		) * _shake_strength
+	else:
+		camera.offset = Vector2.ZERO
+
+## True when the exit can end the floor. A boss floor stays sealed
+## until the boss falls.
+func _exit_clear() -> bool:
+	if not run_rules.is_boss_floor(floor_index):
+		return true
+	return _boss_defeated
 
 ## Moves every live projectile and refreshes its target tile.
 func _update_projectiles(p_delta: float) -> void:
@@ -139,6 +163,8 @@ func _begin_floor() -> void:
 	_clear_world()
 	occupancy.clear()
 	_ended = false
+	_boss = null
+	_boss_defeated = false
 
 	dungeon_view.configure(run.map, biome)
 	player.setup(_player_stats(), run.start_pos, dungeon_view, occupancy)
@@ -152,6 +178,9 @@ func _begin_floor() -> void:
 	var scale := run_rules.monster_scale(floor_index)
 	for spawn in run.monster_spawns:
 		_spawn_monster(spawn.position, spawn.monster, scale)
+
+	if run_rules.is_boss_floor(floor_index):
+		_spawn_warden()
 
 	for key in run.keys:
 		_spawn_pickup(&"key", 1, key.position)
@@ -172,19 +201,25 @@ func _begin_floor() -> void:
 	menu_overlay.hide_menu()
 	result_overlay.hide_result()
 	get_tree().paused = false
-	audio.play_music(biome.id)
+	if run_rules.is_boss_floor(floor_index):
+		audio.play_music(&"boss")
+	else:
+		audio.play_music(biome.id)
 
-## Builds the hero stats for this floor.
+## Builds the hero stats for this floor. Damage keeps any emblem boost
+## the hero earned, so power carries between floors.
 func _player_stats() -> CombatStats:
 	var max_health := biome.starting_health
 	var health := max_health
+	var damage := biome.player_damage
 	if floor_index > 0 and player.stats != null:
 		max_health = player.stats.max_health
 		health = player.stats.health
+		damage = player.stats.damage
 	return CombatStats.make({
 		"max_health": max_health,
 		"health": health,
-		"damage": biome.player_damage,
+		"damage": damage,
 	})
 
 ## The hero reached the exit. Descend, or win on the final floor.
@@ -211,6 +246,22 @@ func _spawn_monster(p_position: Vector2i, p_monster_id: StringName, p_scale: flo
 	monster.ranged_fired.connect(_on_ranged_fired)
 	monster.died.connect(_on_monster_died)
 	monster_index += 1
+
+## Spawns the boss that guards the final-floor exit. The boss never
+## scales, so the fight has a fixed shape on every run.
+func _spawn_warden() -> void:
+	var warden: MonsterActor = MONSTER_SCENE.instantiate()
+	monsters_root.add_child(warden)
+	warden.setup(MonsterSpecs.warden(), run.boss_spawn, dungeon_view, occupancy, player)
+	occupancy[run.boss_spawn] = warden
+	warden.attack_player.connect(_on_monster_attack)
+	warden.ranged_fired.connect(_on_ranged_fired)
+	warden.died.connect(_on_monster_died)
+	warden.hp_changed.connect(hud.set_boss_hp)
+	warden.enraged.connect(_on_boss_enraged)
+	_boss = warden
+	hud.show_boss(warden.spec.display_name)
+	hud.set_boss_hp(warden.stats.health, warden.stats.max_health)
 
 func _spawn_pickup(p_kind: StringName, p_count: int, p_position: Vector2i) -> void:
 	var pickup: Pickup = PICKUP_SCENE.instantiate()
@@ -239,9 +290,12 @@ func _hero_can_enter(p_cell: Vector2i) -> bool:
 	return player.keys_held > 0
 
 func _on_pickup_taken(p_pickup: Pickup) -> void:
-	player.apply_pickup(p_pickup.kind, p_pickup.count)
-	audio.play_sfx(StringName("pickup_" + p_pickup.kind))
+	var kind := p_pickup.kind
+	player.apply_pickup(kind, p_pickup.count)
+	audio.play_sfx(StringName("pickup_" + kind))
 	p_pickup.queue_free()
+	if kind == &"relic":
+		_on_victory()
 
 func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p_damage: int) -> void:
 	audio.play_sfx(&"swing")
@@ -357,11 +411,34 @@ func _spawn_explosion(p_cell: Vector2i) -> void:
 func _on_monster_died(p_monster: MonsterActor) -> void:
 	occupancy.erase(p_monster.grid_pos)
 	audio.play_sfx(&"death")
+	if p_monster == _boss:
+		_on_boss_died(p_monster)
+		return
 	var drop_rng := SeededRng.new(run_seed ^ (monster_index * 0x9E37))
 	var drops := MonsterSpecs.roll_drops(p_monster.spec, drop_rng)
 	for drop in drops:
 		_spawn_pickup(drop.item, drop.count, p_monster.grid_pos)
 	p_monster.queue_free()
+
+## The warden fell. Drop the relic and unseal the exit.
+func _on_boss_died(p_warden: MonsterActor) -> void:
+	_boss = null
+	_boss_defeated = true
+	hud.hide_boss()
+	_spawn_pickup(&"relic", 1, p_warden.grid_pos)
+	if _beacon != null:
+		_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
+	p_warden.queue_free()
+
+## The warden enraged. Roar and shake the camera.
+func _on_boss_enraged(_p_warden: MonsterActor) -> void:
+	audio.play_sfx(&"roar")
+	_shake_camera(3.0)
+
+## A brief camera shake, used for boss moments.
+func _shake_camera(p_strength: float) -> void:
+	_shake_time = 0.18
+	_shake_strength = p_strength
 
 func _on_player_died() -> void:
 	if _ended:
@@ -419,7 +496,10 @@ func _apply_camera_limits() -> void:
 func _spawn_exit_beacon() -> void:
 	_beacon = Sprite2D.new()
 	_beacon.texture = _beacon_texture()
-	_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
+	if run_rules.is_boss_floor(floor_index) and not _boss_defeated:
+		_beacon.modulate = Color("#e07070")
+	else:
+		_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
 	_beacon.scale = Vector2(0.5, 0.5)
 	_beacon.position = dungeon_view.tile_to_world(run.exit_pos)
 	effects_root.add_child(_beacon)

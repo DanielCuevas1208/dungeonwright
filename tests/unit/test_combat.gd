@@ -72,3 +72,33 @@ func test_stats_make_copies_values() -> void:
 	first.take_damage(10)
 	assert_eq(second.health, 40)
 	assert_eq(first.health, 30)
+
+func test_single_shot_volley_is_the_aim_direction() -> void:
+	assert_eq(Combat.volley_directions(Vector2i.RIGHT, 1), [Vector2i.RIGHT])
+
+func test_three_shot_volley_spreads_to_both_sides() -> void:
+	var fan := Combat.volley_directions(Vector2i.RIGHT, 3)
+	assert_eq(fan.size(), 3)
+	assert_true(fan.has(Vector2i.RIGHT))
+	assert_true(fan.has(Vector2i(1, -1)))
+	assert_true(fan.has(Vector2i(1, 1)))
+
+func test_volley_centers_on_the_aim_line_for_every_direction() -> void:
+	for direction in [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP,
+			Vector2i(1, 1), Vector2i(-1, -1)]:
+		var fan := Combat.volley_directions(direction, 3)
+		assert_eq(fan.size(), 3, str(direction))
+		assert_true(fan.has(direction), "base %s missing from %s" % [direction, str(fan)])
+
+func test_volley_never_repeats_a_direction() -> void:
+	var fan := Combat.volley_directions(Vector2i.DOWN, 3)
+	var seen := {}
+	for direction in fan:
+		assert_false(seen.has(direction), "duplicate %s" % str(direction))
+		seen[direction] = true
+
+func test_wide_volley_covers_five_directions() -> void:
+	var fan := Combat.volley_directions(Vector2i.RIGHT, 5)
+	assert_eq(fan.size(), 5)
+	assert_true(fan.has(Vector2i(1, -1)))
+	assert_true(fan.has(Vector2i(1, 1)))

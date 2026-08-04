@@ -12,6 +12,7 @@ signal coins_changed(count: int)
 signal shards_changed(count: int)
 signal keys_changed(count: int)
 signal bombs_changed(count: int)
+signal emblems_changed(count: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
 signal bomb_thrown(origin: Vector2i, facing: Vector2i)
 signal moved(grid: Vector2i)
@@ -22,6 +23,8 @@ const ATTACK_COOLDOWN := 0.35
 const ATTACK_RANGE := 1.5
 const POTION_HEAL := 25
 const BOMB_COOLDOWN := 0.6
+## Damage an emblem adds to the hero's sword for the rest of the run.
+const EMBLEM_POWER := 2
 
 var stats: CombatStats = null
 var grid_pos: Vector2i = Vector2i.ZERO
@@ -30,6 +33,7 @@ var coins := 0
 var shards := 0
 var keys_held := 0
 var bombs := 0
+var emblems := 0
 
 var view: DungeonView = null
 var occupancy: Dictionary = {}
@@ -164,6 +168,13 @@ func apply_pickup(p_item: StringName, p_count: int) -> void:
 		&"bomb":
 			bombs += p_count
 			bombs_changed.emit(bombs)
+		&"emblem":
+			emblems += p_count
+			if stats != null:
+				stats.damage += EMBLEM_POWER * p_count
+			emblems_changed.emit(emblems)
+		&"relic":
+			pass
 		&"key":
 			keys_held += p_count
 			keys_changed.emit(keys_held)
@@ -184,6 +195,7 @@ func start_run() -> void:
 	shards = 0
 	keys_held = 0
 	bombs = 0
+	emblems = 0
 	if stats != null:
 		emit_hud()
 
@@ -199,6 +211,7 @@ func emit_hud() -> void:
 	shards_changed.emit(shards)
 	keys_changed.emit(keys_held)
 	bombs_changed.emit(bombs)
+	emblems_changed.emit(emblems)
 
 func _flash() -> void:
 	var tween := create_tween()

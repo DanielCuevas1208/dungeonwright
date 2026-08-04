@@ -66,3 +66,35 @@ static func direction_toward(p_from: Vector2i, p_to: Vector2i) -> Vector2i:
 	if dx == 0 and dy == 0:
 		return Vector2i.DOWN
 	return Vector2i(dx, dy)
+
+## Returns a fan of p_count directions centered on p_base.
+## The fan spreads across the eight compass directions, so a three-shot
+## volley sends one bolt at the aim line and one to each side of it.
+static func volley_directions(p_base: Vector2i, p_count: int) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if p_count <= 1:
+		result.append(p_base)
+		return result
+	var index := _direction_index(p_base)
+	if index < 0:
+		result.append(p_base)
+		return result
+	var half := p_count / 2
+	for offset in range(-half, half + 1):
+		var wrapped := (index + offset) % _COMPASS.size()
+		if wrapped < 0:
+			wrapped += _COMPASS.size()
+		result.append(_COMPASS[wrapped])
+	return result
+
+## The eight compass directions in clockwise order from right.
+const _COMPASS := [
+	Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1),
+	Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+]
+
+static func _direction_index(p_direction: Vector2i) -> int:
+	for i in _COMPASS.size():
+		if _COMPASS[i] == p_direction:
+			return i
+	return -1

@@ -89,3 +89,20 @@ func test_monsters_spawn_on_walkable_cells() -> void:
 func test_monster_specs_are_valid() -> void:
 	for spec in MonsterSpecs.all():
 		assert_true(spec.is_valid(), "monster %s is invalid" % spec.id)
+
+func test_boss_spawn_is_a_walkable_cell_next_to_the_exit() -> void:
+	var biome := Biomes.crypt()
+	for seed in [41, 42, 43]:
+		var result := generator.generate(biome, seed)
+		assert_true(result.map.in_bounds_cell(result.boss_spawn), "seed %d" % seed)
+		assert_true(result.map.is_walkable_cell(result.boss_spawn), "seed %d" % seed)
+		assert_ne(result.boss_spawn, result.exit_pos, "seed %d" % seed)
+
+func test_boss_spawn_is_reachable_from_the_start() -> void:
+	var biome := Biomes.crypt()
+	for seed in [51, 52, 53]:
+		var result := generator.generate(biome, seed)
+		assert_true(
+			Pathfinding.reaches(result.map, result.start_pos, result.boss_spawn, true),
+			"seed %d" % seed
+		)

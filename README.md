@@ -3,6 +3,7 @@
 A seeded dungeon crawler built with Godot and GDScript.
 Every run builds a new dungeon that you can explore and finish.
 Descend three floors. Every floor grows harder.
+The final floor is a boss fight.
 
 ```
 ####.D.############
@@ -35,6 +36,10 @@ The same seed always builds the same dungeon.
 - Monsters with simple combat and balanced drops.
 - Ranged monsters that fire dodgeable projectiles.
 - A bomb item that blasts a crowd of monsters.
+- A boss floor guarded by the Warden.
+- The Warden fires bolt volleys and enrages below half health.
+- A relic that ends the run when the Warden falls.
+- An emblem item that boosts the hero's sword damage.
 - Monsters grow stronger on deeper floors.
 - Procedural pixel art with no bundled image files.
 - Procedural sound and music with no bundled audio files.
@@ -51,15 +56,26 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds procedural audio.
+This release adds a boss floor.
+The final floor is a sealed arena.
+The Warden guards the exit.
+It slams in melee and fires bolt volleys.
+Below half health, it enrages and fights faster.
+It drops a relic when it falls.
+Collect the relic to win the run.
+Monsters can now drop damage emblems.
+Each emblem raises the hero's sword damage.
+A tense theme plays while the Warden lives.
+
+## Earlier releases
+
+Release 0.6 added procedural audio.
 Every sound effect is generated in code at run time.
 Sword swings, hits, deaths, and explosions all have cues.
 Each pickup has a distinct sound.
 Every biome has its own looping music theme.
 The menu plays a quiet theme of its own.
 No audio files ship with the game.
-
-## Earlier releases
 
 Release 0.5 added a fourth biome and a bomb item.
 The Frost Vault is a hall of blue ice.
@@ -181,6 +197,22 @@ It reuses a small pool of effect players.
 Every stream is cached after its first build.
 The same cue always produces the same sound.
 
+The final floor is a boss floor.
+The generator marks a tile next to the exit for the Warden.
+The Warden chases the hero and slams in melee.
+At range, it fires a fan of three bolts.
+Below half health, it enrages.
+An enraged Warden moves and attacks faster.
+The exit stays sealed while the Warden lives.
+When it falls, it drops a relic.
+Collecting the relic wins the run.
+The HUD shows a boss bar while the Warden lives.
+
+Emblems are a rare monster drop.
+Each emblem adds two points of sword damage.
+The bonus lasts for the whole run.
+It carries between floors.
+
 ## Project layout
 
 - `scripts/dungeon` holds the generator and map logic.
@@ -206,14 +238,18 @@ Bolts stop at walls and locked doors.
 Monsters never fire through a solid wall.
 A cue always produces the same sound.
 Every biome has a music theme.
+A boss floor seals the exit until the Warden falls.
+The Warden always drops a relic when it dies.
 
 ## Evaluation evidence
 
-The suite has 169 tests.
+The suite has 201 tests.
 It covers generation, biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
-All 169 tests pass in a headless run.
+It also covers the boss floor, bolt volleys, enrage, and the relic win.
+All 201 tests pass in a headless run.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test checks the hero descends after reaching the exit.
+The smoke test checks the boss floor spawns a Warden and a relic.
 The smoke test checks every action has a gamepad binding.
 The smoke test checks every monster and every drop item has art.
 The smoke test checks every sound cue and every music theme builds audio.
@@ -221,11 +257,15 @@ The smoke test checks every sound cue and every music theme builds audio.
 ## Roadmap
 
 Done in this release:
-- Procedural sound effects for combat, pickups, doors, and results.
-- A distinct looping music theme for every biome.
-- A menu theme that plays before a run starts.
+- A boss floor that seals the exit.
+- The Warden, with melee slams, bolt volleys, and enrage.
+- A relic that drops when the Warden falls.
+- An emblem item that boosts sword damage.
+- A boss music theme and a boss health bar.
 
 Done in an earlier release:
+- Procedural sound effects for combat, pickups, doors, and results.
+- A distinct looping music theme for every biome.
 - A fourth biome, the Frost Vault.
 - The Hollow Wraith monster.
 - A bomb item with a blast radius.
@@ -234,12 +274,13 @@ Done in an earlier release:
 - Full gamepad support.
 
 Next up:
-- More items and a boss floor.
+- A fifth biome and more item types.
 
 ## Limitations
 
 The demo has four biomes.
 Each run spans three floors.
+One boss type guards the final floor.
 The hero has one melee attack and one thrown item.
 Audio is instrumental, with no voice lines.
 

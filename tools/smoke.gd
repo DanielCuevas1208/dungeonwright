@@ -36,6 +36,7 @@ func _run() -> void:
 		return
 	_verify()
 	await _verify_descent()
+	await _verify_boss_floor()
 	_main.audio.stop_all()
 	for i in 5:
 		await physics_frame
@@ -76,6 +77,9 @@ func _verify_specs() -> void:
 			var spec := MonsterSpecs.by_id(entry.monster)
 			if spec.id != entry.monster:
 				_fail("biome %s references unknown monster %s" % [biome.id, entry.monster])
+	for key in [&"relic", &"emblem", &"warden"]:
+		if not TileArt.has_entity(key):
+			_fail("boss item %s has no art" % key)
 
 ## Every sound cue and music theme must resolve to audio.
 ## This guards against content drift in the audio bank.
@@ -94,6 +98,9 @@ func _verify_audio() -> void:
 	var menu := MusicTheme.theme(&"menu")
 	if menu == null or menu.data.is_empty():
 		_fail("menu theme is invalid")
+	var boss := MusicTheme.theme(&"boss")
+	if boss == null or boss.data.is_empty() or boss.loop_mode == AudioStreamWAV.LOOP_DISABLED:
+		_fail("boss theme is invalid")
 
 ## Reaching the exit must start the next floor, not end the run.
 func _verify_descent() -> void:
@@ -108,6 +115,30 @@ func _verify_descent() -> void:
 		_fail("floor 2 dungeon is not solvable")
 	elif _main.player.grid_pos != _main.run.start_pos:
 		_fail("hero is not at the start of the next floor")
+
+## The final floor spawns a boss that seals the exit until it falls.
+func _verify_boss_floor() -> void:
+	_main.player.grid_pos = _main.run.exit_pos
+	for i in 5:
+		await physics_frame
+	if _main.floor_index != 2:
+		_fail("hero did not reach the boss floor")
+		return
+	if _main._boss == null:
+		_fail("the boss floor spawned no boss")
+		return
+	_main._boss.take_damage(100000)
+	for i in 3:
+		await physics_frame
+	if not _main._boss_defeated:
+		_fail("the boss did not fall")
+		return
+	var has_relic := false
+	for pickup in _main.pickups_root.get_children():
+		if pickup.kind == &"relic":
+			has_relic = true
+	if not has_relic:
+		_fail("the boss dropped no relic")
 
 func _verify_input_bindings() -> void:
 	for action in Controls.ACTIONS:

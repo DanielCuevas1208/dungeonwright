@@ -11,6 +11,7 @@ const AI := {
 	"stalker": &"stalker",
 	"sentry": &"sentry",
 	"archer": &"archer",
+	"boss": &"boss",
 }
 
 var id: StringName = &""
@@ -24,6 +25,14 @@ var drop_table: DropTable = null
 var projectile_speed: float = 0.0
 ## Maximum travel distance of a fired projectile, in tiles.
 var projectile_range: int = 0
+## How many bolts a ranged attack fires in a fan. One for archers.
+var projectile_volley: int = 1
+## The health fraction that triggers an enrage. Zero disables enrage.
+var enrage_health_ratio: float = 0.0
+## Movement speed multiplier while enraged.
+var enrage_speed_multiplier: float = 1.0
+## Attack cooldown multiplier while enraged.
+var enrage_cooldown_multiplier: float = 1.0
 
 ## True when this spec is valid for spawning.
 func is_valid() -> bool:
@@ -52,4 +61,8 @@ func scaled(p_scale: float) -> MonsterSpec:
 	copy.drop_table = drop_table
 	copy.projectile_speed = projectile_speed
 	copy.projectile_range = projectile_range
+	copy.projectile_volley = projectile_volley
+	copy.enrage_health_ratio = enrage_health_ratio
+	copy.enrage_speed_multiplier = enrage_speed_multiplier
+	copy.enrage_cooldown_multiplier = enrage_cooldown_multiplier
 	return copy
