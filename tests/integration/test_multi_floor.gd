@@ -74,9 +74,18 @@ func test_winning_on_the_final_floor_shows_victory() -> void:
 	_step_to_exit()
 	assert_eq(main.floor_index, 2)
 	assert_true(main.run_rules.is_final_floor(main.floor_index))
+	# The boss floor seals the exit until the warden falls.
+	_step_to_exit()
+	assert_eq(RunState.status, RunState.RunStatus.ACTIVE)
+	_kill_the_warden()
 	_step_to_exit()
 	assert_eq(RunState.status, RunState.RunStatus.WON)
 	assert_true(main.result_overlay.visible)
+
+## Kills the boss that guards the final-floor exit.
+func _kill_the_warden() -> void:
+	assert_not_null(main._boss, "a boss should guard the final floor")
+	main._boss.take_damage(100000)
 
 func test_defeat_still_shows_the_reached_floor() -> void:
 	main.start_run(404)

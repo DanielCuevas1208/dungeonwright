@@ -7,7 +7,7 @@ extends RefCounted
 
 ## Returns every biome in a stable order.
 static func all() -> Array[DungeonConfig]:
-	return [crypt(), drowned_forest(), ember_stronghold()]
+	return [crypt(), drowned_forest(), ember_stronghold(), frost_vault(), tidebound_archive()]
 
 ## Returns a copy of the biome with the given id.
 static func by_id(p_id: StringName) -> DungeonConfig:
@@ -40,6 +40,7 @@ static func crypt() -> DungeonConfig:
 	config.monster_table = [
 		{ "monster": &"skeleton", "weight": 3.0 },
 		{ "monster": &"crawler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.5 },
 	]
 	config.starting_health = 100
 	config.player_damage = 12
@@ -94,11 +95,57 @@ static func ember_stronghold() -> DungeonConfig:
 		{ "monster": &"golem", "weight": 2.0 },
 		{ "monster": &"skeleton", "weight": 2.0 },
 		{ "monster": &"shambler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.5 },
 	]
 	config.starting_health = 100
 	config.player_damage = 14
 	config.palette = _ember_palette()
 	return config
+
+static func frost_vault() -> DungeonConfig:
+	var config := DungeonConfig.new()
+	config.id = &"frost_vault"
+	config.display_name = "Frost Vault"
+	config.description = "Chilled halls of blue ice. Long winding corridors link vast frozen chambers."
+	config.width = 50
+	config.height = 32
+	config.room_count_min = 8
+	config.room_count_max = 11
+	config.room_min = 7
+	config.room_max = 11
+	config.corridor_style = DungeonConfig.CorridorStyle.winding
+	config.loop_chance = 0.4
+	config.door_count_min = 2
+	config.door_count_max = 3
+	config.monster_density = 0.5
+	config.monster_cap = 11
+	config.monster_table = [
+		{ "monster": &"wraith", "weight": 2.0 },
+		{ "monster": &"skeleton", "weight": 1.5 },
+		{ "monster": &"crawler", "weight": 1.0 },
+		{ "monster": &"archer", "weight": 1.0 },
+	]
+	config.starting_health = 100
+	config.player_damage = 13
+	config.palette = _frost_palette()
+	return config
+
+static func _frost_palette() -> Dictionary:
+	return {
+		&"wall_outline": Color("#0f1820"),
+		&"wall_fill": Color("#27445c"),
+		&"wall_shade": Color("#1b3144"),
+		&"wall_highlight": Color("#3d6480"),
+		&"floor_base": Color("#1c3247"),
+		&"floor_dark": Color("#152636"),
+		&"floor_light": Color("#2a4a63"),
+		&"door_bar": Color("#4a708f"),
+		&"door_lock": Color("#9fd0e8"),
+		&"door_open": Color("#0a1420"),
+		&"rune": Color("#bfefff"),
+		&"glow": Color("#8fdcff"),
+		&"accent": Color("#9fd0e8"),
+	}
 
 static func _crypt_palette() -> Dictionary:
 	return {
@@ -149,4 +196,49 @@ static func _ember_palette() -> Dictionary:
 		&"rune": Color("#ff8c5a"),
 		&"glow": Color("#ffcf6a"),
 		&"accent": Color("#e8b84c"),
+	}
+
+static func tidebound_archive() -> DungeonConfig:
+	var config := DungeonConfig.new()
+	config.id = &"tidebound_archive"
+	config.display_name = "Tidebound Archive"
+	config.description = "Flooded galleries wind around broken shelves and chambers of green glass."
+	config.width = 54
+	config.height = 32
+	config.room_count_min = 7
+	config.room_count_max = 10
+	config.room_min = 6
+	config.room_max = 12
+	config.corridor_style = DungeonConfig.CorridorStyle.winding
+	config.loop_chance = 0.65
+	config.door_count_min = 1
+	config.door_count_max = 3
+	config.monster_density = 0.55
+	config.monster_cap = 12
+	config.monster_table = [
+		{ "monster": &"wisp", "weight": 1.5 },
+		{ "monster": &"archer", "weight": 1.5 },
+		{ "monster": &"wraith", "weight": 1.0 },
+		{ "monster": &"shambler", "weight": 0.75 },
+	]
+	config.starting_health = 100
+	config.player_damage = 14
+	config.palette = _tidebound_palette()
+	return config
+
+static func _tidebound_palette() -> Dictionary:
+	return {
+		&"wall_outline": Color("#081d22"),
+		&"wall_fill": Color("#16434a"),
+		&"wall_shade": Color("#103238"),
+		&"wall_highlight": Color("#2c6c70"),
+		&"floor_base": Color("#123339"),
+		&"floor_dark": Color("#0c272d"),
+		&"floor_light": Color("#1c4b4f"),
+		&"door_bar": Color("#3c7470"),
+		&"door_lock": Color("#d1ad63"),
+		&"door_open": Color("#07181c"),
+		&"rune": Color("#86e0c5"),
+		&"glow": Color("#5ed6c3"),
+		&"accent": Color("#d1ad63"),
 	}

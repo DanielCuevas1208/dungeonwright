@@ -18,8 +18,9 @@ const TILE_START := &"start"
 const TILE_EXIT := &"exit"
 
 const ENTITY_KEYS := [
-	&"player", &"key", &"potion", &"coin",
+	&"player", &"key", &"potion", &"coin", &"shard", &"bomb",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
+	&"archer", &"wraith", &"warden", &"bolt", &"relic", &"emblem",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -90,8 +91,24 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _SHAMBLER
 		&"golem":
 			return _GOLEM
+		&"archer":
+			return _ARCHER
+		&"wraith":
+			return _WRAITH
+		&"warden":
+			return _WARDEN
+		&"bolt":
+			return _BOLT
+		&"relic":
+			return _RELIC
+		&"emblem":
+			return _EMBLEM
 		&"key":
 			return _KEY
+		&"shard":
+			return _SHARD
+		&"bomb":
+			return _BOMB
 		&"potion":
 			return _POTION
 		&"coin":
@@ -116,10 +133,26 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#4f7a3f"), &"*": Color("#16240f"), &"+": Color("#6f9a58") }
 		&"golem":
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
+		&"archer":
+			return { &"@": Color("#d9d2c0"), &"*": Color("#1a1a1a"), &"+": Color("#5a3a20") }
+		&"wraith":
+			return { &"@": Color("#9fd8ef"), &"*": Color("#dffaff"), &"+": Color("#5a8aa0") }
+		&"warden":
+			return { &"@": Color("#5a2a2a"), &"*": Color("#e8d8b0"), &"o": Color("#e8b84c"), &"+": Color("#8a4a3a") }
+		&"bolt":
+			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
+		&"relic":
+			return { &"@": Color("#8a6ad9"), &"*": Color("#f0e8ff"), &"o": Color("#e8b84c"), &"+": Color("#b49ae8") }
+		&"emblem":
+			return { &"@": Color("#4a7ab5"), &"o": Color("#e8b84c"), &"+": Color("#dff0ff") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
+		&"shard":
+			return { &"@": Color("#6ac8ff"), &"+": Color("#dff4ff"), &"*": Color("#2a6a9a") }
 		&"potion":
 			return { &"@": Color("#c94a4a"), &"+": Color("#e88a7a"), &"o": Color("#3a1a1a") }
+		&"bomb":
+			return { &"@": Color("#3a3a44"), &"+": Color("#8a8a94"), &"o": Color("#e8b84c") }
 		&"coin":
 			return { &"@": Color("#e8b84c"), &"+": Color("#fff0b0") }
 		_:
@@ -273,6 +306,72 @@ const _GOLEM := [
 	"........",
 ]
 
+const _ARCHER := [
+	"..@@@@..",
+	".@@*@@..",
+	"..@@@@..",
+	"...@....",
+	"..@@@@..",
+	".@@..@@.",
+	".@@...+.",
+	"..@....+",
+]
+
+const _WRAITH := [
+	"........",
+	"..@@@@..",
+	".@@*@@..",
+	".@***@..",
+	".@@@@@..",
+	".@@.@@..",
+	".@.@.@..",
+	"........",
+]
+
+const _WARDEN := [
+	"..*.....",
+	"..*@@@..",
+	".@@@@@@.",
+	"@@o@@o@@",
+	"@@@@@@@@",
+	".@@@@@@.",
+	".@@..@@.",
+	"..@..@..",
+]
+
+const _BOLT := [
+	"........",
+	"........",
+	"........",
+	"......+.",
+	".....@+.",
+	"....@+..",
+	".....@+.",
+	"......+.",
+]
+
+const _RELIC := [
+	"........",
+	"..oooo..",
+	".o@@@@o.",
+	".o@++@o.",
+	".o@**@o.",
+	"..@@@@..",
+	"...@@...",
+	"........",
+]
+
+const _EMBLEM := [
+	"..@@@@..",
+	".@o++o@.",
+	".@o++o@.",
+	".@@@@@@.",
+	".@+@@+@.",
+	"..@@@@..",
+	"...@@...",
+	"........",
+]
+
 const _KEY := [
 	"........",
 	"...oooo.",
@@ -292,6 +391,28 @@ const _POTION := [
 	".@@@@@@.",
 	".@@@@@@.",
 	"..@@@@..",
+	"........",
+]
+
+const _SHARD := [
+	"........",
+	"...@@...",
+	"..@@@...",
+	".+@@@+..",
+	"..@@+...",
+	"..@@....",
+	"..@@....",
+	"........",
+]
+
+const _BOMB := [
+	"........",
+	"...oo...",
+	"..oooo..",
+	".o@@@@o.",
+	".o@@@@o.",
+	".o@@o@o.",
+	"..oooo..",
 	"........",
 ]
 

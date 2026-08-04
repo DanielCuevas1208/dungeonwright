@@ -19,6 +19,9 @@ The pipeline runs in a fixed order.
 6. Place doors and keys.
 7. Scatter monsters in the rooms.
 
+The generator also marks a walkable tile next to the exit.
+This tile holds the final-floor boss and is stored in the result.
+
 ### Room placement
 
 The generator draws random rectangles in the map bounds.
@@ -41,6 +44,11 @@ Each biome picks a carving style.
 
 All carvers keep every carved cell orthogonally adjacent to the path.
 This rule prevents floating single-cell islands.
+
+Five biomes ship with the game.
+The Frost Vault uses the winding style and large rooms.
+The Tidebound Archive uses winding corridors, larger rooms, and frequent loops.
+Each biome defines its own palette, doors, monsters, and pressure.
 
 ### Doors and keys
 
@@ -86,7 +94,75 @@ Attack range and facing arcs use tile math, not physics.
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
-Coins drop often, shards sometimes, potions rarely.
+Coins drop often, shards sometimes, potions rarely, bombs rarest.
+
+## Ranged combat
+
+Archers fire projectiles at the hero.
+The `Combat` class provides two helpers for ranged attacks.
+`has_line_of_sight` checks every tile between two cells.
+A wall or a locked door blocks the line.
+`direction_toward` returns the eight-direction step toward a target.
+
+A `Projectile` node carries the shot.
+It holds a damage value, a speed, a direction, and a range.
+The scene controller calls `tick` every frame.
+A bolt moves one tile at a time toward its direction.
+Walls, locked doors, and the map edge stop a bolt.
+A bolt expires when its range runs out.
+When a bolt reaches the hero's tile, it calls `take_damage`.
+
+Archers aim at the hero's current tile.
+Bolts take time to arrive, so the hero can dodge.
+An archer holds its ground while it has line of sight.
+Without line of sight, the archer closes the distance.
+A melee monster never fires a bolt.
+
+## Bomb combat
+
+Bombs give the hero an area attack.
+A monster drop can carry a bomb.
+The hero throws a bomb in the facing direction.
+The bomb starts one tile in front of the hero.
+
+A `Bomb` node carries the throw.
+It holds a damage value, a speed, a direction, a throw range, a fuse, and a blast radius.
+The scene controller calls `tick` every frame.
+A bomb travels forward until a wall or the map edge stops it.
+It then sits on that tile while the fuse counts down.
+When the fuse ends, the controller damages every monster in the blast radius.
+A `Combat` helper checks the square radius around the blast center.
+The blast damage scales with the hero's sword damage.
+The blast never hurts the hero.
+
+## Audio
+
+All audio is generated in code at run time.
+The game ships no sound files, matching the art pipeline.
+
+The `Waveform` class in `scripts/audio` is the synthesis core.
+It builds tones, glides, noise, envelopes, and mixing.
+Every function takes explicit inputs and returns a sample buffer.
+The output is deterministic, so tests can compare buffers exactly.
+The `pack_wav` helper turns a buffer into a 16-bit mono stream.
+
+The `SoundBank` class builds every effect cue.
+Each cue layers short tones and noise bursts into one stream.
+Cues exist for attacks, hits, deaths, shots, bombs, pickups, doors, and results.
+The bank caches every stream after its first build.
+
+The `MusicTheme` class builds a looping theme for each biome.
+A theme is a chord pad with a bass line and a soft arpeggio.
+Each biome has its own note and level table.
+The menu plays its own quiet theme.
+The Tidebound Archive has its own chord and level table.
+
+The `AudioController` node owns the players.
+It keeps a small pool of effect players and one music player.
+The players keep running while the game is paused.
+The controller switches music on each descent.
+The music stops when a run ends.
+The scene controller calls the audio cues from the same handlers that drive combat.
 
 ## Scene flow
 
@@ -121,6 +197,43 @@ The run ends when the hero clears the final floor.
 `MonsterSpec.scaled` copies a spec with stronger health and damage.
 The generator and the rest of combat stay unchanged.
 
+Ranged monsters share the same scene flow.
+An archer emits `ranged_fired` when it shoots.
+The controller spawns a `Projectile` in the world.
+It refreshes the bolt's target tile to follow the hero.
+A bolt that lands on the hero damages the hero.
+
+## Boss floor
+
+The final floor is a boss floor.
+`RunRules.is_boss_floor` returns true for the last floor.
+The generator marks a walkable tile next to the exit.
+This tile becomes `boss_spawn` in the result.
+The controller spawns the Warden there.
+
+The Warden is a two-phase boss.
+It chases the hero and slams in melee at close range.
+At range, it fires a fan of three bolts.
+A `Combat.volley_directions` helper spreads the aim line.
+Each bolt is a normal `Projectile` the hero can dodge.
+Below half health, the Warden enrages.
+It moves faster, attacks faster, and turns red.
+The boss bar in the HUD tracks the fight.
+
+The exit stays sealed while the Warden lives.
+`Main._exit_clear` blocks the exit until the boss falls.
+When the Warden dies, it drops a relic.
+The relic is a pickup with its own sound and art.
+Collecting the relic calls the victory flow.
+The run can no longer end by walking to the exit first.
+
+Monsters can drop damage emblems.
+An emblem adds two points to the hero's sword.
+The hero carries the bonus between floors.
+The HUD counts the emblems the hero holds.
+The boss theme plays on the boss floor.
+The beacon turns red while the Warden guards the exit.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -138,10 +251,18 @@ The hints update when a gamepad connects or disconnects.
 
 The suite runs headless with GUT.
 Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
+Unit tests also cover line of sight, projectile flight, and bomb flight.
+Unit tests also cover waveform math, every sound cue, and every music theme.
+Unit tests also cover the boss spec, enrage profile, and volley math.
+Unit tests also cover every biome rule and the Tidebound Archive replay.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
+Integration tests verify archers fire and bolts damage the hero.
+Integration tests verify bombs blast the monsters they should.
+Integration tests verify the boss floor seals the exit and drops the relic.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
+The final floor must spawn a boss and a relic.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

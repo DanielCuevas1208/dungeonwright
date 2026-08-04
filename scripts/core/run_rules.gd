@@ -25,6 +25,11 @@ static func floor_seed(p_run_seed: int, p_floor: int) -> int:
 func is_final_floor(p_floor: int) -> bool:
 	return p_floor >= floor_count - 1
 
+## True when this floor holds the boss that guards the exit.
+## The final floor is always a boss floor.
+func is_boss_floor(p_floor: int) -> bool:
+	return is_final_floor(p_floor)
+
 ## The monster strength multiplier for a floor. Floor 0 is 1.0.
 func monster_scale(p_floor: int) -> float:
 	return 1.0 + float(p_floor) * difficulty_per_floor

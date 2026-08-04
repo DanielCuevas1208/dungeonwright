@@ -30,12 +30,12 @@ if (-not $godot) {
 Push-Location $root
 try {
     Write-Host "Importing project resources..."
-    & $godot --headless --import
+    & $godot --headless --log-file godot-test.log --import
     if ($LASTEXITCODE -ne 0) {
         throw "Godot import failed with exit code $LASTEXITCODE"
     }
     Write-Host "Running GUT tests..."
-    & $godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+    & $godot --headless --log-file godot-test.log --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
     if ($LASTEXITCODE -ne 0) {
         throw "GUT tests failed with exit code $LASTEXITCODE"
     }

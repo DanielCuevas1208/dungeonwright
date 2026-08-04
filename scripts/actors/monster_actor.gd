@@ -4,11 +4,16 @@ extends Node2D
 ##
 ## Each monster reads its behaviour from a MonsterSpec. Chasers walk
 ## toward the hero, stalkers are fast and aggressive, and sentries hold
-## their ground and lash out at anyone who comes close. Movement follows
-## a short flood-fill path so monsters rarely get stuck on walls.
+## their ground and lash out at anyone who comes close. Archers fire
+## dodgeable projectiles while they can see the hero. The warden is a
+## boss: it slams in melee, fires bolt volleys, and enrages below half
+## health. Movement follows a short flood-fill path so monsters rarely
+## get stuck on walls.
 
 signal attack_player(damage: int)
+signal ranged_fired(monster, direction: Vector2i)
 signal hp_changed(current: int, max: int)
+signal enraged(monster)
 signal died(monster)
 
 const REPATH_INTERVAL := 0.4
@@ -31,6 +36,7 @@ var _sprite: Sprite2D = null
 var _hp_bg: ColorRect = null
 var _hp_fill: ColorRect = null
 var _is_dead := false
+var _enraged := false
 
 func setup(
 	p_spec: MonsterSpec,
@@ -66,20 +72,60 @@ func _physics_process(p_delta: float) -> void:
 		return
 
 	var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
+
+	if spec.ai == MonsterSpec.AI.boss:
+		_act_as_boss(distance_sq, p_delta)
+		return
+
+	if spec.ai == MonsterSpec.AI.archer:
+		_act_as_archer(distance_sq, p_delta)
+		return
+
 	if Combat.within_attack_range(distance_sq, stats.attack_range):
 		_try_attack()
 		return
 
 	if spec.ai == MonsterSpec.AI.sentry:
 		return
+
 	if distance_sq > spec.aggro_range * spec.aggro_range:
 		return
 
+	_move_along_path(p_delta)
+
+## Ranged behaviour: fire while the hero is in range and visible.
+## Otherwise close the distance until the hero can be shot again.
+func _act_as_archer(p_distance_sq: float, p_delta: float) -> void:
+	if p_distance_sq > spec.aggro_range * spec.aggro_range:
+		return
+	var can_see := Combat.has_line_of_sight(view.map, grid_pos, target.grid_pos)
+	if can_see and Combat.within_attack_range(p_distance_sq, stats.attack_range):
+		_try_ranged_attack()
+		_sprite.position.y = 0.0
+		return
+	_move_along_path(p_delta)
+
+## Boss behaviour: slam in melee, fire a bolt volley at range, and chase
+## when the hero is out of reach or hidden behind a wall.
+func _act_as_boss(p_distance_sq: float, p_delta: float) -> void:
+	if p_distance_sq > spec.aggro_range * spec.aggro_range:
+		return
+	if Combat.within_attack_range(p_distance_sq, stats.attack_range):
+		_try_attack()
+		return
+	var can_see := Combat.has_line_of_sight(view.map, grid_pos, target.grid_pos)
+	if can_see and Combat.within_attack_range(p_distance_sq, float(spec.projectile_range)):
+		_try_volley()
+		return
+	_move_along_path(p_delta)
+
+## Walks the stored path one step toward the target.
+func _move_along_path(p_delta: float) -> void:
 	if _repath_timer <= 0.0:
 		_repath_timer = REPATH_INTERVAL
 		_path = Pathfinding.find_path(view.map, grid_pos, target.grid_pos, false)
 	if _moving:
-		_progress += p_delta * stats.speed
+		_progress += p_delta * _speed()
 		if _progress >= 1.0:
 			grid_pos = _to
 			position = view.tile_to_world(grid_pos)
@@ -98,6 +144,7 @@ func take_damage(p_amount: int) -> bool:
 	hp_changed.emit(stats.health, stats.max_health)
 	_flash()
 	_update_hp_bar()
+	_check_enrage()
 	if stats.is_dead():
 		_is_dead = true
 		died.emit(self)
@@ -107,9 +154,54 @@ func take_damage(p_amount: int) -> bool:
 func _try_attack() -> void:
 	if _attack_timer > 0.0:
 		return
-	_attack_timer = stats.attack_cooldown
+	_attack_timer = _cooldown()
 	attack_player.emit(stats.damage)
 	_lunge()
+
+## Fires a projectile at the hero and reports the shot direction.
+func _try_ranged_attack() -> void:
+	if _attack_timer > 0.0:
+		return
+	_attack_timer = _cooldown()
+	ranged_fired.emit(self, Combat.direction_toward(grid_pos, target.grid_pos))
+	_lunge()
+
+## A boss fires a fan of bolts at the hero. Each bolt is reported
+## separately so the controller can spawn the projectiles.
+func _try_volley() -> void:
+	if _attack_timer > 0.0:
+		return
+	_attack_timer = _cooldown()
+	var base := Combat.direction_toward(grid_pos, target.grid_pos)
+	for direction in Combat.volley_directions(base, spec.projectile_volley):
+		ranged_fired.emit(self, direction)
+	_lunge()
+
+## The speed a monster moves at, boosted while the boss is enraged.
+func _speed() -> float:
+	if _enraged:
+		return stats.speed * spec.enrage_speed_multiplier
+	return stats.speed
+
+## The attack cooldown a monster waits, shortened while the boss is
+## enraged.
+func _cooldown() -> float:
+	if _enraged:
+		return stats.attack_cooldown * spec.enrage_cooldown_multiplier
+	return stats.attack_cooldown
+
+## A boss turns red and speeds up once its health drops low enough.
+func _check_enrage() -> void:
+	if _enraged or spec.ai != MonsterSpec.AI.boss:
+		return
+	if spec.enrage_health_ratio <= 0.0:
+		return
+	var threshold := maxi(1, roundi(stats.max_health * spec.enrage_health_ratio))
+	if stats.health <= threshold:
+		_enraged = true
+		_sprite.modulate = Color(1.7, 0.45, 0.35)
+		_lunge()
+		enraged.emit(self)
 
 func _step_along_path() -> void:
 	while not _path.is_empty():
@@ -131,6 +223,9 @@ func _build_sprite() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = TileArt.entity_texture(StringName(spec.sprite_key))
 	_sprite.centered = true
+	if spec.ai == MonsterSpec.AI.boss:
+		_sprite.scale = Vector2(1.5, 1.5)
+		_sprite.position.y = -3.0
 	add_child(_sprite)
 
 func _build_hp_bar() -> void:
@@ -154,7 +249,14 @@ func _update_hp_bar() -> void:
 func _flash() -> void:
 	var tween := create_tween()
 	tween.tween_property(_sprite, "modulate", Color(3.0, 0.4, 0.4), 0.08)
-	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.12)
+	tween.tween_property(_sprite, "modulate", _rest_color(), 0.12)
+
+## The colour a monster rests at between flashes. An enraged boss
+## keeps its red tint so the phase reads clearly.
+func _rest_color() -> Color:
+	if _enraged:
+		return Color(1.7, 0.45, 0.35)
+	return Color.WHITE
 
 func _lunge() -> void:
 	if not _moving:

@@ -29,6 +29,27 @@ func test_biomes_use_different_generation_rules() -> void:
 	assert_ne(crypt.room_count_max, ember.room_count_max)
 	assert_ne(crypt.loop_chance, forest.loop_chance)
 
+func test_fourth_biome_frost_vault_is_distinct() -> void:
+	var frost := Biomes.frost_vault()
+	assert_eq(frost.id, &"frost_vault")
+	assert_ne(frost.palette, Biomes.crypt().palette)
+	assert_ne(frost.palette, Biomes.ember_stronghold().palette)
+	assert_gt(frost.loop_chance, Biomes.crypt().loop_chance)
+	assert_true(frost.is_valid())
+
+func test_frost_vault_references_existing_monsters() -> void:
+	for entry in Biomes.frost_vault().monster_table:
+		var spec := MonsterSpecs.by_id(entry.monster)
+		assert_eq(spec.id, entry.monster, "unknown monster %s" % entry.monster)
+
+func test_tidebound_archive_references_existing_monsters() -> void:
+	for entry in Biomes.tidebound_archive().monster_table:
+		var spec := MonsterSpecs.by_id(entry.monster)
+		assert_eq(spec.id, entry.monster, "unknown monster %s" % entry.monster)
+
+func test_there_are_five_biomes() -> void:
+	assert_eq(Biomes.all().size(), 5)
+
 func test_same_seed_different_biome_differs() -> void:
 	var seed := 2468
 	var crypt_map := DungeonGenerator.new().generate(Biomes.crypt(), seed)
@@ -41,3 +62,21 @@ func test_biome_choice_is_seeded() -> void:
 	var first := Biomes.random(SeededRng.new(555))
 	var second := Biomes.random(SeededRng.new(555))
 	assert_eq(first.id, second.id)
+
+func test_fifth_biome_tidebound_archive_is_distinct() -> void:
+	var archive := Biomes.tidebound_archive()
+	assert_eq(archive.id, &"tidebound_archive")
+	assert_ne(archive.palette, Biomes.frost_vault().palette)
+	assert_ne(archive.palette, Biomes.drowned_forest().palette)
+	assert_gt(archive.loop_chance, Biomes.frost_vault().loop_chance)
+	assert_eq(archive.corridor_style, DungeonConfig.CorridorStyle.winding)
+	assert_true(archive.is_valid())
+
+func test_tidebound_archive_replays_identically() -> void:
+	var generator := DungeonGenerator.new()
+	var first := generator.generate(Biomes.tidebound_archive(), 8675309)
+	var second := generator.generate(Biomes.tidebound_archive(), 8675309)
+	assert_eq(first.map._cells, second.map._cells)
+	assert_eq(first.start_pos, second.start_pos)
+	assert_eq(first.exit_pos, second.exit_pos)
+	assert_eq(first.monster_spawns.size(), second.monster_spawns.size())

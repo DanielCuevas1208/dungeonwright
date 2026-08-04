@@ -12,6 +12,8 @@ signal run_started(seed_value: int)
 @onready var dungeon_view: DungeonView = $World/DungeonView
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
+@onready var projectiles_root: Node2D = $World/Projectiles
+@onready var bombs_root: Node2D = $World/Bombs
 @onready var effects_root: Node2D = $World/Effects
 @onready var player: Player = $World/Player
 @onready var camera: Camera2D = $Camera
@@ -19,9 +21,12 @@ signal run_started(seed_value: int)
 @onready var menu_overlay: MenuOverlay = $UI/MenuOverlay
 @onready var result_overlay: ResultOverlay = $UI/ResultOverlay
 @onready var ambient: CanvasModulate = $Ambient
+@onready var audio: AudioController = $Audio
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
+const BOMB_SCENE := preload("res://scenes/actors/bomb.tscn")
 
 var run: DungeonResult = null
 var run_rules: RunRules = null
@@ -33,17 +38,27 @@ var monster_index := 0
 var _ended := false
 var _beacon_phase := 0.0
 var _beacon: Sprite2D = null
+## The living boss of the current floor, null when there is no boss.
+var _boss: MonsterActor = null
+var _boss_defeated := false
+var _shake_time := 0.0
+var _shake_strength := 0.0
 
 func _ready() -> void:
 	_wire_signals()
 	get_tree().paused = true
 	menu_overlay.show_menu(false)
+	audio.play_music(&"menu")
 
 func _wire_signals() -> void:
 	player.hp_changed.connect(hud.set_hp)
 	player.coins_changed.connect(hud.set_coins)
+	player.shards_changed.connect(hud.set_shards)
+	player.bombs_changed.connect(hud.set_bombs)
 	player.keys_changed.connect(hud.set_keys)
+	player.emblems_changed.connect(hud.set_emblems)
 	player.attacked.connect(_on_player_attack)
+	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
 	player.moved.connect(_on_player_moved)
 	menu_overlay.start_requested.connect(_on_start_requested)
@@ -64,11 +79,42 @@ func _physics_process(p_delta: float) -> void:
 	if run == null:
 		return
 	camera.position = player.position
+	_apply_camera_shake(p_delta)
 	hud.update_marker(player.grid_pos)
 	_collect_pickups()
+	_update_projectiles(p_delta)
+	_update_bombs(p_delta)
 	_pulse_beacon(p_delta)
-	if not _ended and player.grid_pos == run.exit_pos:
+	if not _ended and player.grid_pos == run.exit_pos and _exit_clear():
 		_on_exit_reached()
+
+## Offsets the camera while a shake decays. Visual juice only.
+func _apply_camera_shake(p_delta: float) -> void:
+	if _shake_time > 0.0:
+		_shake_time -= p_delta
+		camera.offset = Vector2(
+			randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)
+		) * _shake_strength
+	else:
+		camera.offset = Vector2.ZERO
+
+## True when the exit can end the floor. A boss floor stays sealed
+## until the boss falls.
+func _exit_clear() -> bool:
+	if not run_rules.is_boss_floor(floor_index):
+		return true
+	return _boss_defeated
+
+## Moves every live projectile and refreshes its target tile.
+func _update_projectiles(p_delta: float) -> void:
+	for projectile: Projectile in projectiles_root.get_children():
+		projectile.target_grid = player.grid_pos
+		projectile.tick(p_delta)
+
+## Advances every live bomb.
+func _update_bombs(p_delta: float) -> void:
+	for bomb: Bomb in bombs_root.get_children():
+		bomb.tick(p_delta)
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
@@ -117,6 +163,8 @@ func _begin_floor() -> void:
 	_clear_world()
 	occupancy.clear()
 	_ended = false
+	_boss = null
+	_boss_defeated = false
 
 	dungeon_view.configure(run.map, biome)
 	player.setup(_player_stats(), run.start_pos, dungeon_view, occupancy)
@@ -130,6 +178,9 @@ func _begin_floor() -> void:
 	var scale := run_rules.monster_scale(floor_index)
 	for spawn in run.monster_spawns:
 		_spawn_monster(spawn.position, spawn.monster, scale)
+
+	if run_rules.is_boss_floor(floor_index):
+		_spawn_warden()
 
 	for key in run.keys:
 		_spawn_pickup(&"key", 1, key.position)
@@ -150,18 +201,25 @@ func _begin_floor() -> void:
 	menu_overlay.hide_menu()
 	result_overlay.hide_result()
 	get_tree().paused = false
+	if run_rules.is_boss_floor(floor_index):
+		audio.play_music(&"boss")
+	else:
+		audio.play_music(biome.id)
 
-## Builds the hero stats for this floor.
+## Builds the hero stats for this floor. Damage keeps any emblem boost
+## the hero earned, so power carries between floors.
 func _player_stats() -> CombatStats:
 	var max_health := biome.starting_health
 	var health := max_health
+	var damage := biome.player_damage
 	if floor_index > 0 and player.stats != null:
 		max_health = player.stats.max_health
 		health = player.stats.health
+		damage = player.stats.damage
 	return CombatStats.make({
 		"max_health": max_health,
 		"health": health,
-		"damage": biome.player_damage,
+		"damage": damage,
 	})
 
 ## The hero reached the exit. Descend, or win on the final floor.
@@ -175,6 +233,7 @@ func _on_exit_reached() -> void:
 
 func _descend() -> void:
 	floor_index += 1
+	audio.play_sfx(&"descend")
 	_begin_floor()
 
 func _spawn_monster(p_position: Vector2i, p_monster_id: StringName, p_scale: float = 1.0) -> void:
@@ -184,8 +243,25 @@ func _spawn_monster(p_position: Vector2i, p_monster_id: StringName, p_scale: flo
 	monster.setup(spec, p_position, dungeon_view, occupancy, player)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
+	monster.ranged_fired.connect(_on_ranged_fired)
 	monster.died.connect(_on_monster_died)
 	monster_index += 1
+
+## Spawns the boss that guards the final-floor exit. The boss never
+## scales, so the fight has a fixed shape on every run.
+func _spawn_warden() -> void:
+	var warden: MonsterActor = MONSTER_SCENE.instantiate()
+	monsters_root.add_child(warden)
+	warden.setup(MonsterSpecs.warden(), run.boss_spawn, dungeon_view, occupancy, player)
+	occupancy[run.boss_spawn] = warden
+	warden.attack_player.connect(_on_monster_attack)
+	warden.ranged_fired.connect(_on_ranged_fired)
+	warden.died.connect(_on_monster_died)
+	warden.hp_changed.connect(hud.set_boss_hp)
+	warden.enraged.connect(_on_boss_enraged)
+	_boss = warden
+	hud.show_boss(warden.spec.display_name)
+	hud.set_boss_hp(warden.stats.health, warden.stats.max_health)
 
 func _spawn_pickup(p_kind: StringName, p_count: int, p_position: Vector2i) -> void:
 	var pickup: Pickup = PICKUP_SCENE.instantiate()
@@ -198,6 +274,7 @@ func _on_player_moved(p_grid: Vector2i) -> void:
 		run.map.set_tile_cell(p_grid, DungeonMap.Tile.DOOR_OPEN)
 		dungeon_view.refresh_cell(p_grid)
 		player.spend_key()
+		audio.play_sfx(&"door_open")
 
 func _collect_pickups() -> void:
 	for pickup: Pickup in pickups_root.get_children():
@@ -213,10 +290,16 @@ func _hero_can_enter(p_cell: Vector2i) -> bool:
 	return player.keys_held > 0
 
 func _on_pickup_taken(p_pickup: Pickup) -> void:
-	player.apply_pickup(p_pickup.kind, p_pickup.count)
+	var kind := p_pickup.kind
+	player.apply_pickup(kind, p_pickup.count)
+	audio.play_sfx(StringName("pickup_" + kind))
 	p_pickup.queue_free()
+	if kind == &"relic":
+		_on_victory()
 
 func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p_damage: int) -> void:
+	audio.play_sfx(&"swing")
+	var hit_any := false
 	for monster: MonsterActor in monsters_root.get_children():
 		var distance_sq := Vector2(p_origin).distance_squared_to(Vector2(monster.grid_pos))
 		if not Combat.within_attack_range(distance_sq, p_range):
@@ -225,22 +308,144 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 			continue
 		monster.take_damage(p_damage)
 		_spawn_slash(monster.grid_pos)
+		hit_any = true
+	if hit_any:
+		audio.play_sfx(&"hit")
 
 func _on_monster_attack(p_damage: int) -> void:
+	audio.play_sfx(&"hurt")
 	player.take_damage(p_damage)
+
+## A ranged monster reported a shot. Spawn the bolt for the hero to dodge.
+func _on_ranged_fired(p_monster: MonsterActor, p_direction: Vector2i) -> void:
+	audio.play_sfx(&"shoot")
+	spawn_projectile(
+		p_monster.stats.damage,
+		p_monster.spec.projectile_speed,
+		p_direction,
+		p_monster.grid_pos,
+		p_monster.spec.projectile_range
+	)
+
+## Spawns a projectile and returns it. Public entry point for tooling.
+func spawn_projectile(
+	p_damage: int,
+	p_speed: float,
+	p_direction: Vector2i,
+	p_origin: Vector2i,
+	p_range: int
+) -> Projectile:
+	var projectile: Projectile = PROJECTILE_SCENE.instantiate()
+	projectiles_root.add_child(projectile)
+	projectile.setup(p_damage, p_speed, p_direction, p_origin, dungeon_view, p_range)
+	projectile.target_grid = player.grid_pos
+	projectile.on_hit = func() -> void:
+		player.take_damage(projectile.damage)
+		_spawn_impact(projectile.grid_pos)
+		audio.play_sfx(&"impact")
+	projectile.expired.connect(_on_projectile_expired)
+	return projectile
+
+func _on_projectile_expired(p_projectile: Projectile) -> void:
+	if not p_projectile.is_queued_for_deletion():
+		p_projectile.queue_free()
+
+## The hero threw a bomb. Spawn it in front of the hero.
+func _on_bomb_thrown(p_origin: Vector2i, p_facing: Vector2i) -> void:
+	spawn_bomb(p_origin, p_facing)
+
+## Spawns a thrown bomb and returns it. Public entry point for tooling.
+func spawn_bomb(p_origin: Vector2i, p_facing: Vector2i) -> Bomb:
+	audio.play_sfx(&"throw")
+	var bomb: Bomb = BOMB_SCENE.instantiate()
+	bombs_root.add_child(bomb)
+	var damage := maxi(10, player.stats.damage * 2)
+	bomb.setup(damage, 5.0, p_facing, p_origin, dungeon_view, 2, 0.8, 2)
+	bomb.on_explode = func() -> void:
+		_explode_bomb(bomb)
+	bomb.expired.connect(_on_bomb_expired)
+	return bomb
+
+## A bomb detonated. Damage every monster inside the blast radius.
+func _explode_bomb(p_bomb: Bomb) -> void:
+	audio.play_sfx(&"explosion")
+	for monster: MonsterActor in monsters_root.get_children():
+		if Combat.in_blast_radius(p_bomb.grid_pos, monster.grid_pos, p_bomb.blast_radius):
+			monster.take_damage(p_bomb.damage)
+	_spawn_explosion(p_bomb.grid_pos)
+
+func _on_bomb_expired(p_bomb: Bomb) -> void:
+	if not p_bomb.is_queued_for_deletion():
+		p_bomb.queue_free()
+
+## A brief flash where a bolt lands, so hits read clearly.
+func _spawn_impact(p_cell: Vector2i) -> void:
+	var impact := ColorRect.new()
+	impact.color = Color(biome.palette.get(&"glow", Color.WHITE))
+	impact.size = Vector2(10, 10)
+	impact.position = Vector2(-5, -5)
+	var wrapper := Node2D.new()
+	wrapper.position = dungeon_view.tile_to_world(p_cell)
+	wrapper.add_child(impact)
+	effects_root.add_child(wrapper)
+	var tween := wrapper.create_tween()
+	tween.tween_property(impact, "scale", Vector2(1.8, 1.8), 0.1)
+	tween.parallel().tween_property(impact, "modulate:a", 0.0, 0.1)
+	tween.tween_callback(wrapper.queue_free)
+
+## A wide ring where a bomb goes off, so the blast reads clearly.
+func _spawn_explosion(p_cell: Vector2i) -> void:
+	var burst := ColorRect.new()
+	burst.color = Color(biome.palette.get(&"glow", Color.WHITE))
+	burst.size = Vector2(16, 16)
+	burst.position = Vector2(-8, -8)
+	var wrapper := Node2D.new()
+	wrapper.position = dungeon_view.tile_to_world(p_cell)
+	wrapper.add_child(burst)
+	effects_root.add_child(wrapper)
+	var tween := wrapper.create_tween()
+	tween.tween_property(burst, "scale", Vector2(5.0, 5.0), 0.22)
+	tween.parallel().tween_property(burst, "modulate:a", 0.0, 0.22)
+	tween.tween_callback(wrapper.queue_free)
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
 	occupancy.erase(p_monster.grid_pos)
+	audio.play_sfx(&"death")
+	if p_monster == _boss:
+		_on_boss_died(p_monster)
+		return
 	var drop_rng := SeededRng.new(run_seed ^ (monster_index * 0x9E37))
 	var drops := MonsterSpecs.roll_drops(p_monster.spec, drop_rng)
 	for drop in drops:
 		_spawn_pickup(drop.item, drop.count, p_monster.grid_pos)
 	p_monster.queue_free()
 
+## The warden fell. Drop the relic and unseal the exit.
+func _on_boss_died(p_warden: MonsterActor) -> void:
+	_boss = null
+	_boss_defeated = true
+	hud.hide_boss()
+	_spawn_pickup(&"relic", 1, p_warden.grid_pos)
+	if _beacon != null:
+		_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
+	p_warden.queue_free()
+
+## The warden enraged. Roar and shake the camera.
+func _on_boss_enraged(_p_warden: MonsterActor) -> void:
+	audio.play_sfx(&"roar")
+	_shake_camera(3.0)
+
+## A brief camera shake, used for boss moments.
+func _shake_camera(p_strength: float) -> void:
+	_shake_time = 0.18
+	_shake_strength = p_strength
+
 func _on_player_died() -> void:
 	if _ended:
 		return
 	_ended = true
+	audio.play_sfx(&"defeat")
+	audio.stop_music()
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
@@ -257,6 +462,8 @@ func _on_victory() -> void:
 	if _ended:
 		return
 	_ended = true
+	audio.play_sfx(&"victory")
+	audio.stop_music()
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
 	result_overlay.show_result(
@@ -289,7 +496,10 @@ func _apply_camera_limits() -> void:
 func _spawn_exit_beacon() -> void:
 	_beacon = Sprite2D.new()
 	_beacon.texture = _beacon_texture()
-	_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
+	if run_rules.is_boss_floor(floor_index) and not _boss_defeated:
+		_beacon.modulate = Color("#e07070")
+	else:
+		_beacon.modulate = Color(biome.palette.get(&"glow", Color.WHITE))
 	_beacon.scale = Vector2(0.5, 0.5)
 	_beacon.position = dungeon_view.tile_to_world(run.exit_pos)
 	effects_root.add_child(_beacon)
@@ -329,6 +539,10 @@ func _clear_world() -> void:
 	for child in monsters_root.get_children():
 		child.queue_free()
 	for child in pickups_root.get_children():
+		child.queue_free()
+	for child in projectiles_root.get_children():
+		child.queue_free()
+	for child in bombs_root.get_children():
 		child.queue_free()
 	for child in effects_root.get_children():
 		child.queue_free()

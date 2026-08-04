@@ -10,11 +10,12 @@ if [ ! -d "addons/gut" ]; then
 fi
 
 GODOT="${GODOT_BIN:-godot}"
+LOG_FILE="godot-test.log"
 
 echo "Importing project resources..."
-"$GODOT" --headless --import
+"$GODOT" --headless --log-file "$LOG_FILE" --import
 
 echo "Running GUT tests..."
-"$GODOT" --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+"$GODOT" --headless --log-file "$LOG_FILE" --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 
 echo "All tests passed."
