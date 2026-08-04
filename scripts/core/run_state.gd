@@ -13,6 +13,8 @@ static var biome_id: StringName = &""
 static var status: RunStatus = RunStatus.IDLE
 static var started_at: float = 0.0
 static var finished_at: float = 0.0
+static var floor_index: int = 0
+static var floor_count: int = 0
 
 ## Elapsed play time in seconds for the current run.
 static func elapsed() -> float:
