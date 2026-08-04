@@ -4,6 +4,17 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Ranged combat with projectiles.
+- Three new ranged monsters across the biomes.
+- Line-of-sight checks so monsters cannot shoot through walls.
+- Kiting behaviour that keeps ranged monsters at a distance.
+- Unit tests for aim, blocking, and line of sight.
+- Integration tests for firing, impact, and wall stops.
+
 ## [0.2.0] - 2026-08-03
 
 Added

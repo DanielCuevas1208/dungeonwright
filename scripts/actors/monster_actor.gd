@@ -3,11 +3,13 @@ extends Node2D
 ## A living monster.
 ##
 ## Each monster reads its behaviour from a MonsterSpec. Chasers walk
-## toward the hero, stalkers are fast and aggressive, and sentries hold
-## their ground and lash out at anyone who comes close. Movement follows
-## a short flood-fill path so monsters rarely get stuck on walls.
+## toward the hero, stalkers are fast and aggressive, sentries hold
+## their ground, and ranged monsters fire bolts while keeping distance.
+## Movement follows a short flood-fill path so monsters rarely get
+## stuck on walls.
 
 signal attack_player(damage: int)
+signal shoot_requested(origin: Vector2i, target: Vector2i, spec: MonsterSpec)
 signal hp_changed(current: int, max: int)
 signal died(monster)
 
@@ -64,30 +66,16 @@ func _physics_process(p_delta: float) -> void:
 	_repath_timer = maxf(0.0, _repath_timer - p_delta)
 	if target == null:
 		return
+	if _moving:
+		_advance_movement(p_delta)
+		_sprite.position.y = -2.0
+		return
 
 	var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
-	if Combat.within_attack_range(distance_sq, stats.attack_range):
-		_try_attack()
-		return
-
-	if spec.ai == MonsterSpec.AI.sentry:
-		return
-	if distance_sq > spec.aggro_range * spec.aggro_range:
-		return
-
-	if _repath_timer <= 0.0:
-		_repath_timer = REPATH_INTERVAL
-		_path = Pathfinding.find_path(view.map, grid_pos, target.grid_pos, false)
-	if _moving:
-		_progress += p_delta * stats.speed
-		if _progress >= 1.0:
-			grid_pos = _to
-			position = view.tile_to_world(grid_pos)
-			_moving = false
-			occupancy.erase(_from)
-			occupancy[grid_pos] = self
+	if spec.ranged:
+		_ranged_think(distance_sq)
 	else:
-		_step_along_path()
+		_melee_think(distance_sq)
 	_sprite.position.y = -2.0 if _moving else 0.0
 
 ## Applies damage. Returns true when the monster died.
@@ -111,21 +99,101 @@ func _try_attack() -> void:
 	attack_player.emit(stats.damage)
 	_lunge()
 
+## Melee behaviour: attack in range, hold ground as a sentry, else chase.
+func _melee_think(p_distance_sq: float) -> void:
+	if Combat.within_attack_range(p_distance_sq, stats.attack_range):
+		_try_attack()
+		return
+	if spec.ai == MonsterSpec.AI.sentry:
+		return
+	_approach_target(p_distance_sq)
+
+## Ranged behaviour: flee a close hero, fire with line of sight,
+## and advance until the hero is in range.
+func _ranged_think(p_distance_sq: float) -> void:
+	if Combat.within_attack_range(p_distance_sq, spec.min_range):
+		_flee_from_target()
+		return
+	var in_fire_range := p_distance_sq <= spec.projectile_range * spec.projectile_range
+	var has_los := Projectile.los_clear(view.map, grid_pos, target.grid_pos)
+	if in_fire_range and has_los:
+		_try_fire()
+		return
+	_approach_target(p_distance_sq)
+
+## Walks toward the hero along a short flood-fill path.
+func _approach_target(p_distance_sq: float) -> void:
+	if p_distance_sq > spec.aggro_range * spec.aggro_range:
+		return
+	if _repath_timer <= 0.0:
+		_repath_timer = REPATH_INTERVAL
+		_path = Pathfinding.find_path(view.map, grid_pos, target.grid_pos, false)
+	_step_along_path()
+
+## Steps one cell away from the hero, choosing the open neighbour that
+## increases the distance the most.
+func _flee_from_target() -> void:
+	var best := Vector2i(-1, -1)
+	var best_distance := -1.0
+	for offset: Vector2i in Pathfinding.ORTHO:
+		var candidate := grid_pos + offset
+		if not _can_step(candidate):
+			continue
+		var distance := Vector2(candidate).distance_squared_to(Vector2(target.grid_pos))
+		if distance > best_distance:
+			best_distance = distance
+			best = candidate
+	if best == Vector2i(-1, -1):
+		return
+	_from = grid_pos
+	_to = best
+	_progress = 0.0
+	_moving = true
+
+## Fires a projectile when the attack cooldown is ready.
+func _try_fire() -> void:
+	if _attack_timer > 0.0:
+		return
+	_attack_timer = stats.attack_cooldown
+	shoot_requested.emit(grid_pos, target.grid_pos, spec)
+	_lunge()
+
+## Finishes the current tile step and claims the new cell.
+func _advance_movement(p_delta: float) -> void:
+	_progress += p_delta * stats.speed
+	if _progress < 1.0:
+		return
+	grid_pos = _to
+	position = view.tile_to_world(grid_pos)
+	_moving = false
+	occupancy.erase(_from)
+	occupancy[grid_pos] = self
+
 func _step_along_path() -> void:
 	while not _path.is_empty():
 		var next_cell := _path[_path.size() - 1]
 		_path.remove_at(_path.size() - 1)
 		if next_cell == grid_pos:
 			continue
-		if view.map.get_tile_cell(next_cell) == DungeonMap.Tile.DOOR_LOCKED:
-			return
-		if occupancy.has(next_cell):
+		if not _can_step(next_cell):
 			return
 		_from = grid_pos
 		_to = next_cell
 		_progress = 0.0
 		_moving = true
 		return
+
+## True when a monster may step onto the cell.
+func _can_step(p_cell: Vector2i) -> bool:
+	if not view.map.in_bounds_cell(p_cell):
+		return false
+	if view.map.get_tile_cell(p_cell) == DungeonMap.Tile.DOOR_LOCKED:
+		return false
+	if not view.map.is_walkable_cell(p_cell):
+		return false
+	if occupancy.has(p_cell):
+		return false
+	return true
 
 func _build_sprite() -> void:
 	_sprite = Sprite2D.new()

@@ -80,8 +80,24 @@ Attack range and facing arcs use tile math, not physics.
 
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
+Ranged monsters fire projectiles and keep their distance.
 Each monster rolls loot from a weighted `DropTable`.
 Coins drop often, shards sometimes, potions rarely.
+
+### Ranged combat
+
+Ranged monsters follow a separate rule set in `MonsterSpec`.
+They carry a minimum range, a fire range, and a bolt speed.
+Each biome hosts one ranged monster type.
+
+The monster aims only when it has line of sight.
+A Bresenham walk in `Projectile.los_clear` checks every tile on the
+segment. A wall or a locked door blocks the shot.
+
+A `Projectile` node flies in a straight line.
+It stops at walls and locked doors, and it despawns after its range.
+The controller spawns bolts from a dedicated scene.
+The pure rules live in static helpers, so tests run without a scene.
 
 ## Scene flow
 

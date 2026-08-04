@@ -48,6 +48,25 @@ func _verify() -> void:
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
 	_verify_input_bindings()
+	_verify_ranged()
+
+func _verify_ranged() -> void:
+	for spec in MonsterSpecs.all():
+		if not spec.ranged:
+			continue
+		if not spec.is_valid():
+			_fail("ranged monster %s is invalid" % spec.id)
+		if not TileArt.has_entity(spec.projectile_key):
+			_fail("ranged monster %s has no projectile sprite" % spec.id)
+	for biome in Biomes.all():
+		var has_ranged := false
+		for entry in biome.monster_table:
+			if MonsterSpecs.by_id(entry.monster).ranged:
+				has_ranged = true
+		if not has_ranged:
+			_fail("biome %s has no ranged monster" % biome.id)
+	if not Projectile.blocks(DungeonMap.Tile.WALL):
+		_fail("projectiles must stop at walls")
 
 func _verify_input_bindings() -> void:
 	for action in Controls.ACTIONS:

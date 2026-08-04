@@ -10,6 +10,7 @@ const AI := {
 	"chaser": &"chaser",
 	"stalker": &"stalker",
 	"sentry": &"sentry",
+	"ranged": &"ranged",
 }
 
 var id: StringName = &""
@@ -20,6 +21,20 @@ var aggro_range: float = 8.0
 var stats: CombatStats = null
 var drop_table: DropTable = null
 
+## Ranged behaviour. Ranged monsters fire projectiles and keep distance.
+var ranged: bool = false
+var min_range: float = 2.0
+var projectile_range: float = 7.0
+var projectile_speed: float = 7.0
+var projectile_damage: int = 6
+var projectile_key: StringName = &"bolt"
+var projectile_tint: Color = Color.WHITE
+
 ## True when this spec is valid for spawning.
 func is_valid() -> bool:
-	return id != &"" and stats != null and drop_table != null
+	if id == &"" or stats == null or drop_table == null:
+		return false
+	if not ranged:
+		return true
+	return projectile_damage > 0 and projectile_speed > 0.0 \
+		and projectile_range >= min_range

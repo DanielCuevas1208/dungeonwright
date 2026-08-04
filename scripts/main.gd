@@ -13,6 +13,7 @@ signal run_started(seed_value: int)
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
 @onready var effects_root: Node2D = $World/Effects
+@onready var projectiles_root: Node2D = $World/Projectiles
 @onready var player: Player = $World/Player
 @onready var camera: Camera2D = $Camera
 @onready var hud: Hud = $UI/HUD
@@ -22,6 +23,7 @@ signal run_started(seed_value: int)
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
 
 var run: DungeonResult = null
 var biome: DungeonConfig = null
@@ -144,6 +146,7 @@ func _spawn_monster(p_position: Vector2i, p_monster_id: StringName) -> void:
 	monster.setup(spec, p_position, dungeon_view, occupancy, player)
 	occupancy[p_position] = monster
 	monster.attack_player.connect(_on_monster_attack)
+	monster.shoot_requested.connect(_on_monster_shoot)
 	monster.died.connect(_on_monster_died)
 	monster_index += 1
 
@@ -187,6 +190,16 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 		_spawn_slash(monster.grid_pos)
 
 func _on_monster_attack(p_damage: int) -> void:
+	player.take_damage(p_damage)
+
+## Spawns a projectile when a ranged monster fires.
+func _on_monster_shoot(p_origin: Vector2i, p_target: Vector2i, p_spec: MonsterSpec) -> void:
+	var projectile: Projectile = PROJECTILE_SCENE.instantiate()
+	projectiles_root.add_child(projectile)
+	projectile.setup(p_spec, p_origin, p_target, dungeon_view, player)
+	projectile.hit_player.connect(_on_projectile_hit)
+
+func _on_projectile_hit(p_damage: int) -> void:
 	player.take_damage(p_damage)
 
 func _on_monster_died(p_monster: MonsterActor) -> void:
@@ -289,5 +302,7 @@ func _clear_world() -> void:
 	for child in pickups_root.get_children():
 		child.queue_free()
 	for child in effects_root.get_children():
+		child.queue_free()
+	for child in projectiles_root.get_children():
 		child.queue_free()
 	_beacon = null

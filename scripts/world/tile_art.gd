@@ -20,6 +20,8 @@ const TILE_EXIT := &"exit"
 const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
+	&"bonecaster", &"spitter", &"slinger",
+	&"bolt", &"spit", &"ember",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -90,6 +92,18 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _SHAMBLER
 		&"golem":
 			return _GOLEM
+		&"bonecaster":
+			return _BONECASTER
+		&"spitter":
+			return _SPITTER
+		&"slinger":
+			return _SLINGER
+		&"bolt":
+			return _BOLT
+		&"spit":
+			return _SPIT
+		&"ember":
+			return _EMBER
 		&"key":
 			return _KEY
 		&"potion":
@@ -116,6 +130,18 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#4f7a3f"), &"*": Color("#16240f"), &"+": Color("#6f9a58") }
 		&"golem":
 			return { &"@": Color("#8a6a52"), &"*": Color("#2a1f18"), &"+": Color("#b09070") }
+		&"bonecaster":
+			return { &"@": Color("#c9b89a"), &"*": Color("#7a5a3a"), &"+": Color("#e8e0cc") }
+		&"spitter":
+			return { &"@": Color("#7ab84c"), &"*": Color("#2a4a1a"), &"+": Color("#a8d86a") }
+		&"slinger":
+			return { &"@": Color("#d86a3a"), &"*": Color("#3a1a10"), &"+": Color("#f09058") }
+		&"bolt":
+			return { &"@": Color("#9fb4c9"), &"*": Color("#e8f4ff") }
+		&"spit":
+			return { &"@": Color("#7ab84c"), &"*": Color("#e8ffb0") }
+		&"ember":
+			return { &"@": Color("#d86a3a"), &"*": Color("#ffe8b0"), &"+": Color("#f0a050") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"potion":
@@ -270,6 +296,72 @@ const _GOLEM := [
 	".@@@.@@.",
 	".@@.@.@.",
 	"........",
+	"........",
+]
+
+const _BONECASTER := [
+	"..@@@...",
+	".@*+*@..",
+	".@@*@@..",
+	"...@@...",
+	"..@@@@..",
+	".@..@@@.",
+	".@.@@@@.",
+	"........",
+]
+
+const _SPITTER := [
+	"........",
+	"..@@@...",
+	".@+@+@..",
+	".@@@@@@.",
+	".@@*@@@.",
+	".@@@@@@.",
+	"..@@@@..",
+	"........",
+]
+
+const _SLINGER := [
+	"..@@@...",
+	".@+++@..",
+	".@@@@@@.",
+	".@@*@@@.",
+	".@@@@@@.",
+	".@@@@@@.",
+	"..@@@...",
+	"........",
+]
+
+const _BOLT := [
+	"........",
+	"...@@...",
+	"..@@@@..",
+	".@@@@@@.",
+	"..@@@@..",
+	"...@@...",
+	"........",
+	"........",
+]
+
+const _SPIT := [
+	"........",
+	"..@@@...",
+	".@@@@@..",
+	".@@@@@@.",
+	".@@@@@@.",
+	".@@@@@@.",
+	".@@@@@..",
+	"........",
+]
+
+const _EMBER := [
+	"........",
+	"...@@...",
+	"..@++@..",
+	"..@@@@..",
+	".@+@@+@.",
+	".@@@@@@.",
+	"..@@@@..",
 	"........",
 ]
 

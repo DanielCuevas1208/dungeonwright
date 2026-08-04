@@ -13,6 +13,9 @@ static func all() -> Array[MonsterSpec]:
 		wisp(),
 		shambler(),
 		golem(),
+		bonecaster(),
+		spitter(),
+		slinger(),
 	]
 
 static func by_id(p_id: StringName) -> MonsterSpec:
@@ -64,6 +67,51 @@ static func golem() -> MonsterSpec:
 		"speed": 1.2, "attack_range": 1.4, "attack_cooldown": 1.6,
 	})
 	spec.drop_table = DropTable.from_entries(_entries([4.0, 3.0, 2.0]), null)
+	return spec
+
+static func bonecaster() -> MonsterSpec:
+	var spec := _base(&"bonecaster", "Bone Caster", MonsterSpec.AI.ranged, "bonecaster", 9.0)
+	spec.stats = CombatStats.make({
+		"max_health": 24, "health": 24, "damage": 9,
+		"speed": 1.4, "attack_range": 1.5, "attack_cooldown": 1.4,
+	})
+	spec.ranged = true
+	spec.min_range = 2.5
+	spec.projectile_range = 7.0
+	spec.projectile_speed = 6.0
+	spec.projectile_damage = 9
+	spec.projectile_key = &"bolt"
+	spec.drop_table = DropTable.from_entries(_entries([5.0, 2.0, 1.0]), null)
+	return spec
+
+static func spitter() -> MonsterSpec:
+	var spec := _base(&"spitter", "Root Spitter", MonsterSpec.AI.ranged, "spitter", 8.0)
+	spec.stats = CombatStats.make({
+		"max_health": 16, "health": 16, "damage": 7,
+		"speed": 2.6, "attack_range": 1.5, "attack_cooldown": 1.1,
+	})
+	spec.ranged = true
+	spec.min_range = 2.0
+	spec.projectile_range = 6.0
+	spec.projectile_speed = 7.0
+	spec.projectile_damage = 7
+	spec.projectile_key = &"spit"
+	spec.drop_table = DropTable.from_entries(_entries([4.0, 2.0, 0.5]), null)
+	return spec
+
+static func slinger() -> MonsterSpec:
+	var spec := _base(&"slinger", "Cinder Slinger", MonsterSpec.AI.ranged, "slinger", 8.0)
+	spec.stats = CombatStats.make({
+		"max_health": 34, "health": 34, "damage": 11,
+		"speed": 1.6, "attack_range": 1.5, "attack_cooldown": 1.6,
+	})
+	spec.ranged = true
+	spec.min_range = 3.0
+	spec.projectile_range = 8.0
+	spec.projectile_speed = 6.0
+	spec.projectile_damage = 11
+	spec.projectile_key = &"ember"
+	spec.drop_table = DropTable.from_entries(_entries([4.0, 2.0, 1.5]), null)
 	return spec
 
 static func _base(
