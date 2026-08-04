@@ -32,7 +32,7 @@ The same seed always builds the same dungeon.
 - A new map for every run, driven by a seed.
 - Three floors per run with a depth counter.
 - Rooms, corridors, locked doors, and keys.
-- Four biomes with different generation rules.
+- Five biomes with different generation rules.
 - Monsters with simple combat and balanced drops.
 - Ranged monsters that fire dodgeable projectiles.
 - A bomb item that blasts a crowd of monsters.
@@ -54,7 +54,15 @@ The generator guarantees the exit is always reachable.
 You can walk, fight, collect loot, and finish a run.
 You can replay any run from its seed.
 
-## This release
+## This release: Tidebound Archive
+
+This release adds the Tidebound Archive.
+Flooded galleries use winding corridors and larger rooms.
+Extra loops create more route choices.
+Teal and amber tiles give the biome a clear identity.
+Its procedural music theme uses a matching chord set.
+
+The final floor still holds the Warden boss.
 
 This release adds a boss floor.
 The final floor is a sealed arena.
@@ -164,6 +172,10 @@ The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
+Five biomes ship with the demo.
+Each biome changes map dimensions, room rules, monster pressure, palette, and music.
+The Tidebound Archive uses winding galleries, larger rooms, and frequent shortcut loops.
+
 A run descends through three floors.
 `RunRules` sets the floor count and the difficulty curve.
 Each floor uses a seed derived from the run seed.
@@ -227,6 +239,8 @@ It carries between floors.
 - `tests` holds the GUT suite.
 - `tools` holds the setup, test, and CI scripts.
 
+Read [docs/architecture.md](docs/architecture.md) for the system design.
+
 ## Design guarantees
 
 A seed always produces the same map.
@@ -243,20 +257,30 @@ The Warden always drops a relic when it dies.
 
 ## Evaluation evidence
 
-The suite has 201 tests.
-It covers generation, biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
+The suite has 205 tests and 5,004 assertions.
+All 205 tests pass in a headless run.
+It covers generation, all five biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
 It also covers the boss floor, bolt volleys, enrage, and the relic win.
-All 201 tests pass in a headless run.
+Run the full suite before release.
 A smoke test loads the game and spawns a fixed-seed run.
+The smoke test passes with seed 12345.
 The smoke test checks the hero descends after reaching the exit.
 The smoke test checks the boss floor spawns a Warden and a relic.
 The smoke test checks every action has a gamepad binding.
 The smoke test checks every monster and every drop item has art.
 The smoke test checks every sound cue and every music theme builds audio.
 
+## Sample output
+
+The smoke test prints this success line:
+
+`Smoke test passed: seed 12345 spawned a solvable dungeon across floors.`
+
 ## Roadmap
 
 Done in this release:
+- The Tidebound Archive, a fifth biome with winding galleries.
+- A matching procedural music theme.
 - A boss floor that seals the exit.
 - The Warden, with melee slams, bolt volleys, and enrage.
 - A relic that drops when the Warden falls.
@@ -274,11 +298,14 @@ Done in an earlier release:
 - Full gamepad support.
 
 Next up:
-- A fifth biome and more item types.
+- A new item type with a focused use.
+- A short in-game biome gallery.
+
+Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 
 ## Limitations
 
-The demo has four biomes.
+The demo has five biomes.
 Each run spans three floors.
 One boss type guards the final floor.
 The hero has one melee attack and one thrown item.

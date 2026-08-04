@@ -7,7 +7,7 @@ extends RefCounted
 
 ## Returns every biome in a stable order.
 static func all() -> Array[DungeonConfig]:
-	return [crypt(), drowned_forest(), ember_stronghold(), frost_vault()]
+	return [crypt(), drowned_forest(), ember_stronghold(), frost_vault(), tidebound_archive()]
 
 ## Returns a copy of the biome with the given id.
 static func by_id(p_id: StringName) -> DungeonConfig:
@@ -196,4 +196,49 @@ static func _ember_palette() -> Dictionary:
 		&"rune": Color("#ff8c5a"),
 		&"glow": Color("#ffcf6a"),
 		&"accent": Color("#e8b84c"),
+	}
+
+static func tidebound_archive() -> DungeonConfig:
+	var config := DungeonConfig.new()
+	config.id = &"tidebound_archive"
+	config.display_name = "Tidebound Archive"
+	config.description = "Flooded galleries wind around broken shelves and chambers of green glass."
+	config.width = 54
+	config.height = 32
+	config.room_count_min = 7
+	config.room_count_max = 10
+	config.room_min = 6
+	config.room_max = 12
+	config.corridor_style = DungeonConfig.CorridorStyle.winding
+	config.loop_chance = 0.65
+	config.door_count_min = 1
+	config.door_count_max = 3
+	config.monster_density = 0.55
+	config.monster_cap = 12
+	config.monster_table = [
+		{ "monster": &"wisp", "weight": 1.5 },
+		{ "monster": &"archer", "weight": 1.5 },
+		{ "monster": &"wraith", "weight": 1.0 },
+		{ "monster": &"shambler", "weight": 0.75 },
+	]
+	config.starting_health = 100
+	config.player_damage = 14
+	config.palette = _tidebound_palette()
+	return config
+
+static func _tidebound_palette() -> Dictionary:
+	return {
+		&"wall_outline": Color("#081d22"),
+		&"wall_fill": Color("#16434a"),
+		&"wall_shade": Color("#103238"),
+		&"wall_highlight": Color("#2c6c70"),
+		&"floor_base": Color("#123339"),
+		&"floor_dark": Color("#0c272d"),
+		&"floor_light": Color("#1c4b4f"),
+		&"door_bar": Color("#3c7470"),
+		&"door_lock": Color("#d1ad63"),
+		&"door_open": Color("#07181c"),
+		&"rune": Color("#86e0c5"),
+		&"glow": Color("#5ed6c3"),
+		&"accent": Color("#d1ad63"),
 	}

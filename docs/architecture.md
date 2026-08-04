@@ -45,8 +45,9 @@ Each biome picks a carving style.
 All carvers keep every carved cell orthogonally adjacent to the path.
 This rule prevents floating single-cell islands.
 
-Four biomes ship with the game.
+Five biomes ship with the game.
 The Frost Vault uses the winding style and large rooms.
+The Tidebound Archive uses winding corridors, larger rooms, and frequent loops.
 Each biome defines its own palette, doors, monsters, and pressure.
 
 ### Doors and keys
@@ -154,6 +155,7 @@ The `MusicTheme` class builds a looping theme for each biome.
 A theme is a chord pad with a bass line and a soft arpeggio.
 Each biome has its own note and level table.
 The menu plays its own quiet theme.
+The Tidebound Archive has its own chord and level table.
 
 The `AudioController` node owns the players.
 It keeps a small pool of effect players and one music player.
@@ -252,6 +254,7 @@ Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
 Unit tests also cover line of sight, projectile flight, and bomb flight.
 Unit tests also cover waveform math, every sound cue, and every music theme.
 Unit tests also cover the boss spec, enrage profile, and volley math.
+Unit tests also cover every biome rule and the Tidebound Archive replay.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.

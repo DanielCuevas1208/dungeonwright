@@ -4,6 +4,16 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.8.0] - 2026-08-04
+
+Added
+
+- A fifth biome, the Tidebound Archive.
+- Winding galleries with larger rooms and more loops.
+- A teal and amber palette for the new biome.
+- A matching procedural music theme.
+- Deterministic tests for biome rules and replay.
+
 ## [0.7.0] - 2026-08-04
 
 Added

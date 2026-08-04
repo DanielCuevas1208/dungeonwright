@@ -95,6 +95,13 @@ static func _settings(p_id: StringName) -> Dictionary:
 				"bass_gain": 0.26,
 				"arp_gain": 0.2,
 			}
+		&"tidebound_archive":
+			return {
+				"chords": [[52, 56, 59], [48, 52, 55], [55, 59, 62], [50, 53, 57]],
+				"pad_gain": 0.12,
+				"bass_gain": 0.27,
+				"arp_gain": 0.2,
+			}
 		&"boss":
 			return {
 				"chords": [[40, 43, 46], [38, 41, 44], [40, 43, 46], [35, 38, 42]],

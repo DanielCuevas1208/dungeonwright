@@ -29,3 +29,8 @@ func test_themes_are_distinct() -> void:
 	var crypt := MusicTheme.theme(&"crypt")
 	assert_ne(menu.data, crypt.data)
 
+func test_tidebound_archive_has_its_own_theme() -> void:
+	var archive := MusicTheme.theme(StringName("tidebound_archive"))
+	var frost := MusicTheme.theme(&"frost_vault")
+	assert_ne(archive.data, frost.data)
+

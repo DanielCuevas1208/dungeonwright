@@ -42,8 +42,13 @@ func test_frost_vault_references_existing_monsters() -> void:
 		var spec := MonsterSpecs.by_id(entry.monster)
 		assert_eq(spec.id, entry.monster, "unknown monster %s" % entry.monster)
 
-func test_there_are_four_biomes() -> void:
-	assert_eq(Biomes.all().size(), 4)
+func test_tidebound_archive_references_existing_monsters() -> void:
+	for entry in Biomes.tidebound_archive().monster_table:
+		var spec := MonsterSpecs.by_id(entry.monster)
+		assert_eq(spec.id, entry.monster, "unknown monster %s" % entry.monster)
+
+func test_there_are_five_biomes() -> void:
+	assert_eq(Biomes.all().size(), 5)
 
 func test_same_seed_different_biome_differs() -> void:
 	var seed := 2468
@@ -57,3 +62,21 @@ func test_biome_choice_is_seeded() -> void:
 	var first := Biomes.random(SeededRng.new(555))
 	var second := Biomes.random(SeededRng.new(555))
 	assert_eq(first.id, second.id)
+
+func test_fifth_biome_tidebound_archive_is_distinct() -> void:
+	var archive := Biomes.tidebound_archive()
+	assert_eq(archive.id, &"tidebound_archive")
+	assert_ne(archive.palette, Biomes.frost_vault().palette)
+	assert_ne(archive.palette, Biomes.drowned_forest().palette)
+	assert_gt(archive.loop_chance, Biomes.frost_vault().loop_chance)
+	assert_eq(archive.corridor_style, DungeonConfig.CorridorStyle.winding)
+	assert_true(archive.is_valid())
+
+func test_tidebound_archive_replays_identically() -> void:
+	var generator := DungeonGenerator.new()
+	var first := generator.generate(Biomes.tidebound_archive(), 8675309)
+	var second := generator.generate(Biomes.tidebound_archive(), 8675309)
+	assert_eq(first.map._cells, second.map._cells)
+	assert_eq(first.start_pos, second.start_pos)
+	assert_eq(first.exit_pos, second.exit_pos)
+	assert_eq(first.monster_spawns.size(), second.monster_spawns.size())
