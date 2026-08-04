@@ -4,6 +4,24 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor descent across three floors.
+- A floor counter in the HUD.
+- Difficulty scaling for monsters on deeper floors.
+- A heal between floors that keeps hero health.
+- Loot that carries across floors.
+- Run rules with deterministic per-floor seeds.
+- Integration tests for the descent flow.
+
+Changed
+
+- Reaching the exit now descends until the final floor.
+- Run summaries show the floor reached.
+- Coins reset at the start of a new run.
+
 ## [0.2.0] - 2026-08-03
 
 Added

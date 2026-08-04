@@ -51,11 +51,12 @@ func setup(
 	view = p_view
 	occupancy = p_occupancy
 	position = view.tile_to_world(grid_pos)
-	_sprite = Sprite2D.new()
-	_sprite.texture = TileArt.entity_texture(&"player")
-	_sprite.centered = true
-	add_child(_sprite)
-	_add_light()
+	if _sprite == null:
+		_sprite = Sprite2D.new()
+		_sprite.texture = TileArt.entity_texture(&"player")
+		_sprite.centered = true
+		add_child(_sprite)
+		_add_light()
 	emit_hud()
 
 func _physics_process(p_delta: float) -> void:
@@ -147,6 +148,20 @@ func spend_key() -> void:
 
 func add_key() -> void:
 	apply_pickup(&"key", 1)
+
+## Resets run-only loot when a new run starts. Health is set by setup.
+func start_run() -> void:
+	coins = 0
+	shards = 0
+	keys_held = 0
+	if stats != null:
+		emit_hud()
+
+## Drops any keys carried from the previous floor.
+func reset_keys() -> void:
+	if keys_held > 0:
+		keys_held = 0
+		keys_changed.emit(keys_held)
 
 func emit_hud() -> void:
 	hp_changed.emit(stats.health, stats.max_health)

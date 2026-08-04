@@ -23,3 +23,26 @@ var drop_table: DropTable = null
 ## True when this spec is valid for spawning.
 func is_valid() -> bool:
 	return id != &"" and stats != null and drop_table != null
+
+## Returns a copy of this spec with scaled health and damage.
+## Deeper floors use the result so monsters grow stronger.
+## A scale at or below 1.0 returns this spec unchanged.
+func scaled(p_scale: float) -> MonsterSpec:
+	if p_scale <= 1.0:
+		return self
+	var copy := MonsterSpec.new()
+	copy.id = id
+	copy.display_name = display_name
+	copy.ai = ai
+	copy.sprite_key = sprite_key
+	copy.aggro_range = aggro_range
+	copy.stats = CombatStats.make({
+		"max_health": maxi(1, roundi(stats.max_health * p_scale)),
+		"health": maxi(1, roundi(stats.max_health * p_scale)),
+		"damage": maxi(1, roundi(stats.damage * p_scale)),
+		"speed": stats.speed,
+		"attack_range": stats.attack_range,
+		"attack_cooldown": stats.attack_cooldown,
+	})
+	copy.drop_table = drop_table
+	return copy

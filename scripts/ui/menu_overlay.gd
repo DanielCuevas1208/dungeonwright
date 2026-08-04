@@ -67,7 +67,7 @@ func _build() -> void:
 	title.add_theme_font_size_override("font_size", 40)
 
 	var subtitle := Label.new()
-	subtitle.text = "A new dungeon for every run. Every run can repeat from its seed."
+	subtitle.text = "Descend three floors. Every run builds a new dungeon from its seed."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle.add_theme_font_size_override("font_size", 14)

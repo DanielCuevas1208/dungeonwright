@@ -72,6 +72,11 @@ The class wraps the mulberry32 algorithm.
 The output depends only on the seed, never on the platform.
 Seeds display as six-character base-36 strings.
 
+A run uses one run seed.
+Each floor derives its dungeon seed from that run seed.
+`RunRules.floor_seed` mixes the run seed with the floor number.
+Floor one uses the run seed unchanged.
+
 ## Combat model
 
 The player and each monster carry a `CombatStats` block.
@@ -95,6 +100,27 @@ The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
 
+## Floor descent
+
+A run spans three floors.
+`RunRules` in `scripts/core` defines the run.
+It holds the floor count, the difficulty curve, and the heal rate.
+
+Each floor uses a derived seed.
+Floor one uses the run seed unchanged.
+Deeper floors mix the run seed with the floor number.
+This keeps every run replayable from one seed.
+
+The hero keeps health and loot between floors.
+Keys reset, because each floor has its own doors.
+The hero heals a fraction of missing health on descent.
+Monsters use scaled stats on deeper floors.
+
+The scene controller descends when the hero reaches the exit.
+The run ends when the hero clears the final floor.
+`MonsterSpec.scaled` copies a spec with stronger health and damage.
+The generator and the rest of combat stay unchanged.
+
 ## Input handling
 
 A `Controls` class reads all movement input.
@@ -111,9 +137,11 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops, and run rules.
 Integration tests run many seeds across all biomes.
+Integration tests also drive the floor descent flow.
 Every generated dungeon must be solvable.
+Each floor must be a fresh solvable dungeon.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.
