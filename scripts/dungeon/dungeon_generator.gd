@@ -1,6 +1,6 @@
 class_name DungeonGenerator
 extends RefCounted
-## Builds a solvable dungeon from a seed and a biome.
+## Builds one floor of a solvable dungeon from a seed and a biome.
 ##
 ## The generator follows a fixed pipeline:
 ##   1. Place rooms without overlaps.
@@ -13,11 +13,18 @@ extends RefCounted
 ##   7. Scatter monsters in the rooms.
 ##
 ## Every step uses the same SeededRng, so a seed always produces the
-## same dungeon.
-
-func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
+## same dungeon. Multi-floor runs pass p_floor and p_run_seed so the
+## result can report which floor it describes.
+func generate(
+	p_config: DungeonConfig,
+	p_seed: int,
+	p_floor: int = 1,
+	p_run_seed: int = -1
+) -> DungeonResult:
 	var result := DungeonResult.new()
 	result.seed_value = p_seed
+	result.run_seed = p_seed if p_run_seed < 0 else p_run_seed
+	result.floor = p_floor
 	result.config = p_config
 
 	var rng := SeededRng.new(p_seed)
@@ -34,14 +41,19 @@ func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
 	result.start_pos = result.rooms[result.start_room].center()
 	result.exit_pos = result.rooms[result.exit_room].center()
 	result.map.set_tile_cell(result.start_pos, DungeonMap.Tile.START)
-	result.map.set_tile_cell(result.exit_pos, DungeonMap.Tile.EXIT)
+	result.map.set_tile_cell(result.exit_pos, _exit_tile(result))
 
 	_place_doors_and_keys(rng, p_config, result)
-	_place_monsters(rng, p_config, result)
+	_place_monsters(rng, p_config, result, p_floor)
 
 	result.depth = Pathfinding.flood(result.map, result.start_pos, true).get(result.exit_pos, 0)
 	result.solvable = Solvability.verify(result)
 	return result
+
+## Returns the tile for the exit of a floor.
+## The final floor uses the victory exit; earlier floors use stairs.
+func _exit_tile(p_result: DungeonResult) -> int:
+	return DungeonMap.Tile.EXIT if p_result.is_final_floor() else DungeonMap.Tile.STAIRS
 
 func _place_rooms(p_rng: SeededRng, p_config: DungeonConfig) -> Array[Room]:
 	var rooms: Array[Room] = []
@@ -455,13 +467,17 @@ func _rooms_on_start_side(
 func _place_monsters(
 	p_rng: SeededRng,
 	p_config: DungeonConfig,
-	p_result: DungeonResult
+	p_result: DungeonResult,
+	p_floor: int = 1
 ) -> void:
 	var monster_ids: Array = []
 	var weights: Array = []
 	for entry in p_config.monster_table:
 		monster_ids.append(entry.monster)
 		weights.append(entry.weight)
+
+	var density := Descent.monster_density(p_config, p_floor)
+	var monster_cap := Descent.monster_cap(p_config, p_floor)
 
 	var monster_rooms: Array[int] = []
 	for room in p_result.rooms:
@@ -470,13 +486,13 @@ func _place_monsters(
 		monster_rooms.append(room.id)
 
 	for room_id in monster_rooms:
-		if p_result.monster_spawns.size() >= p_config.monster_cap:
+		if p_result.monster_spawns.size() >= monster_cap:
 			break
 		var room := p_result.rooms[room_id]
-		var density := p_config.monster_density
+		var room_density := density
 		if room.area() >= 56:
-			density += 0.2
-		if not p_rng.chance(density):
+			room_density += 0.2
+		if not p_rng.chance(room_density):
 			continue
 		var monster_id: StringName = monster_ids[p_rng.weighted_index(weights)]
 		p_result.monster_spawns.append({

@@ -51,11 +51,27 @@ func setup(
 	view = p_view
 	occupancy = p_occupancy
 	position = view.tile_to_world(grid_pos)
-	_sprite = Sprite2D.new()
-	_sprite.texture = TileArt.entity_texture(&"player")
-	_sprite.centered = true
-	add_child(_sprite)
-	_add_light()
+	if _sprite == null:
+		_sprite = Sprite2D.new()
+		_sprite.texture = TileArt.entity_texture(&"player")
+		_sprite.centered = true
+		add_child(_sprite)
+		_add_light()
+	emit_hud()
+
+## Moves the hero to the start of a new floor.
+## Loot and health carry over; keys reset because every floor has its
+## own doors.
+func begin_floor(p_start: Vector2i, p_view: DungeonView, p_occupancy: Dictionary) -> void:
+	grid_pos = p_start
+	view = p_view
+	occupancy = p_occupancy
+	position = view.tile_to_world(grid_pos)
+	keys_held = 0
+	_moving = false
+	_from = grid_pos
+	_to = grid_pos
+	_progress = 1.0
 	emit_hud()
 
 func _physics_process(p_delta: float) -> void:

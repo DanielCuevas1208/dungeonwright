@@ -4,6 +4,19 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.3.0] - 2026-08-03
+
+Added
+
+- Multi-floor runs with a floor counter.
+- Reaching the exit on a lower floor descends.
+- Every floor uses a deterministic child seed of the run seed.
+- A stairs tile marks the exit of a lower floor.
+- Monster pressure scales with each floor.
+- A floor transition overlay between descents.
+- Floor and run-seed metadata on generated dungeons.
+- Unit and integration tests for the descent system.
+
 ## [0.2.0] - 2026-08-03
 
 Added

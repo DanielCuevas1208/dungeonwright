@@ -33,6 +33,7 @@ static func crypt() -> DungeonConfig:
 	config.room_max = 9
 	config.corridor_style = DungeonConfig.CorridorStyle.elbow
 	config.loop_chance = 0.25
+	config.max_floors = 2
 	config.door_count_min = 2
 	config.door_count_max = 3
 	config.monster_density = 0.5
@@ -59,6 +60,7 @@ static func drowned_forest() -> DungeonConfig:
 	config.room_max = 12
 	config.corridor_style = DungeonConfig.CorridorStyle.winding
 	config.loop_chance = 0.5
+	config.max_floors = 3
 	config.door_count_min = 1
 	config.door_count_max = 2
 	config.monster_density = 0.4
@@ -86,6 +88,7 @@ static func ember_stronghold() -> DungeonConfig:
 	config.room_max = 8
 	config.corridor_style = DungeonConfig.CorridorStyle.straight
 	config.loop_chance = 0.15
+	config.max_floors = 4
 	config.door_count_min = 3
 	config.door_count_max = 4
 	config.monster_density = 0.65

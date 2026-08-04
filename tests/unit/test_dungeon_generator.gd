@@ -36,7 +36,11 @@ func test_start_and_exit_are_valid() -> void:
 	assert_true(result.map.is_walkable_cell(result.start_pos))
 	assert_true(result.map.is_walkable_cell(result.exit_pos))
 	assert_eq(result.map.get_tile_cell(result.start_pos), DungeonMap.Tile.START)
-	assert_eq(result.map.get_tile_cell(result.exit_pos), DungeonMap.Tile.EXIT)
+	var exit_tile := result.map.get_tile_cell(result.exit_pos)
+	assert_true(
+		exit_tile == DungeonMap.Tile.EXIT or exit_tile == DungeonMap.Tile.STAIRS,
+		"exit tile %d is neither the exit nor stairs" % exit_tile
+	)
 
 func test_map_dimensions_match_config() -> void:
 	var biome := Biomes.crypt()

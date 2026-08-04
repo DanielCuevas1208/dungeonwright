@@ -25,6 +25,7 @@ The same seed always builds the same dungeon.
 - A new map for every run, driven by a seed.
 - Rooms, corridors, locked doors, and keys.
 - Three biomes with different generation rules.
+- Multi-floor runs with a floor counter.
 - Monsters with simple combat and balanced drops.
 - Procedural pixel art with no bundled image files.
 - A minimap, a health bar, and run summary overlays.
@@ -40,11 +41,21 @@ You can replay any run from its seed.
 
 ## This release
 
-This release adds full gamepad support.
-Every action has a gamepad binding.
-Movement uses the left stick or the d-pad.
-Analog input gets a deadzone and a diagonal speed cap.
-Menus show the controls for the active device.
+This release adds multi-floor descent.
+A run now spans several floors, set by the biome.
+The crypt runs two floors.
+The drowned forest runs three floors.
+The ember stronghold runs four floors.
+
+The exit of a lower floor is a staircase.
+Walk onto it to descend to the next floor.
+Each floor is a fresh dungeon from a child seed.
+A floor counter and a transition card show your depth.
+
+Loot and health carry between floors.
+Keys reset, because every floor has its own doors.
+Monster pressure rises on every deeper floor.
+The run ends only when you clear the final floor.
 
 ## Requirements
 
@@ -102,12 +113,18 @@ It picks the farthest room as the exit.
 It places doors on corridors and puts each key on the safe side.
 A solver then proves the dungeon can be completed.
 
+A run starts from one seed.
+Every floor uses a child seed derived from it.
+The derivation is a fixed integer hash, so a run replays exactly.
+The biome sets the number of floors and the monster curve.
+
 The generation code is pure data.
 It has no scene nodes, so tests run fast and deterministic.
 The scene controller turns the map into a live game.
 
 ## Project layout
 
+- `scripts/core` holds run state and the descent rules.
 - `scripts/dungeon` holds the generator and map logic.
 - `scripts/combat` holds stats, monsters, and loot tables.
 - `scripts/input` holds the controls helper.
@@ -120,26 +137,33 @@ The scene controller turns the map into a live game.
 
 ## Design guarantees
 
-A seed always produces the same map.
+A seed always produces the same run.
+Every floor of the run stays solvable.
 Doors never block the exit permanently.
 Every key sits on the reachable side of its door.
 Monsters never cross a locked door.
 
 ## Evaluation evidence
 
-The suite has 68 tests.
-It covers generation, biomes, combat, drops, pathfinding, and input.
-All 68 tests pass in a headless run.
-A smoke test loads the game and spawns a fixed-seed run.
+The suite has 83 tests.
+It covers generation, biomes, combat, drops, pathfinding, input,
+and descent.
+All 83 tests pass in a headless run.
+A smoke test loads the game and clears every floor.
 The smoke test also checks every action has a gamepad binding.
 
 ## Roadmap
 
+See `docs/roadmap.md` for the full plan.
+
 Done in this release:
+- Multi-floor descent and a depth counter.
+
+Done in earlier releases:
 - Full gamepad support.
+- A playable single-floor demo.
 
 Next up:
-- Multi-floor descent and a depth counter.
 - Ranged monsters and projectiles.
 - Sound and music.
 - More biomes and items.
@@ -147,7 +171,7 @@ Next up:
 ## Limitations
 
 The demo has three biomes.
-Each run is a single floor.
+The biome sets the run length.
 All monsters use melee attacks.
 The game has no audio yet.
 

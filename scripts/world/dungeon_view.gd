@@ -14,7 +14,7 @@ var _tile_atlas: Dictionary = {}
 ## The atlas coordinates for each tile type.
 const ATLAS_ORDER: Array = [
 	[0, 0], [1, 0], [2, 0], [3, 0],
-	[0, 1], [1, 1], [2, 1],
+	[0, 1], [1, 1], [2, 1], [3, 1],
 ]
 
 func _ready() -> void:
@@ -71,7 +71,7 @@ func build_minimap_image() -> Image:
 					color = door_color
 				DungeonMap.Tile.START:
 					color = start_color
-				DungeonMap.Tile.EXIT:
+				DungeonMap.Tile.EXIT, DungeonMap.Tile.STAIRS:
 					color = exit_color
 			for dx in 2:
 				for dy in 2:
@@ -86,7 +86,7 @@ func _build_tileset(p_palette: Dictionary) -> void:
 	var keys: Array = [
 		TileArt.TILE_WALL, TileArt.TILE_FLOOR_A, TileArt.TILE_FLOOR_B,
 		TileArt.TILE_DOOR_LOCKED, TileArt.TILE_DOOR_OPEN,
-		TileArt.TILE_START, TileArt.TILE_EXIT,
+		TileArt.TILE_START, TileArt.TILE_EXIT, TileArt.TILE_STAIRS,
 	]
 	for i in keys.size():
 		var tile_texture: Texture2D = textures[keys[i]]
@@ -123,6 +123,8 @@ func _atlas_for(p_tile: int) -> Vector2i:
 			return Vector2i(1, 1)
 		DungeonMap.Tile.EXIT:
 			return Vector2i(2, 1)
+		DungeonMap.Tile.STAIRS:
+			return Vector2i(3, 1)
 		_:
 			return Vector2i(1, 0)
 

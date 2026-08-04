@@ -72,6 +72,29 @@ The class wraps the mulberry32 algorithm.
 The output depends only on the seed, never on the platform.
 Seeds display as six-character base-36 strings.
 
+## Multi-floor descent
+
+A run spans several floors.
+The biome sets the number of floors in `DungeonConfig.max_floors`.
+Each floor is a fresh dungeon with its own child seed.
+
+The `Descent` class derives the child seeds.
+It applies a fixed integer hash to the run seed once per floor.
+The chain is pure and deterministic.
+A single seed replays every floor in the same order.
+
+The generator receives the floor and the run seed.
+The result records both.
+Lower floors place a stairs tile at the exit.
+The final floor places the victory exit.
+Monster density and the monster cap rise with each floor.
+
+The scene controller keeps one run alive across floors.
+Loot and health carry over.
+Keys reset, because each floor has its own doors.
+A transition overlay appears between floors.
+The run ends only when the hero clears the final floor.
+
 ## Combat model
 
 The player and each monster carry a `CombatStats` block.
@@ -111,9 +134,10 @@ The hints update when a gamepad connects or disconnects.
 ## Testing
 
 The suite runs headless with GUT.
-Unit tests cover the RNG, generator, biomes, combat, and drops.
+Unit tests cover the RNG, generator, biomes, combat, drops, and descent.
 Integration tests run many seeds across all biomes.
 Every generated dungeon must be solvable.
+Descent tests prove every floor stays solvable and replayable.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

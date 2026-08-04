@@ -41,3 +41,12 @@ jobs:
 
       - name: Run the headless smoke test
         run: godot --headless --path . -s tools/smoke.gd
+
+      - name: Confirm the working tree stays clean
+        run: |
+          status=$(git status --porcelain)
+          if [ -n "$status" ]; then
+            echo "$status"
+            echo "Import generated untracked files. Track them or update .gitignore."
+            exit 1
+          fi
