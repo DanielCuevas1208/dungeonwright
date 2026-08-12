@@ -4,6 +4,13 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Released
 
+### 0.10.0 - Showcase Frame
+
+- Added a capture-ready frame to the main menu.
+- Added a fixed Tidebound Archive preview.
+- Added replay seed, map facts, and reachability status.
+- Added a direct action to play the featured seed.
+
 ### 0.9.0 - Biome Gallery
 
 - Added a browseable gallery to the main menu.
@@ -58,7 +65,7 @@ This roadmap tracks shipped work and the next release slice.
 
 ### Presentation
 
-- Add a capture-ready showcase scene.
+- Keep the showcase frame aligned with live game content.
 
 ## Scope rules
 

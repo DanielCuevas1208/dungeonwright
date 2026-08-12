@@ -185,6 +185,15 @@ The gallery renders the map, palette swatches, and configured monster art.
 This keeps the showcase view aligned with game content.
 The gallery does not modify run state.
 
+## Showcase frame
+
+The main menu can open the showcase frame while the game is paused.
+`ShowcaseOverlay` selects the Tidebound Archive and one fixed seed.
+`DungeonPreview` renders the generated map for both the gallery and showcase.
+The frame also reads room, door, threat, and map data from `DungeonResult`.
+The play action sends the displayed seed through the normal start path.
+This keeps the captured evidence and live run on the same code path.
+
 ## Floor descent
 
 A run spans three floors.
@@ -264,6 +273,7 @@ Unit tests also cover line of sight, projectile flight, and bomb flight.
 Unit tests also cover waveform math, every sound cue, and every music theme.
 Unit tests also cover the boss spec, enrage profile, and volley math.
 Unit tests also cover every biome rule and the Tidebound Archive replay.
+Unit tests also cover shared map previews and the showcase replay seed.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.

@@ -8,12 +8,16 @@ extends Control
 signal start_requested(seed_text: String)
 signal continue_requested
 
+const SHOWCASE_SCENE := preload('res://scenes/ui/showcase.tscn')
+
 var _seed_edit: LineEdit = null
 var _continue_button: Button = null
 var _gallery_button: Button = null
+var _showcase_button: Button = null
 var _error_label: Label = null
 var _hint_label: Label = null
 var _gallery: BiomeGallery = null
+var _showcase: ShowcaseOverlay = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -24,6 +28,8 @@ func _ready() -> void:
 func show_menu(p_can_continue: bool) -> void:
 	if _gallery != null:
 		_gallery.close()
+	if _showcase != null:
+		_showcase.close()
 	visible = true
 	_continue_button.visible = p_can_continue
 	_seed_edit.text = ""
@@ -33,6 +39,8 @@ func show_menu(p_can_continue: bool) -> void:
 func hide_menu() -> void:
 	if _gallery != null:
 		_gallery.close()
+	if _showcase != null:
+		_showcase.close()
 	visible = false
 
 ## Shows a validation message under the seed field.
@@ -42,6 +50,9 @@ func show_error(p_text: String) -> void:
 func _unhandled_input(p_event: InputEvent) -> void:
 	if _gallery != null:
 		if _gallery.visible:
+			return
+	if _showcase != null:
+		if _showcase.visible:
 			return
 	if visible and p_event.is_action_pressed("pause"):
 		continue_requested.emit()
@@ -99,6 +110,9 @@ func _build() -> void:
 	_gallery_button = Button.new()
 	_gallery_button.text = 'Browse biomes'
 	_gallery_button.custom_minimum_size = Vector2(0, 36)
+	_showcase_button = Button.new()
+	_showcase_button.text = 'View showcase'
+	_showcase_button.custom_minimum_size = Vector2(0, 36)
 	_continue_button.text = "Continue"
 	_continue_button.custom_minimum_size = Vector2(0, 36)
 
@@ -115,6 +129,7 @@ func _build() -> void:
 	box.add_child(start_button)
 	box.add_child(_continue_button)
 	box.add_child(_gallery_button)
+	box.add_child(_showcase_button)
 	box.add_child(_hint_label)
 
 	margin.add_child(box)
@@ -125,12 +140,30 @@ func _build() -> void:
 	start_button.pressed.connect(_on_start_pressed)
 	_continue_button.pressed.connect(func() -> void: continue_requested.emit())
 	_gallery_button.pressed.connect(_open_gallery)
+	_showcase_button.pressed.connect(_open_showcase)
 	_gallery = BiomeGallery.new()
 	add_child(_gallery)
+	_showcase = SHOWCASE_SCENE.instantiate()
+	_showcase.closed.connect(_on_showcase_closed)
+	_showcase.play_requested.connect(_on_showcase_play_requested)
+	add_child(_showcase)
 	_seed_edit.text_submitted.connect(func(_text: String) -> void: _on_start_pressed())
 
 func _on_start_pressed() -> void:
 	start_requested.emit(_seed_edit.text)
 
 func _open_gallery() -> void:
+	if _showcase != null:
+		_showcase.close()
 	_gallery.open()
+
+func _open_showcase() -> void:
+	if _gallery != null:
+		_gallery.close()
+	_showcase.open()
+
+func _on_showcase_closed() -> void:
+	_seed_edit.grab_focus()
+
+func _on_showcase_play_requested(p_seed_text: String) -> void:
+	start_requested.emit(p_seed_text)

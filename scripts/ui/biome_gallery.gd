@@ -182,7 +182,7 @@ func _render_page() -> void:
 		'page': _page + 1,
 		'count': biomes.size(),
 	})
-	_preview.texture = ImageTexture.create_from_image(_preview_image(result, config))
+	_preview.texture = ImageTexture.create_from_image(DungeonPreview.render_image(result, config, PREVIEW_TILE_SIZE))
 	_render_swatches(config)
 	_render_threats(config)
 	_previous_button.disabled = _page == 0
@@ -212,29 +212,6 @@ func _render_threats(p_config: DungeonConfig) -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		item.add_child(label)
 		_threats.add_child(item)
-
-func _preview_image(p_result: DungeonResult, p_config: DungeonConfig) -> Image:
-	var image := Image.create(p_result.map.width, p_result.map.height, false, Image.FORMAT_RGBA8)
-	var wall := Color(p_config.palette.get(StringName('wall_fill'), Color.BLACK))
-	var floor := Color(p_config.palette.get(StringName('floor_base'), Color.WHITE))
-	var door := Color(p_config.palette.get(StringName('accent'), Color.WHITE))
-	var glow := Color(p_config.palette.get(StringName('glow'), Color.WHITE))
-	for x in p_result.map.width:
-		for y in p_result.map.height:
-			var cell := Vector2i(x, y)
-			var color := wall
-			match p_result.map.get_tile_cell(cell):
-				DungeonMap.Tile.FLOOR:
-					color = floor
-				DungeonMap.Tile.DOOR_LOCKED, DungeonMap.Tile.DOOR_OPEN:
-					color = door
-				DungeonMap.Tile.START:
-					color = door
-				DungeonMap.Tile.EXIT:
-					color = glow
-			image.set_pixel(x, y, color)
-	image.resize(image.get_width() * PREVIEW_TILE_SIZE, image.get_height() * PREVIEW_TILE_SIZE, Image.INTERPOLATE_NEAREST)
-	return image
 
 func _previous_page() -> void:
 	_page = maxi(_page - 1, 0)

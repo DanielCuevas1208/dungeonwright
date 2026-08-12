@@ -29,6 +29,8 @@ The same seed always builds the same dungeon.
 
 The main menu includes a biome gallery.
 It previews real generated maps before you start a run.
+It also includes a capture-ready showcase frame.
+The frame explains one fixed run and can launch that seed.
 
 ## Features
 
@@ -50,6 +52,7 @@ It previews real generated maps before you start a run.
 - Deterministic generation for replayable runs.
 - Full gamepad support with analog movement.
 - An in-game biome gallery for quick visual comparison.
+- A capture-ready showcase frame for the featured biome.
 
 ## First release
 
@@ -58,7 +61,14 @@ The generator guarantees the exit is always reachable.
 You can walk, fight, collect loot, and finish a run.
 You can replay any run from its seed.
 
-## This release: Tidebound Archive
+## This release: Showcase frame
+
+The menu now offers a capture-ready showcase frame.
+It features the Tidebound Archive and its generated map.
+The frame shows the replay seed, map facts, and reachability status.
+Play this seed to move from the frame into a live run.
+
+## Featured content: Tidebound Archive
 
 This release adds the Tidebound Archive.
 Flooded galleries use winding corridors and larger rooms.
@@ -149,6 +159,9 @@ Choose Browse biomes in the menu.
 Use the buttons or arrow keys to change pages.
 Press Escape to return to the menu.
 
+Choose View showcase in the menu.
+Press Play this seed to start the featured run.
+
 A gamepad works too.
 Move with the left stick or the d-pad.
 Attack with A or the right shoulder button.
@@ -187,6 +200,10 @@ The scene controller turns the map into a live game.
 The biome gallery uses the same generator.
 Each preview uses a fixed seed.
 The gallery never changes the active run.
+
+The showcase uses one fixed Tidebound seed.
+It uses `DungeonPreview` to render the same map data as the gallery.
+The play action sends the replay seed through the normal menu start path.
 
 Five biomes ship with the demo.
 Each biome changes map dimensions, room rules, monster pressure, palette, and music.
@@ -251,7 +268,9 @@ It carries between floors.
 - `scripts/world` renders tiles and builds the minimap.
 - `scripts/actors` holds the hero, monsters, pickups, and projectiles.
 - `scripts/ui` builds the HUD and overlays.
+- `scripts/ui/dungeon_preview.gd` renders deterministic map previews.
 - `scenes` holds the scene tree.
+- `scenes/ui/showcase.tscn` holds the capture-ready showcase view.
 - `tests` holds the GUT suite.
 - `tools` holds the setup, test, and CI scripts.
 
@@ -275,8 +294,9 @@ The Warden always drops a relic when it dies.
 
 It covers generation, all five biomes, combat, drops, pathfinding, input, floors, projectiles, bombs, and audio.
 It covers the boss floor, bolt volleys, enrage, relic victory, and gallery previews.
-The suite has 210 tests and 5,037 assertions.
-All 210 tests pass in a headless run.
+It also covers the showcase seed, preview size, replay stability, and view state.
+The suite has 215 tests and 5,047 assertions.
+All 215 tests pass in a headless run.
 Run the full suite before release.
 A smoke test loads the game and spawns a fixed-seed run.
 The smoke test passes with seed 12345.
@@ -289,6 +309,12 @@ The smoke test checks every sound cue and every music theme builds audio.
 CI imports the project, runs GUT, runs the smoke test, and uploads the test report.
 Local status depends on the installed Godot version.
 
+Validation status:
+
+- CI is configured for Godot 4.6.1.
+- Local GUT validation passes with 215 tests and 5,047 assertions.
+- Local smoke validation passes with seed 12345.
+
 ## Sample output
 
 The smoke test prints this success line:
@@ -297,9 +323,17 @@ The smoke test prints this success line:
 
 The gallery shows one generated map for each biome.
 
+The showcase displays:
+
+`Replay seed: 0000ZJ`
+
+`Exit reachable: yes`
+
 ## Roadmap
 
 Done in this release:
+- The capture-ready showcase frame.
+- A fixed featured seed with a play action.
 - The biome gallery with deterministic map previews.
 - Palette swatches and common threat icons.
 - The Tidebound Archive, a fifth biome with winding galleries.
@@ -322,7 +356,6 @@ Done in an earlier release:
 
 Next up:
 - A new item type with a focused use.
-- A capture-ready showcase scene.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 
@@ -335,6 +368,8 @@ The hero has one melee attack and one thrown item.
 Audio is instrumental, with no voice lines.
 Gallery previews use fixed seeds.
 Gallery previews do not replace a live run.
+The showcase features one fixed biome.
+The showcase frame does not replace a live run.
 
 ## License
 

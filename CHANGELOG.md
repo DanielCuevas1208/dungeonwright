@@ -4,6 +4,15 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.10.0] - 2026-08-12
+
+Added
+
+- A capture-ready showcase frame in the main menu.
+- A fixed Tidebound Archive preview with replay seed and run facts.
+- A direct action to play the featured seed.
+- A shared dungeon preview renderer for gallery and showcase views.
+
 ## [0.9.0] - 2026-08-04
 
 Added
