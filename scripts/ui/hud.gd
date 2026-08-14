@@ -15,6 +15,7 @@ var shard_label: Label = null
 var bomb_label: Label = null
 var key_label: Label = null
 var emblem_label: Label = null
+var aegis_label: Label = null
 var minimap_texture: TextureRect = null
 var minimap_marker: ColorRect = null
 var _minimap_frame: PanelContainer = null
@@ -64,6 +65,9 @@ func set_keys(p_count: int) -> void:
 
 func set_emblems(p_count: int) -> void:
 	emblem_label.text = "x " + str(p_count)
+
+func set_aegis(p_count: int) -> void:
+	aegis_label.text = "x " + str(p_count)
 
 ## Shows the boss bar and names the boss.
 func show_boss(p_name: String) -> void:
@@ -146,6 +150,7 @@ func _build_bottom_panel() -> void:
 	loot_row.add_child(_icon_counter(&"shard"))
 	loot_row.add_child(_icon_counter(&"bomb"))
 	loot_row.add_child(_icon_counter(&"emblem"))
+	loot_row.add_child(_icon_counter(&"aegis"))
 	loot_row.add_child(_icon_counter(&"key"))
 	hp_box.add_child(loot_row)
 	add_child(hp_panel)
@@ -225,6 +230,8 @@ func _icon_counter(p_icon: StringName) -> Control:
 			bomb_label = label
 		&"emblem":
 			emblem_label = label
+		&"aegis":
+			aegis_label = label
 		&"key":
 			key_label = label
 	return row

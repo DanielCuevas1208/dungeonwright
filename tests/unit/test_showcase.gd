@@ -26,7 +26,7 @@ func test_showcase_opens_and_closes() -> void:
 	var showcase := ShowcaseOverlay.new()
 	autofree(showcase)
 	add_child(showcase)
-	await wait_frames(1)
+	await wait_process_frames(1)
 	showcase.open()
 	assert_true(showcase.visible)
 	showcase.close()

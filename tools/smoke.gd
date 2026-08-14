@@ -77,7 +77,7 @@ func _verify_specs() -> void:
 			var spec := MonsterSpecs.by_id(entry.monster)
 			if spec.id != entry.monster:
 				_fail("biome %s references unknown monster %s" % [biome.id, entry.monster])
-	for key in [&"relic", &"emblem", &"warden"]:
+	for key in [&"relic", &"emblem", &"aegis", &"warden"]:
 		if not TileArt.has_entity(key):
 			_fail("boss item %s has no art" % key)
 

@@ -11,7 +11,7 @@ func before_each() -> void:
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	main = scene.instantiate()
 	add_child_autofree(main)
-	await wait_frames(1)
+	await wait_physics_frames(1)
 
 func _open_map() -> DungeonMap:
 	var map := DungeonMap.new(20, 12)

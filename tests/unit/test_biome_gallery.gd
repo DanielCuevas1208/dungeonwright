@@ -29,7 +29,7 @@ func test_gallery_opens_and_closes() -> void:
 	var gallery := BiomeGallery.new()
 	autofree(gallery)
 	add_child(gallery)
-	await wait_frames(1)
+	await wait_process_frames(1)
 	gallery.open()
 	assert_true(gallery.visible)
 	gallery.close()

@@ -94,7 +94,7 @@ Attack range and facing arcs use tile math, not physics.
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
-Coins drop often, shards sometimes, potions rarely, bombs rarest.
+Coins drop often, shards sometimes, potions rarely, bombs, emblems, and aegis crests rarest.
 
 ## Ranged combat
 
@@ -245,10 +245,12 @@ The relic is a pickup with its own sound and art.
 Collecting the relic calls the victory flow.
 The run can no longer end by walking to the exit first.
 
-Monsters can drop damage emblems.
-An emblem adds two points to the hero's sword.
-The hero carries the bonus between floors.
-The HUD counts the emblems the hero holds.
+Monsters can drop damage emblems and protective aegis crests.
+An emblem adds two points to the hero sword damage.
+An aegis crest adds one point of defence to the hero armour.
+Defence reduces incoming combat damage, but never below one minimum damage.
+The hero carries both bonuses between floors for the entire run.
+The HUD counts both items in the active loot row.
 The boss theme plays on the boss floor.
 The beacon turns red while the Warden guards the exit.
 
@@ -274,11 +276,13 @@ Unit tests also cover waveform math, every sound cue, and every music theme.
 Unit tests also cover the boss spec, enrage profile, and volley math.
 Unit tests also cover every biome rule and the Tidebound Archive replay.
 Unit tests also cover shared map previews and the showcase replay seed.
+Unit tests also cover the aegis defence formula, pickup events, and drop weights.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
 Integration tests verify bombs blast the monsters they should.
 Integration tests verify the boss floor seals the exit and drops the relic.
+Integration tests verify aegis defence reduces damage during live combat.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 The final floor must spawn a boss and a relic.

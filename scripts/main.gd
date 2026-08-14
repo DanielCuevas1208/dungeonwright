@@ -57,6 +57,7 @@ func _wire_signals() -> void:
 	player.bombs_changed.connect(hud.set_bombs)
 	player.keys_changed.connect(hud.set_keys)
 	player.emblems_changed.connect(hud.set_emblems)
+	player.aegis_changed.connect(hud.set_aegis)
 	player.attacked.connect(_on_player_attack)
 	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
@@ -206,20 +207,23 @@ func _begin_floor() -> void:
 	else:
 		audio.play_music(biome.id)
 
-## Builds the hero stats for this floor. Damage keeps any emblem boost
-## the hero earned, so power carries between floors.
+## Builds the hero stats for this floor. Damage and defence keep any
+## emblem and aegis boosts earned, so power carries between floors.
 func _player_stats() -> CombatStats:
 	var max_health := biome.starting_health
 	var health := max_health
 	var damage := biome.player_damage
+	var defence := 0
 	if floor_index > 0 and player.stats != null:
 		max_health = player.stats.max_health
 		health = player.stats.health
 		damage = player.stats.damage
+		defence = player.stats.defence
 	return CombatStats.make({
 		"max_health": max_health,
 		"health": health,
 		"damage": damage,
+		"defence": defence,
 	})
 
 ## The hero reached the exit. Descend, or win on the final floor.

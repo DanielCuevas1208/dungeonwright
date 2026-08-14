@@ -13,6 +13,7 @@ signal shards_changed(count: int)
 signal keys_changed(count: int)
 signal bombs_changed(count: int)
 signal emblems_changed(count: int)
+signal aegis_changed(count: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
 signal bomb_thrown(origin: Vector2i, facing: Vector2i)
 signal moved(grid: Vector2i)
@@ -25,6 +26,8 @@ const POTION_HEAL := 25
 const BOMB_COOLDOWN := 0.6
 ## Damage an emblem adds to the hero's sword for the rest of the run.
 const EMBLEM_POWER := 2
+## Defence an aegis crest adds to the hero's armour for the rest of the run.
+const AEGIS_DEFENCE := 1
 
 var stats: CombatStats = null
 var grid_pos: Vector2i = Vector2i.ZERO
@@ -34,6 +37,7 @@ var shards := 0
 var keys_held := 0
 var bombs := 0
 var emblems := 0
+var aegis := 0
 
 var view: DungeonView = null
 var occupancy: Dictionary = {}
@@ -146,7 +150,8 @@ func _dominant_axis(p_input: Vector2) -> Vector2i:
 func take_damage(p_amount: int) -> bool:
 	if stats == null or stats.is_dead():
 		return false
-	stats.take_damage(p_amount)
+	var incoming := Combat.compute_damage(p_amount, stats.defence)
+	stats.take_damage(incoming)
 	hp_changed.emit(stats.health, stats.max_health)
 	_flash()
 	if stats.is_dead():
@@ -173,6 +178,11 @@ func apply_pickup(p_item: StringName, p_count: int) -> void:
 			if stats != null:
 				stats.damage += EMBLEM_POWER * p_count
 			emblems_changed.emit(emblems)
+		&"aegis":
+			aegis += p_count
+			if stats != null:
+				stats.defence += AEGIS_DEFENCE * p_count
+			aegis_changed.emit(aegis)
 		&"relic":
 			pass
 		&"key":
@@ -196,6 +206,7 @@ func start_run() -> void:
 	keys_held = 0
 	bombs = 0
 	emblems = 0
+	aegis = 0
 	if stats != null:
 		emit_hud()
 
@@ -212,9 +223,14 @@ func emit_hud() -> void:
 	keys_changed.emit(keys_held)
 	bombs_changed.emit(bombs)
 	emblems_changed.emit(emblems)
+	aegis_changed.emit(aegis)
 
 func _flash() -> void:
+	if _sprite == null or not is_inside_tree():
+		return
 	var tween := create_tween()
+	if tween == null:
+		return
 	tween.tween_property(_sprite, "modulate", Color(3.0, 0.4, 0.4), 0.08)
 	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.12)
 

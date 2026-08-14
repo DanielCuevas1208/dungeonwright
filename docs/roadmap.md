@@ -4,6 +4,14 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Released
 
+### 0.11.0 - Aegis Crest
+
+- Added the Aegis Crest defensive item.
+- Added damage absorption that scales with held crests.
+- Added procedural crest pixel art and pickup audio.
+- Added HUD armour counters and carried defence between floors.
+- Added unit and integration tests for defence and drops.
+
 ### 0.10.0 - Showcase Frame
 
 - Added a capture-ready frame to the main menu.
@@ -57,15 +65,16 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Next up
 
-### Content depth
+### Interactive shrines
 
-- Add one new item type.
-- Add a focused use for that item.
-- Keep every drop deterministic.
+- Add optional interactive shrines inside rooms.
+- Let the hero spend shards for single-floor buffs.
+- Keep all shrine choices deterministic.
 
-### Presentation
+### Run statistics
 
-- Keep the showcase frame aligned with live game content.
+- Record damage dealt, damage blocked, and bombs thrown.
+- Display the stats on the run summary screen.
 
 ## Scope rules
 

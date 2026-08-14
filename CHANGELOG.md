@@ -4,6 +4,24 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.11.0] - 2026-08-14
+
+Added
+
+- The Aegis Crest defensive item as a rare monster drop.
+- Damage absorption calculation based on held Aegis Crests.
+- Procedural pixel art for the Aegis Crest entity.
+- Procedural resonant chime cue in the sound bank for picking up an Aegis Crest.
+- HUD counter showing held Aegis Crests in the active loot panel.
+- Unit and integration tests for defence scaling, pickups, and drop rates.
+
+Changed
+
+- Hero damage calculation now subtracts defence before applying health loss.
+- Monster drop tables now include rare Aegis Crest loot entries.
+- Floor transitions preserve hero defence stat across descent.
+- Replaced deprecated test frame waiting methods with GUT process frame helpers.
+
 ## [0.10.0] - 2026-08-12
 
 Added
