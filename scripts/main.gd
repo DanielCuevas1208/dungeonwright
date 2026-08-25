@@ -33,6 +33,7 @@ var run_rules: RunRules = null
 var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
+var run_stats := RunStats.new()
 var floor_index := 0
 var monster_index := 0
 var _ended := false
@@ -58,6 +59,7 @@ func _wire_signals() -> void:
 	player.keys_changed.connect(hud.set_keys)
 	player.emblems_changed.connect(hud.set_emblems)
 	player.aegis_changed.connect(hud.set_aegis)
+	player.damage_received.connect(_on_player_damage_received)
 	player.attacked.connect(_on_player_attack)
 	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
@@ -141,6 +143,7 @@ func start_run(p_seed_value: int) -> void:
 
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
+	run_stats.reset()
 	run_rules = RunRules.new()
 	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
 	floor_index = 0
@@ -310,7 +313,7 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 			continue
 		if not Combat.in_facing_arc(p_origin, p_facing, monster.grid_pos):
 			continue
-		monster.take_damage(p_damage)
+		_damage_monster(monster, p_damage)
 		_spawn_slash(monster.grid_pos)
 		hit_any = true
 	if hit_any:
@@ -319,6 +322,17 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 func _on_monster_attack(p_damage: int) -> void:
 	audio.play_sfx(&"hurt")
 	player.take_damage(p_damage)
+
+func _on_player_damage_received(_p_raw: int, _p_applied: int, p_blocked: int) -> void:
+	run_stats.record_damage_blocked(p_blocked)
+
+## Applies player damage to one monster and records health actually removed.
+func _damage_monster(p_monster: MonsterActor, p_damage: int) -> void:
+	if p_monster == null or p_monster.stats == null:
+		return
+	var health_before := p_monster.stats.health
+	p_monster.take_damage(p_damage)
+	run_stats.record_damage_dealt(health_before - p_monster.stats.health)
 
 ## A ranged monster reported a shot. Spawn the bolt for the hero to dodge.
 func _on_ranged_fired(p_monster: MonsterActor, p_direction: Vector2i) -> void:
@@ -356,6 +370,7 @@ func _on_projectile_expired(p_projectile: Projectile) -> void:
 
 ## The hero threw a bomb. Spawn it in front of the hero.
 func _on_bomb_thrown(p_origin: Vector2i, p_facing: Vector2i) -> void:
+	run_stats.record_bomb_thrown()
 	spawn_bomb(p_origin, p_facing)
 
 ## Spawns a thrown bomb and returns it. Public entry point for tooling.
@@ -375,7 +390,7 @@ func _explode_bomb(p_bomb: Bomb) -> void:
 	audio.play_sfx(&"explosion")
 	for monster: MonsterActor in monsters_root.get_children():
 		if Combat.in_blast_radius(p_bomb.grid_pos, monster.grid_pos, p_bomb.blast_radius):
-			monster.take_damage(p_bomb.damage)
+			_damage_monster(monster, p_bomb.damage)
 	_spawn_explosion(p_bomb.grid_pos)
 
 func _on_bomb_expired(p_bomb: Bomb) -> void:
@@ -458,7 +473,8 @@ func _on_player_died() -> void:
 		floor_index + 1,
 		run_rules.floor_count,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		run_stats
 	)
 	get_tree().paused = true
 
@@ -476,7 +492,8 @@ func _on_victory() -> void:
 		floor_index + 1,
 		run_rules.floor_count,
 		player.coins,
-		RunState.elapsed()
+		RunState.elapsed(),
+		run_stats
 	)
 	get_tree().paused = true
 

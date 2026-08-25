@@ -14,6 +14,7 @@ signal keys_changed(count: int)
 signal bombs_changed(count: int)
 signal emblems_changed(count: int)
 signal aegis_changed(count: int)
+signal damage_received(raw_damage: int, applied_damage: int, blocked_damage: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
 signal bomb_thrown(origin: Vector2i, facing: Vector2i)
 signal moved(grid: Vector2i)
@@ -151,7 +152,9 @@ func take_damage(p_amount: int) -> bool:
 	if stats == null or stats.is_dead():
 		return false
 	var incoming := Combat.compute_damage(p_amount, stats.defence)
-	stats.take_damage(incoming)
+	var blocked := maxi(0, p_amount - incoming)
+	var applied := stats.take_damage(incoming)
+	damage_received.emit(p_amount, applied, blocked)
 	hp_changed.emit(stats.health, stats.max_health)
 	_flash()
 	if stats.is_dead():

@@ -48,14 +48,21 @@ The frame explains one fixed run and can launch that seed.
 - Procedural pixel art with no bundled image files.
 - Procedural sound and music with no bundled audio files.
 - A minimap, a health bar, and run summary overlays.
+- Run statistics for damage dealt, damage blocked, and bombs thrown.
 - Deterministic generation for replayable runs.
 - Full gamepad support with analog movement.
 - An in-game biome gallery for quick visual comparison.
 - A capture-ready showcase frame for the featured biome.
 
-## This release: Aegis Crest
+## This release: Run statistics
 
-This release adds the Aegis Crest defensive item.
+The result screen now reports three combat counters.
+It shows enemy health removed, damage absorbed by defence, and bombs thrown.
+Counters cover every floor and reset when a new run starts.
+
+## Previous release: Aegis Crest
+
+That release added the Aegis Crest defensive item.
 Monsters can now drop aegis crests.
 Each crest adds one point of defence to the hero.
 Defence absorbs incoming melee and projectile damage.
@@ -72,6 +79,7 @@ The project separates pure generation logic from the live scene.
 - `scripts/actors`: Hero, monsters, projectiles, bombs, and collectible pickups.
 - `scripts/audio`: Procedural waveform synthesis, sound bank cues, and looping biome music themes.
 - `scripts/core`: Deterministic multi-floor rules and runtime state tracking.
+- `RunStats` keeps run counters separate from the live scene.
 - `scripts/ui`: In-game HUD, pause menu, biome gallery, and showcase overlay.
 - `scripts/world`: Procedural pixel tile renderer and minimap builder.
 
@@ -125,8 +133,9 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 227 tests pass across 24 test scripts with 5,124 assertions.
+- 236 tests pass across 25 test scripts with 5,148 assertions.
 - 0 failing tests and 0 deprecation warnings.
+- Result screens show damage dealt, damage blocked, and bombs thrown.
 - Headless smoke test passes with seed 12345.
 - GitHub Actions CI workflow validates pushes and pull requests.
 
@@ -150,13 +159,21 @@ GUT test suite summary:
 
 Totals
 ------
-Scripts              24
-Tests               227
-Passing Tests       227
-Asserts            5124
-Time              19.942s
+Scripts              25
+Tests               236
+Passing Tests       236
+Asserts            5148
+Time              <duration>
 
 ---- All tests passed! ----
+```
+
+Result screen counters:
+
+```
+Damage dealt: <enemy health removed>
+Damage blocked: <damage absorbed>
+Bombs thrown: <bombs used>
 ```
 
 ## Limitations
@@ -168,10 +185,12 @@ The hero has one melee attack and one thrown bomb.
 Audio is instrumental, with no voice acting.
 Gallery previews use fixed seeds.
 The showcase frame features one fixed biome.
+Run statistics cover one run and are not saved.
 
 ## Roadmap
 
 Done in this release:
+- Run statistics on the result screen.
 - The Aegis Crest defensive item and damage absorption.
 - Carried defence bonuses across multi-floor runs.
 - Procedural pixel art and pickup audio for the Aegis Crest.
@@ -189,7 +208,6 @@ Done in earlier releases:
 
 Next up:
 - Interactive shrines for single-floor shard buffs.
-- Run statistics tracking for damage dealt and damage absorbed.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

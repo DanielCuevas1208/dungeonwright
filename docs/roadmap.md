@@ -2,6 +2,14 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.12.0 - Run statistics
+
+- Added damage dealt, damage blocked, and bombs thrown counters.
+- Kept counters across floor descent.
+- Reset counters at the start of each run.
+- Added result-screen summary lines.
+- Added deterministic unit and integration coverage.
+
 ## Released
 
 ### 0.11.0 - Aegis Crest
@@ -71,10 +79,10 @@ This roadmap tracks shipped work and the next release slice.
 - Let the hero spend shards for single-floor buffs.
 - Keep all shrine choices deterministic.
 
-### Run statistics
+### Run history
 
-- Record damage dealt, damage blocked, and bombs thrown.
-- Display the stats on the run summary screen.
+- Expand the result screen with optional run history.
+- Keep the current counters as the first release of this system.
 
 ## Scope rules
 

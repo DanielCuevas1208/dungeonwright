@@ -17,15 +17,30 @@ func _ready() -> void:
 	visible = false
 	_build()
 
-func show_result(p_won: bool, p_seed: String, p_floor_reached: int, p_floor_count: int, p_coins: int, p_time: float) -> void:
+func show_result(
+	p_won: bool,
+	p_seed: String,
+	p_floor_reached: int,
+	p_floor_count: int,
+	p_coins: int,
+	p_time: float,
+	p_stats: RunStats = null
+) -> void:
 	visible = true
 	_title.text = "Victory" if p_won else "Defeat"
 	_title.add_theme_color_override("font_color", Color("#7fe8b9") if p_won else Color("#e07070"))
 	var minutes := int(p_time) / 60
 	var seconds := int(p_time) % 60
-	_summary.text = "Seed: %s\nFloor: %d / %d\nCoins: %d\nTime: %d:%02d" % [
+	var summary := "Seed: %s\nFloor: %d / %d\nCoins: %d\nTime: %d:%02d" % [
 		p_seed, p_floor_reached, p_floor_count, p_coins, minutes, seconds,
 	]
+	if p_stats != null:
+		summary += "\n\nDamage dealt: %d\nDamage blocked: %d\nBombs thrown: %d" % [
+			p_stats.damage_dealt,
+			p_stats.damage_blocked,
+			p_stats.bombs_thrown,
+		]
+	_summary.text = summary
 	_same_seed_button.visible = p_won
 	_new_button.grab_focus()
 

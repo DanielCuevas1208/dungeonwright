@@ -47,6 +47,39 @@ func test_loot_carries_between_floors() -> void:
 	_step_to_exit()
 	assert_eq(main.player.coins, 5)
 
+func test_live_combat_updates_run_statistics() -> void:
+	main.start_run(777)
+	var monster := main.monsters_root.get_child(0) as MonsterActor
+	var health_before := monster.stats.health
+	main._damage_monster(monster, 3)
+	assert_eq(main.run_stats.damage_dealt, health_before - monster.stats.health)
+	main.player.apply_pickup(&"aegis", 2)
+	main.player.take_damage(8)
+	assert_eq(main.run_stats.damage_blocked, 2)
+	main.player.bombs = 1
+	assert_true(main.player.try_throw_bomb())
+	assert_eq(main.run_stats.bombs_thrown, 1)
+
+func test_run_statistics_carry_between_floors() -> void:
+	main.start_run(321)
+	main.run_stats.record_damage_dealt(7)
+	main.run_stats.record_damage_blocked(2)
+	main.run_stats.record_bomb_thrown()
+	_step_to_exit()
+	assert_eq(main.run_stats.damage_dealt, 7)
+	assert_eq(main.run_stats.damage_blocked, 2)
+	assert_eq(main.run_stats.bombs_thrown, 1)
+
+func test_new_run_resets_statistics() -> void:
+	main.start_run(654)
+	main.run_stats.record_damage_dealt(7)
+	main.run_stats.record_damage_blocked(2)
+	main.run_stats.record_bomb_thrown()
+	main.start_run(655)
+	assert_eq(main.run_stats.damage_dealt, 0)
+	assert_eq(main.run_stats.damage_blocked, 0)
+	assert_eq(main.run_stats.bombs_thrown, 0)
+
 func test_keys_reset_on_descent() -> void:
 	main.start_run(123)
 	main.player.apply_pickup(&"key", 3)

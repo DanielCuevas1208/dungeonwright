@@ -194,6 +194,15 @@ The frame also reads room, door, threat, and map data from `DungeonResult`.
 The play action sends the displayed seed through the normal start path.
 This keeps the captured evidence and live run on the same code path.
 
+## Run statistics
+
+`RunStats` stores counters for the active run.
+The main controller records actual enemy health removed after each player attack and bomb blast.
+The player reports damage absorbed by defence through a signal.
+The controller records each thrown bomb.
+The counters continue across floor descent and reset at run start.
+`ResultOverlay` reads the counters when it builds the final summary.
+
 ## Floor descent
 
 A run spans three floors.

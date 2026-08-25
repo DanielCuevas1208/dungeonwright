@@ -4,6 +4,14 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.12.0] - 2026-08-25
+
+Added
+
+- Run statistics for damage dealt, damage blocked, and bombs thrown.
+- Result-screen counters that span all floors in a run.
+- Unit and integration tests for counter reset and persistence.
+
 ## [0.11.0] - 2026-08-14
 
 Added
