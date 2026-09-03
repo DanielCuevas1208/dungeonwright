@@ -86,6 +86,28 @@ func test_keys_reset_on_descent() -> void:
 	_step_to_exit()
 	assert_eq(main.player.keys_held, 0)
 
+func test_shrine_buffs_expire_on_descent() -> void:
+	main.start_run(12345)
+	var shrine := main.shrines_root.get_child(0) as ShrineActor
+	var base_damage := main.player.stats.damage
+	var base_defence := main.player.stats.defence
+	main.player.apply_pickup(&"shard", ShrineOffer.COST)
+	main.player.grid_pos = shrine.grid_pos
+	assert_true(main._use_shrine(shrine))
+	assert_true(shrine.used)
+	assert_eq(main.player.shards, 0)
+	assert_eq(
+		main.player.stats.damage,
+		base_damage + ShrineOffer.damage_bonus(shrine.shrine.offer_id)
+	)
+	assert_eq(
+		main.player.stats.defence,
+		base_defence + ShrineOffer.defence_bonus(shrine.shrine.offer_id)
+	)
+	_step_to_exit()
+	assert_eq(main.player.stats.damage, base_damage)
+	assert_eq(main.player.stats.defence, base_defence)
+
 func test_health_persists_and_heals_between_floors() -> void:
 	main.start_run(555)
 	main.player.take_damage(60)

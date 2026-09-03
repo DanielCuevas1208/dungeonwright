@@ -2,6 +2,14 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.13.0 - Interactive shrines
+
+- Added deterministic room-interior shrine placement.
+- Added Might and Ward offers that cost three shards.
+- Added floor-only damage and defence buffs.
+- Added interaction prompts, activation audio, and procedural shrine art.
+- Added deterministic unit and smoke coverage.
+
 ## 0.12.0 - Run statistics
 
 - Added damage dealt, damage blocked, and bombs thrown counters.
@@ -72,12 +80,6 @@ This roadmap tracks shipped work and the next release slice.
 - Added deterministic floor seeds.
 
 ## Next up
-
-### Interactive shrines
-
-- Add optional interactive shrines inside rooms.
-- Let the hero spend shards for single-floor buffs.
-- Keep all shrine choices deterministic.
 
 ### Run history
 

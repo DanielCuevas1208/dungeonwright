@@ -183,9 +183,10 @@ func _render() -> void:
 	_biome_label.add_theme_color_override('font_color', Color(config.palette.get(StringName('accent'), Color.WHITE)))
 	_description_label.text = config.description
 	_seed_label.text = 'Replay seed: ' + featured_seed_text()
-	_stats_label.text = 'Rooms: %d\nLocked doors: %d\nThreats: %d\nMap: %d x %d' % [
+	_stats_label.text = 'Rooms: %d\nLocked doors: %d\nShrines: %d\nThreats: %d\nMap: %d x %d' % [
 		result.room_count(),
 		result.door_count(),
+		result.shrine_count(),
 		result.monster_count(),
 		result.map.width,
 		result.map.height,

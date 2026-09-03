@@ -29,5 +29,6 @@ func test_showcase_opens_and_closes() -> void:
 	await wait_process_frames(1)
 	showcase.open()
 	assert_true(showcase.visible)
+	assert_true(showcase._stats_label.text.contains('Shrines:'))
 	showcase.close()
 	assert_false(showcase.visible)

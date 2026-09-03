@@ -57,6 +57,10 @@ func _verify() -> void:
 		_fail("exit is not reachable from the start")
 	elif not _main.run.solvable:
 		_fail("dungeon is not solvable")
+	elif _main.run.shrine_count() < 1:
+		_fail("dungeon spawned no interactive shrine")
+	elif _main.shrines_root.get_child_count() != _main.run.shrine_count():
+		_fail("generated shrines did not enter the world")
 	_verify_input_bindings()
 	_verify_specs()
 	_verify_audio()
@@ -77,9 +81,9 @@ func _verify_specs() -> void:
 			var spec := MonsterSpecs.by_id(entry.monster)
 			if spec.id != entry.monster:
 				_fail("biome %s references unknown monster %s" % [biome.id, entry.monster])
-	for key in [&"relic", &"emblem", &"aegis", &"warden"]:
+	for key in [&"relic", &"emblem", &"aegis", &"warden", &"shrine"]:
 		if not TileArt.has_entity(key):
-			_fail("boss item %s has no art" % key)
+			_fail("special entity %s has no art" % key)
 
 ## Every sound cue and music theme must resolve to audio.
 ## This guards against content drift in the audio bank.

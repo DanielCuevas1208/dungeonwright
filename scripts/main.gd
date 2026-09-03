@@ -12,6 +12,7 @@ signal run_started(seed_value: int)
 @onready var dungeon_view: DungeonView = $World/DungeonView
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
+@onready var shrines_root: Node2D = $World/Shrines
 @onready var projectiles_root: Node2D = $World/Projectiles
 @onready var bombs_root: Node2D = $World/Bombs
 @onready var effects_root: Node2D = $World/Effects
@@ -25,6 +26,7 @@ signal run_started(seed_value: int)
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const SHRINE_SCENE := preload("res://scenes/world/shrine.tscn")
 const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
 const BOMB_SCENE := preload("res://scenes/actors/bomb.tscn")
 
@@ -59,6 +61,7 @@ func _wire_signals() -> void:
 	player.keys_changed.connect(hud.set_keys)
 	player.emblems_changed.connect(hud.set_emblems)
 	player.aegis_changed.connect(hud.set_aegis)
+	player.floor_buffs_changed.connect(hud.set_floor_buffs)
 	player.damage_received.connect(_on_player_damage_received)
 	player.attacked.connect(_on_player_attack)
 	player.bomb_thrown.connect(_on_bomb_thrown)
@@ -87,6 +90,7 @@ func _physics_process(p_delta: float) -> void:
 	_collect_pickups()
 	_update_projectiles(p_delta)
 	_update_bombs(p_delta)
+	_update_shrine_interaction()
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos and _exit_clear():
 		_on_exit_reached()
@@ -161,6 +165,7 @@ func _start_run(p_seed_value: int) -> void:
 ## Builds the world for the current floor. Keeps hero health and loot
 ## from the previous floor when the hero descends.
 func _begin_floor() -> void:
+	player.clear_floor_buffs()
 	var floor_seed := RunRules.floor_seed(run_seed, floor_index)
 	run = DungeonGenerator.new().generate(biome, floor_seed)
 
@@ -188,6 +193,8 @@ func _begin_floor() -> void:
 
 	for key in run.keys:
 		_spawn_pickup(&"key", 1, key.position)
+	for shrine in run.shrines:
+		_spawn_shrine(shrine)
 
 	_spawn_exit_beacon()
 
@@ -275,6 +282,49 @@ func _spawn_pickup(p_kind: StringName, p_count: int, p_position: Vector2i) -> vo
 	pickups_root.add_child(pickup)
 	pickup.setup(p_kind, p_count, p_position, dungeon_view)
 	pickup.picked_up.connect(_on_pickup_taken)
+
+## Spawns one generated shrine without adding it to movement occupancy.
+func _spawn_shrine(p_shrine: Shrine) -> void:
+	var shrine: ShrineActor = SHRINE_SCENE.instantiate()
+	shrines_root.add_child(shrine)
+	shrine.setup(
+		p_shrine,
+		dungeon_view,
+		Color(biome.palette.get(&"glow", Color.WHITE))
+	)
+
+## Presents and handles the shrine at the hero's current tile.
+func _update_shrine_interaction() -> void:
+	var focused: ShrineActor = null
+	for shrine: ShrineActor in shrines_root.get_children():
+		var is_focused := shrine.grid_pos == player.grid_pos
+		shrine.set_focused(is_focused)
+		if is_focused:
+			focused = shrine
+	if focused == null:
+		hud.set_interaction_hint("")
+		return
+
+	var hint := focused.prompt_text()
+	if focused.is_available():
+		if player.shards >= ShrineOffer.COST:
+			hint += " | Press " + Controls.action_label(&"interact")
+		else:
+			hint += " | Need %d shards" % ShrineOffer.COST
+	hud.set_interaction_hint(hint)
+	if focused.is_available() and Input.is_action_just_pressed(&"interact"):
+		_use_shrine(focused)
+
+## Attempts to buy the offer on a shrine under the hero.
+## Returns true after the actor is consumed and the buff is applied.
+func _use_shrine(p_shrine: ShrineActor) -> bool:
+	if p_shrine == null or not p_shrine.is_available() or p_shrine.grid_pos != player.grid_pos:
+		return false
+	if not player.apply_shrine_offer(p_shrine.shrine.offer_id):
+		return false
+	p_shrine.consume()
+	audio.play_sfx(&"shrine_activate")
+	return true
 
 func _on_player_moved(p_grid: Vector2i) -> void:
 	if run.map.get_tile_cell(p_grid) == DungeonMap.Tile.DOOR_LOCKED:
@@ -560,6 +610,8 @@ func _clear_world() -> void:
 	for child in monsters_root.get_children():
 		child.queue_free()
 	for child in pickups_root.get_children():
+		child.queue_free()
+	for child in shrines_root.get_children():
 		child.queue_free()
 	for child in projectiles_root.get_children():
 		child.queue_free()

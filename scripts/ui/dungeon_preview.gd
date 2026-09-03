@@ -28,6 +28,10 @@ static func render_image(
 				DungeonMap.Tile.EXIT:
 					color = glow
 			image.set_pixel(x, y, color)
+	var shrine_color := glow.lightened(0.2)
+	for shrine in p_result.shrines:
+		if p_result.map.in_bounds_cell(shrine.position):
+			image.set_pixel(shrine.position.x, shrine.position.y, shrine_color)
 	var scale := maxi(p_tile_size, 1)
 	image.resize(image.get_width() * scale, image.get_height() * scale, Image.INTERPOLATE_NEAREST)
 	return image

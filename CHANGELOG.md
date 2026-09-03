@@ -4,6 +4,17 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.13.0] - 2026-09-03
+
+Added
+
+- Interactive shrines in generated room interiors.
+- Deterministic Might and Ward offers for three shards.
+- Floor-only damage and defence buffs.
+- Shrine prompts, procedural shrine art, and an activation cue.
+- HUD state for active floor buffs.
+- Unit and smoke coverage for shrine behavior.
+
 ## [0.12.0] - 2026-08-25
 
 Added

@@ -14,6 +14,7 @@ signal keys_changed(count: int)
 signal bombs_changed(count: int)
 signal emblems_changed(count: int)
 signal aegis_changed(count: int)
+signal floor_buffs_changed(damage_bonus: int, defence_bonus: int)
 signal damage_received(raw_damage: int, applied_damage: int, blocked_damage: int)
 signal attacked(origin: Vector2i, facing: Vector2i, range: float, damage: int)
 signal bomb_thrown(origin: Vector2i, facing: Vector2i)
@@ -39,6 +40,8 @@ var keys_held := 0
 var bombs := 0
 var emblems := 0
 var aegis := 0
+var floor_damage_bonus := 0
+var floor_defence_bonus := 0
 
 var view: DungeonView = null
 var occupancy: Dictionary = {}
@@ -192,6 +195,33 @@ func apply_pickup(p_item: StringName, p_count: int) -> void:
 			keys_held += p_count
 			keys_changed.emit(keys_held)
 
+## Buys a deterministic shrine offer with shards.
+## Returns false when the hero cannot afford or use the offer.
+func apply_shrine_offer(p_offer_id: StringName) -> bool:
+	if stats == null or stats.is_dead() or not ShrineOffer.is_valid(p_offer_id):
+		return false
+	if shards < ShrineOffer.COST:
+		return false
+	shards -= ShrineOffer.COST
+	shards_changed.emit(shards)
+	var damage_bonus := ShrineOffer.damage_bonus(p_offer_id)
+	var defence_bonus := ShrineOffer.defence_bonus(p_offer_id)
+	floor_damage_bonus += damage_bonus
+	floor_defence_bonus += defence_bonus
+	stats.damage += damage_bonus
+	stats.defence += defence_bonus
+	floor_buffs_changed.emit(floor_damage_bonus, floor_defence_bonus)
+	return true
+
+## Removes current-floor shrine bonuses before a new floor begins.
+func clear_floor_buffs() -> void:
+	if stats != null:
+		stats.damage = maxi(1, stats.damage - floor_damage_bonus)
+		stats.defence = maxi(0, stats.defence - floor_defence_bonus)
+	floor_damage_bonus = 0
+	floor_defence_bonus = 0
+	floor_buffs_changed.emit(0, 0)
+
 ## Consumes one key, used when the hero opens a locked door.
 func spend_key() -> void:
 	if keys_held <= 0:
@@ -204,6 +234,7 @@ func add_key() -> void:
 
 ## Resets run-only loot when a new run starts. Health is set by setup.
 func start_run() -> void:
+	clear_floor_buffs()
 	coins = 0
 	shards = 0
 	keys_held = 0
@@ -227,6 +258,7 @@ func emit_hud() -> void:
 	bombs_changed.emit(bombs)
 	emblems_changed.emit(emblems)
 	aegis_changed.emit(aegis)
+	floor_buffs_changed.emit(floor_damage_bonus, floor_defence_bonus)
 
 func _flash() -> void:
 	if _sprite == null or not is_inside_tree():

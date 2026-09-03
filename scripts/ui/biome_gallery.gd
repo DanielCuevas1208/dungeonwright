@@ -177,7 +177,7 @@ func _render_page() -> void:
 	_title.text = config.display_name
 	_title.add_theme_color_override('font_color', Color(config.palette.get(StringName('accent'), Color.WHITE)))
 	_description.text = config.description
-	_details.text = details_text(config)
+	_details.text = "%s / Shrines: %d" % [details_text(config), result.shrine_count()]
 	_page_label.text = 'Page {page} of {count}'.format({
 		'page': _page + 1,
 		'count': biomes.size(),

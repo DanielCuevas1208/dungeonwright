@@ -17,7 +17,8 @@ The pipeline runs in a fixed order.
 4. Carve the biome corridor style into the map.
 5. Choose the start and the farthest room as the exit.
 6. Place doors and keys.
-7. Scatter monsters in the rooms.
+7. Place shrines in room interiors.
+8. Scatter monsters in the rooms.
 
 The generator also marks a walkable tile next to the exit.
 This tile holds the final-floor boss and is stored in the result.
@@ -168,13 +169,31 @@ The scene controller calls the audio cues from the same handlers that drive comb
 
 The `Main` scene owns the game loop.
 It generates a map and spawns the world.
-The hero, monsters, and pickups are plain nodes.
+The hero, monsters, pickups, and shrines are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
 
 The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
+
+## Shrine offers
+
+`ShrineOffer` stores the cost, names, descriptions, and combat bonuses.
+It exposes two offers: Might adds four sword damage, and Ward adds two defence.
+Both offers cost three shards.
+
+The generator selects the offer with `SeededRng`.
+It places one or two shrines in non-start and non-exit room interiors.
+It avoids keys, doors, and the start and exit cells.
+
+The live `ShrineActor` presents the generated record on the map.
+The hero presses E, or the gamepad B button, while standing on its tile.
+The actor becomes spent after a successful purchase.
+The player applies the bonus to current stats and tracks its floor total.
+`Main` clears that total before generating the next floor.
+
+The shrine actor uses the same procedural entity art system.
 
 ## Biome gallery
 
@@ -286,6 +305,7 @@ Unit tests also cover the boss spec, enrage profile, and volley math.
 Unit tests also cover every biome rule and the Tidebound Archive replay.
 Unit tests also cover shared map previews and the showcase replay seed.
 Unit tests also cover the aegis defence formula, pickup events, and drop weights.
+Unit tests also cover shrine offers, placement, purchases, and floor expiry.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
@@ -295,6 +315,7 @@ Integration tests verify aegis defence reduces damage during live combat.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 The final floor must spawn a boss and a relic.
+Every generated shrine must use a valid offer and a unique interior cell.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

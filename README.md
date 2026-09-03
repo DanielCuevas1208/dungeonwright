@@ -30,6 +30,10 @@ It previews real generated maps before you start a run.
 It also includes a capture-ready showcase frame.
 The frame explains one fixed run and can launch that seed.
 
+Shrines offer a clear choice during exploration.
+Spend three shards for Might or Ward.
+Each blessing lasts for the current floor.
+
 ## Features
 
 - A new map for every run, driven by a seed.
@@ -53,10 +57,19 @@ The frame explains one fixed run and can launch that seed.
 - Full gamepad support with analog movement.
 - An in-game biome gallery for quick visual comparison.
 - A capture-ready showcase frame for the featured biome.
+- Interactive shrines that trade shards for floor-only combat buffs.
 
-## This release: Run statistics
+## This release: Interactive shrines
 
-The result screen now reports three combat counters.
+Each generated floor places one or two shrines in room interiors.
+Shrines offer Might or Ward from a seeded offer table.
+Press E when the hero stands on a shrine.
+Spend three shards to gain four sword damage or two defence.
+The HUD lists active floor buffs.
+Shrines become spent after one purchase.
+Buffs clear when the hero descends.
+
+The result screen reports three combat counters.
 It shows enemy health removed, damage absorbed by defence, and bombs thrown.
 Counters cover every floor and reset when a new run starts.
 
@@ -80,8 +93,9 @@ The project separates pure generation logic from the live scene.
 - `scripts/audio`: Procedural waveform synthesis, sound bank cues, and looping biome music themes.
 - `scripts/core`: Deterministic multi-floor rules and runtime state tracking.
 - `RunStats` keeps run counters separate from the live scene.
+- `ShrineOffer` keeps shrine costs and effects in pure data.
 - `scripts/ui`: In-game HUD, pause menu, biome gallery, and showcase overlay.
-- `scripts/world`: Procedural pixel tile renderer and minimap builder.
+- `scripts/world`: Procedural pixel art, map rendering, and shrine actors.
 
 Read [docs/architecture.md](docs/architecture.md) for detailed architecture documentation.
 
@@ -116,10 +130,13 @@ Press Escape to return to the menu.
 Choose View showcase in the menu.
 Press Play this seed to start the featured run.
 
+Stand on a shrine and press E to inspect or buy its offer.
+
 A gamepad works too.
 Move with the left stick or the d-pad.
 Attack with A or the right shoulder button.
 Throw a bomb with X.
+Press B at a shrine.
 Press Y for a new run.
 Press Select to toggle the minimap.
 Press Start to pause.
@@ -133,7 +150,7 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 236 tests pass across 25 test scripts with 5,148 assertions.
+- 246 tests pass across 26 test scripts with 5,274 assertions.
 - 0 failing tests and 0 deprecation warnings.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
 - Headless smoke test passes with seed 12345.
@@ -159,10 +176,10 @@ GUT test suite summary:
 
 Totals
 ------
-Scripts              25
-Tests               236
-Passing Tests       236
-Asserts            5148
+Scripts              26
+Tests               246
+Passing Tests       246
+Asserts            5274
 Time              <duration>
 
 ---- All tests passed! ----
@@ -176,6 +193,12 @@ Damage blocked: <damage absorbed>
 Bombs thrown: <bombs used>
 ```
 
+Shrine prompt:
+
+```
+Shrine of Might: Sword damage +4 this floor | 3 shards | Press E
+```
+
 ## Limitations
 
 The game includes five biomes.
@@ -186,10 +209,15 @@ Audio is instrumental, with no voice acting.
 Gallery previews use fixed seeds.
 The showcase frame features one fixed biome.
 Run statistics cover one run and are not saved.
+Shrine buffs expire on floor descent and are not saved.
 
 ## Roadmap
 
 Done in this release:
+- Interactive room shrines with deterministic Might and Ward offers.
+- Single-floor buffs that consume three shards.
+- Shrine prompts, procedural art, activation audio, and HUD buff state.
+- Unit and smoke coverage for shrine placement, purchase, and expiry.
 - Run statistics on the result screen.
 - The Aegis Crest defensive item and damage absorption.
 - Carried defence bonuses across multi-floor runs.
@@ -207,7 +235,7 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Interactive shrines for single-floor shard buffs.
+- Optional run history on the result screen.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

@@ -8,6 +8,7 @@ extends Control
 var biome_label: Label = null
 var seed_label: Label = null
 var floor_label: Label = null
+var floor_buffs_label: Label = null
 var hp_fill: ColorRect = null
 var hp_label: Label = null
 var coin_label: Label = null
@@ -20,6 +21,7 @@ var minimap_texture: TextureRect = null
 var minimap_marker: ColorRect = null
 var _minimap_frame: PanelContainer = null
 var _minimap_visible := true
+var _interaction_hint: Label = null
 
 var boss_fill: ColorRect = null
 var boss_label: Label = null
@@ -37,6 +39,7 @@ func _ready() -> void:
 	_build_bottom_panel()
 	_build_boss_panel()
 	_build_minimap()
+	_build_interaction_hint()
 
 ## Shows the run context. The floor is a one-based counter.
 func set_run(p_biome: String, p_seed: String, p_floor: int, p_floors: int) -> void:
@@ -68,6 +71,27 @@ func set_emblems(p_count: int) -> void:
 
 func set_aegis(p_count: int) -> void:
 	aegis_label.text = "x " + str(p_count)
+
+## Shows the temporary combat bonuses active on the current floor.
+func set_floor_buffs(p_damage_bonus: int, p_defence_bonus: int) -> void:
+	if floor_buffs_label == null:
+		return
+	if p_damage_bonus == 0 and p_defence_bonus == 0:
+		floor_buffs_label.text = "Floor buffs: none"
+		return
+	var parts: Array[String] = []
+	if p_damage_bonus > 0:
+		parts.append("damage +%d" % p_damage_bonus)
+	if p_defence_bonus > 0:
+		parts.append("defence +%d" % p_defence_bonus)
+	floor_buffs_label.text = "Floor buffs: " + ", ".join(parts)
+
+## Shows the action prompt for an interactive world object.
+func set_interaction_hint(p_text: String) -> void:
+	if _interaction_hint == null:
+		return
+	_interaction_hint.text = p_text
+	_interaction_hint.visible = not p_text.is_empty()
 
 ## Shows the boss bar and names the boss.
 func show_boss(p_name: String) -> void:
@@ -115,9 +139,11 @@ func _build_top_panel() -> void:
 	biome_label = _label("", 15)
 	seed_label = _label("", 15)
 	floor_label = _label("", 15)
+	floor_buffs_label = _label("Floor buffs: none", 14)
 	box.add_child(biome_label)
 	box.add_child(seed_label)
 	box.add_child(floor_label)
+	box.add_child(floor_buffs_label)
 	add_child(panel)
 
 func _build_bottom_panel() -> void:
@@ -209,6 +235,17 @@ func _build_minimap() -> void:
 	minimap_texture.add_child(minimap_marker)
 	_minimap_frame.add_child(minimap_texture)
 	add_child(_minimap_frame)
+
+func _build_interaction_hint() -> void:
+	_interaction_hint = _label("", 16)
+	_interaction_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_interaction_hint.offset_left = -320
+	_interaction_hint.offset_top = -86
+	_interaction_hint.offset_right = 320
+	_interaction_hint.offset_bottom = -56
+	_interaction_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_interaction_hint.visible = false
+	add_child(_interaction_hint)
 
 func _icon_counter(p_icon: StringName) -> Control:
 	var row := HBoxContainer.new()

@@ -10,7 +10,8 @@ extends RefCounted
 ##   5. Choose the start and the farthest room as the exit.
 ##   6. Place doors on tree corridors and put each key on the
 ##      start side of its door, so the exit is always reachable.
-##   7. Scatter monsters in the rooms.
+##   7. Place deterministic optional shrines in room interiors.
+##   8. Scatter monsters in the rooms.
 ##
 ## Every step uses the same SeededRng, so a seed always produces the
 ## same dungeon.
@@ -38,6 +39,7 @@ func generate(p_config: DungeonConfig, p_seed: int) -> DungeonResult:
 	result.map.set_tile_cell(result.exit_pos, DungeonMap.Tile.EXIT)
 
 	_place_doors_and_keys(rng, p_config, result)
+	_place_shrines(rng, p_config, result)
 	_place_monsters(rng, p_config, result)
 
 	result.depth = Pathfinding.flood(result.map, result.start_pos, true).get(result.exit_pos, 0)
@@ -336,6 +338,7 @@ func _place_doors_and_keys(
 	var blocked := {}
 	blocked[p_result.start_pos] = true
 	blocked[p_result.exit_pos] = true
+	blocked[p_result.boss_spawn] = true
 
 	for corridor in chosen:
 		var region := Pathfinding.flood(working, p_result.start_pos, false)
@@ -429,6 +432,46 @@ func _room_at(p_rooms: Array[Room], p_cell: Vector2i) -> int:
 			return room.id
 	return -1
 
+## Places shard-powered shrines in room interiors, away from run features.
+func _place_shrines(
+	p_rng: SeededRng,
+	p_config: DungeonConfig,
+	p_result: DungeonResult
+) -> void:
+	var target := p_rng.next_int_range(
+		p_config.shrine_count_min, p_config.shrine_count_max
+	)
+	if target <= 0:
+		return
+
+	var blocked := {}
+	blocked[p_result.start_pos] = true
+	blocked[p_result.exit_pos] = true
+	blocked[p_result.boss_spawn] = true
+	for door in p_result.doors:
+		blocked[door.position] = true
+	for key in p_result.keys:
+		blocked[key.position] = true
+
+	var candidates: Array[Vector2i] = []
+	for room in p_result.rooms:
+		if room.id == p_result.start_room or room.id == p_result.exit_room:
+			continue
+		for x in range(room.x + 1, room.x + room.w - 1):
+			for y in range(room.y + 1, room.y + room.h - 1):
+				var cell := Vector2i(x, y)
+				if blocked.has(cell) or p_result.map.get_tile_cell(cell) != DungeonMap.Tile.FLOOR:
+					continue
+				candidates.append(cell)
+
+	p_rng.shuffle(candidates)
+	var count := mini(target, candidates.size())
+	for i in count:
+		var shrine := Shrine.new(
+			i, candidates[i], ShrineOffer.from_rng(p_rng)
+		)
+		p_result.shrines.append(shrine)
+
 ## Picks the tile where the final-floor boss stands guard.
 ## It is the nearest walkable neighbor of the exit, found by a spiral
 ## search that never returns the exit tile itself.
@@ -482,6 +525,14 @@ func _place_monsters(
 		weights.append(entry.weight)
 
 	var monster_rooms: Array[int] = []
+	var blocked := {}
+	blocked[p_result.start_pos] = true
+	blocked[p_result.exit_pos] = true
+	blocked[p_result.boss_spawn] = true
+	for key in p_result.keys:
+		blocked[key.position] = true
+	for shrine in p_result.shrines:
+		blocked[shrine.position] = true
 	for room in p_result.rooms:
 		if room.id == p_result.start_room or room.id == p_result.exit_room:
 			continue
@@ -497,7 +548,29 @@ func _place_monsters(
 		if not p_rng.chance(density):
 			continue
 		var monster_id: StringName = monster_ids[p_rng.weighted_index(weights)]
+		var spawn_position := _pick_monster_cell(p_rng, p_result.map, room, blocked)
+		if spawn_position == Vector2i(-1, -1):
+			continue
 		p_result.monster_spawns.append({
-			"position": room.random_cell(p_rng),
+			"position": spawn_position,
 			"monster": monster_id,
 		})
+		blocked[spawn_position] = true
+
+## Picks an unreserved interior cell for a monster.
+func _pick_monster_cell(
+	p_rng: SeededRng,
+	p_map: DungeonMap,
+	p_room: Room,
+	p_blocked: Dictionary
+) -> Vector2i:
+	var candidates: Array[Vector2i] = []
+	for x in range(p_room.x + 1, p_room.x + p_room.w - 1):
+		for y in range(p_room.y + 1, p_room.y + p_room.h - 1):
+			var cell := Vector2i(x, y)
+			if p_blocked.has(cell) or p_map.get_tile_cell(cell) != DungeonMap.Tile.FLOOR:
+				continue
+			candidates.append(cell)
+	if candidates.is_empty():
+		return Vector2i(-1, -1)
+	return p_rng.shuffle(candidates)[0]
