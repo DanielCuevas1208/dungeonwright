@@ -12,6 +12,7 @@ signal run_started(seed_value: int)
 @onready var dungeon_view: DungeonView = $World/DungeonView
 @onready var monsters_root: Node2D = $World/Monsters
 @onready var pickups_root: Node2D = $World/Pickups
+@onready var shrines_root: Node2D = $World/Shrines
 @onready var projectiles_root: Node2D = $World/Projectiles
 @onready var bombs_root: Node2D = $World/Bombs
 @onready var effects_root: Node2D = $World/Effects
@@ -25,6 +26,7 @@ signal run_started(seed_value: int)
 
 const MONSTER_SCENE := preload("res://scenes/actors/monster.tscn")
 const PICKUP_SCENE := preload("res://scenes/actors/pickup.tscn")
+const SHRINE_SCENE := preload("res://scenes/world/shrine.tscn")
 const PROJECTILE_SCENE := preload("res://scenes/actors/projectile.tscn")
 const BOMB_SCENE := preload("res://scenes/actors/bomb.tscn")
 
@@ -33,6 +35,8 @@ var run_rules: RunRules = null
 var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
+var run_stats := RunStats.new()
+var run_history := RunHistory.new()
 var floor_index := 0
 var monster_index := 0
 var _ended := false
@@ -57,6 +61,9 @@ func _wire_signals() -> void:
 	player.bombs_changed.connect(hud.set_bombs)
 	player.keys_changed.connect(hud.set_keys)
 	player.emblems_changed.connect(hud.set_emblems)
+	player.aegis_changed.connect(hud.set_aegis)
+	player.floor_buffs_changed.connect(hud.set_floor_buffs)
+	player.damage_received.connect(_on_player_damage_received)
 	player.attacked.connect(_on_player_attack)
 	player.bomb_thrown.connect(_on_bomb_thrown)
 	player.died.connect(_on_player_died)
@@ -84,6 +91,7 @@ func _physics_process(p_delta: float) -> void:
 	_collect_pickups()
 	_update_projectiles(p_delta)
 	_update_bombs(p_delta)
+	_update_shrine_interaction()
 	_pulse_beacon(p_delta)
 	if not _ended and player.grid_pos == run.exit_pos and _exit_clear():
 		_on_exit_reached()
@@ -140,6 +148,7 @@ func start_run(p_seed_value: int) -> void:
 
 func _start_run(p_seed_value: int) -> void:
 	run_seed = p_seed_value
+	run_stats.reset()
 	run_rules = RunRules.new()
 	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
 	floor_index = 0
@@ -157,6 +166,7 @@ func _start_run(p_seed_value: int) -> void:
 ## Builds the world for the current floor. Keeps hero health and loot
 ## from the previous floor when the hero descends.
 func _begin_floor() -> void:
+	player.clear_floor_buffs()
 	var floor_seed := RunRules.floor_seed(run_seed, floor_index)
 	run = DungeonGenerator.new().generate(biome, floor_seed)
 
@@ -184,6 +194,8 @@ func _begin_floor() -> void:
 
 	for key in run.keys:
 		_spawn_pickup(&"key", 1, key.position)
+	for shrine in run.shrines:
+		_spawn_shrine(shrine)
 
 	_spawn_exit_beacon()
 
@@ -206,20 +218,23 @@ func _begin_floor() -> void:
 	else:
 		audio.play_music(biome.id)
 
-## Builds the hero stats for this floor. Damage keeps any emblem boost
-## the hero earned, so power carries between floors.
+## Builds the hero stats for this floor. Damage and defence keep any
+## emblem and aegis boosts earned, so power carries between floors.
 func _player_stats() -> CombatStats:
 	var max_health := biome.starting_health
 	var health := max_health
 	var damage := biome.player_damage
+	var defence := 0
 	if floor_index > 0 and player.stats != null:
 		max_health = player.stats.max_health
 		health = player.stats.health
 		damage = player.stats.damage
+		defence = player.stats.defence
 	return CombatStats.make({
 		"max_health": max_health,
 		"health": health,
 		"damage": damage,
+		"defence": defence,
 	})
 
 ## The hero reached the exit. Descend, or win on the final floor.
@@ -269,6 +284,49 @@ func _spawn_pickup(p_kind: StringName, p_count: int, p_position: Vector2i) -> vo
 	pickup.setup(p_kind, p_count, p_position, dungeon_view)
 	pickup.picked_up.connect(_on_pickup_taken)
 
+## Spawns one generated shrine without adding it to movement occupancy.
+func _spawn_shrine(p_shrine: Shrine) -> void:
+	var shrine: ShrineActor = SHRINE_SCENE.instantiate()
+	shrines_root.add_child(shrine)
+	shrine.setup(
+		p_shrine,
+		dungeon_view,
+		Color(biome.palette.get(&"glow", Color.WHITE))
+	)
+
+## Presents and handles the shrine at the hero's current tile.
+func _update_shrine_interaction() -> void:
+	var focused: ShrineActor = null
+	for shrine: ShrineActor in shrines_root.get_children():
+		var is_focused := shrine.grid_pos == player.grid_pos
+		shrine.set_focused(is_focused)
+		if is_focused:
+			focused = shrine
+	if focused == null:
+		hud.set_interaction_hint("")
+		return
+
+	var hint := focused.prompt_text()
+	if focused.is_available():
+		if player.shards >= ShrineOffer.COST:
+			hint += " | Press " + Controls.action_label(&"interact")
+		else:
+			hint += " | Need %d shards" % ShrineOffer.COST
+	hud.set_interaction_hint(hint)
+	if focused.is_available() and Input.is_action_just_pressed(&"interact"):
+		_use_shrine(focused)
+
+## Attempts to buy the offer on a shrine under the hero.
+## Returns true after the actor is consumed and the buff is applied.
+func _use_shrine(p_shrine: ShrineActor) -> bool:
+	if p_shrine == null or not p_shrine.is_available() or p_shrine.grid_pos != player.grid_pos:
+		return false
+	if not player.apply_shrine_offer(p_shrine.shrine.offer_id):
+		return false
+	p_shrine.consume()
+	audio.play_sfx(&"shrine_activate")
+	return true
+
 func _on_player_moved(p_grid: Vector2i) -> void:
 	if run.map.get_tile_cell(p_grid) == DungeonMap.Tile.DOOR_LOCKED:
 		run.map.set_tile_cell(p_grid, DungeonMap.Tile.DOOR_OPEN)
@@ -306,7 +364,7 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 			continue
 		if not Combat.in_facing_arc(p_origin, p_facing, monster.grid_pos):
 			continue
-		monster.take_damage(p_damage)
+		_damage_monster(monster, p_damage)
 		_spawn_slash(monster.grid_pos)
 		hit_any = true
 	if hit_any:
@@ -315,6 +373,17 @@ func _on_player_attack(p_origin: Vector2i, p_facing: Vector2i, p_range: float, p
 func _on_monster_attack(p_damage: int) -> void:
 	audio.play_sfx(&"hurt")
 	player.take_damage(p_damage)
+
+func _on_player_damage_received(_p_raw: int, _p_applied: int, p_blocked: int) -> void:
+	run_stats.record_damage_blocked(p_blocked)
+
+## Applies player damage to one monster and records health actually removed.
+func _damage_monster(p_monster: MonsterActor, p_damage: int) -> void:
+	if p_monster == null or p_monster.stats == null:
+		return
+	var health_before := p_monster.stats.health
+	p_monster.take_damage(p_damage)
+	run_stats.record_damage_dealt(health_before - p_monster.stats.health)
 
 ## A ranged monster reported a shot. Spawn the bolt for the hero to dodge.
 func _on_ranged_fired(p_monster: MonsterActor, p_direction: Vector2i) -> void:
@@ -352,6 +421,7 @@ func _on_projectile_expired(p_projectile: Projectile) -> void:
 
 ## The hero threw a bomb. Spawn it in front of the hero.
 func _on_bomb_thrown(p_origin: Vector2i, p_facing: Vector2i) -> void:
+	run_stats.record_bomb_thrown()
 	spawn_bomb(p_origin, p_facing)
 
 ## Spawns a thrown bomb and returns it. Public entry point for tooling.
@@ -371,7 +441,7 @@ func _explode_bomb(p_bomb: Bomb) -> void:
 	audio.play_sfx(&"explosion")
 	for monster: MonsterActor in monsters_root.get_children():
 		if Combat.in_blast_radius(p_bomb.grid_pos, monster.grid_pos, p_bomb.blast_radius):
-			monster.take_damage(p_bomb.damage)
+			_damage_monster(monster, p_bomb.damage)
 	_spawn_explosion(p_bomb.grid_pos)
 
 func _on_bomb_expired(p_bomb: Bomb) -> void:
@@ -448,14 +518,7 @@ func _on_player_died() -> void:
 	audio.stop_music()
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
-	result_overlay.show_result(
-		false,
-		SeededRng.encode_seed(run_seed),
-		floor_index + 1,
-		run_rules.floor_count,
-		player.coins,
-		RunState.elapsed()
-	)
+	_show_result(false)
 	get_tree().paused = true
 
 func _on_victory() -> void:
@@ -466,15 +529,31 @@ func _on_victory() -> void:
 	audio.stop_music()
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
-	result_overlay.show_result(
-		true,
+	_show_result(true)
+	get_tree().paused = true
+
+## Records and displays the completed run without changing the active counters.
+func _show_result(p_won: bool) -> void:
+	var elapsed_time := RunState.elapsed()
+	run_history.add_result(
+		p_won,
 		SeededRng.encode_seed(run_seed),
 		floor_index + 1,
 		run_rules.floor_count,
 		player.coins,
-		RunState.elapsed()
+		elapsed_time,
+		run_stats
 	)
-	get_tree().paused = true
+	result_overlay.show_result(
+		p_won,
+		SeededRng.encode_seed(run_seed),
+		floor_index + 1,
+		run_rules.floor_count,
+		player.coins,
+		elapsed_time,
+		run_stats,
+		run_history
+	)
 
 func _toggle_pause() -> void:
 	if get_tree().paused:
@@ -539,6 +618,8 @@ func _clear_world() -> void:
 	for child in monsters_root.get_children():
 		child.queue_free()
 	for child in pickups_root.get_children():
+		child.queue_free()
+	for child in shrines_root.get_children():
 		child.queue_free()
 	for child in projectiles_root.get_children():
 		child.queue_free()

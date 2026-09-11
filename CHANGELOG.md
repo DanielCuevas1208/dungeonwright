@@ -4,6 +4,71 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.14.0] - 2026-09-11
+
+Added
+
+- A bounded in-session history for the five latest completed runs.
+- Copied run counters for stable result records.
+- Compact history entries on victory and defeat screens.
+- Unit and integration tests for history ordering and retention.
+
+## [0.13.0] - 2026-09-03
+
+Added
+
+- Interactive shrines in generated room interiors.
+- Deterministic Might and Ward offers for three shards.
+- Floor-only damage and defence buffs.
+- Shrine prompts, procedural shrine art, and an activation cue.
+- HUD state for active floor buffs.
+- Unit and smoke coverage for shrine behavior.
+
+## [0.12.0] - 2026-08-25
+
+Added
+
+- Run statistics for damage dealt, damage blocked, and bombs thrown.
+- Result-screen counters that span all floors in a run.
+- Unit and integration tests for counter reset and persistence.
+
+## [0.11.0] - 2026-08-14
+
+Added
+
+- The Aegis Crest defensive item as a rare monster drop.
+- Damage absorption calculation based on held Aegis Crests.
+- Procedural pixel art for the Aegis Crest entity.
+- Procedural resonant chime cue in the sound bank for picking up an Aegis Crest.
+- HUD counter showing held Aegis Crests in the active loot panel.
+- Unit and integration tests for defence scaling, pickups, and drop rates.
+
+Changed
+
+- Hero damage calculation now subtracts defence before applying health loss.
+- Monster drop tables now include rare Aegis Crest loot entries.
+- Floor transitions preserve hero defence stat across descent.
+- Replaced deprecated test frame waiting methods with GUT process frame helpers.
+
+## [0.10.0] - 2026-08-12
+
+Added
+
+- A capture-ready showcase frame in the main menu.
+- A fixed Tidebound Archive preview with replay seed and run facts.
+- A direct action to play the featured seed.
+- A shared dungeon preview renderer for gallery and showcase views.
+
+## [0.9.0] - 2026-08-04
+
+Added
+
+- A biome gallery in the main menu.
+- Deterministic map previews for all five biomes.
+- Palette swatches and common threat icons.
+- Arrow-key and button navigation.
+- Unit coverage for preview stability and solvability.
+
 ## [0.8.0] - 2026-08-04
 
 Added

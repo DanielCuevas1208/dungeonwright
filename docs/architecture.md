@@ -17,7 +17,8 @@ The pipeline runs in a fixed order.
 4. Carve the biome corridor style into the map.
 5. Choose the start and the farthest room as the exit.
 6. Place doors and keys.
-7. Scatter monsters in the rooms.
+7. Place shrines in room interiors.
+8. Scatter monsters in the rooms.
 
 The generator also marks a walkable tile next to the exit.
 This tile holds the final-floor boss and is stored in the result.
@@ -94,7 +95,7 @@ Attack range and facing arcs use tile math, not physics.
 The player attacks in a facing arc.
 Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
-Coins drop often, shards sometimes, potions rarely, bombs rarest.
+Coins drop often, shards sometimes, potions rarely, bombs, emblems, and aegis crests rarest.
 
 ## Ranged combat
 
@@ -168,13 +169,66 @@ The scene controller calls the audio cues from the same handlers that drive comb
 
 The `Main` scene owns the game loop.
 It generates a map and spawns the world.
-The hero, monsters, and pickups are plain nodes.
+The hero, monsters, pickups, and shrines are plain nodes.
 The hero moves tile to tile with smooth interpolation.
 Monsters follow short flood-fill paths.
 
 The world renders from a tile map.
 A `TileArt` class draws every sprite from pixel patterns.
 The biome palette recolors the tiles at run time.
+
+## Shrine offers
+
+`ShrineOffer` stores the cost, names, descriptions, and combat bonuses.
+It exposes two offers: Might adds four sword damage, and Ward adds two defence.
+Both offers cost three shards.
+
+The generator selects the offer with `SeededRng`.
+It places one or two shrines in non-start and non-exit room interiors.
+It avoids keys, doors, and the start and exit cells.
+
+The live `ShrineActor` presents the generated record on the map.
+The hero presses E, or the gamepad B button, while standing on its tile.
+The actor becomes spent after a successful purchase.
+The player applies the bonus to current stats and tracks its floor total.
+`Main` clears that total before generating the next floor.
+
+The shrine actor uses the same procedural entity art system.
+
+## Biome gallery
+
+The main menu can open the biome gallery while the game is paused.
+`BiomeGallery` uses the same generator as a live run.
+Each biome receives a fixed preview seed.
+The gallery renders the map, palette swatches, and configured monster art.
+This keeps the showcase view aligned with game content.
+The gallery does not modify run state.
+
+## Showcase frame
+
+The main menu can open the showcase frame while the game is paused.
+`ShowcaseOverlay` selects the Tidebound Archive and one fixed seed.
+`DungeonPreview` renders the generated map for both the gallery and showcase.
+The frame also reads room, door, threat, and map data from `DungeonResult`.
+The play action sends the displayed seed through the normal start path.
+This keeps the captured evidence and live run on the same code path.
+
+## Run statistics
+
+`RunStats` stores counters for the active run.
+The main controller records actual enemy health removed after each player attack and bomb blast.
+The player reports damage absorbed by defence through a signal.
+The controller records each thrown bomb.
+The counters continue across floor descent and reset at run start.
+`ResultOverlay` reads the counters when it builds the final summary.
+
+## Run history
+
+`RunHistory` stores up to five completed runs in memory.
+The main controller adds a record when the hero wins or loses.
+Each record copies the run counters before the next run starts.
+The result overlay formats records newest first.
+The history does not write files or change dungeon generation.
 
 ## Floor descent
 
@@ -227,10 +281,12 @@ The relic is a pickup with its own sound and art.
 Collecting the relic calls the victory flow.
 The run can no longer end by walking to the exit first.
 
-Monsters can drop damage emblems.
-An emblem adds two points to the hero's sword.
-The hero carries the bonus between floors.
-The HUD counts the emblems the hero holds.
+Monsters can drop damage emblems and protective aegis crests.
+An emblem adds two points to the hero sword damage.
+An aegis crest adds one point of defence to the hero armour.
+Defence reduces incoming combat damage, but never below one minimum damage.
+The hero carries both bonuses between floors for the entire run.
+The HUD counts both items in the active loot row.
 The boss theme plays on the boss floor.
 The beacon turns red while the Warden guards the exit.
 
@@ -255,14 +311,21 @@ Unit tests also cover line of sight, projectile flight, and bomb flight.
 Unit tests also cover waveform math, every sound cue, and every music theme.
 Unit tests also cover the boss spec, enrage profile, and volley math.
 Unit tests also cover every biome rule and the Tidebound Archive replay.
+Unit tests also cover shared map previews and the showcase replay seed.
+Unit tests also cover the aegis defence formula, pickup events, and drop weights.
+Unit tests also cover shrine offers, placement, purchases, and floor expiry.
+Unit tests also cover run history retention, copying, and result display.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
 Integration tests verify bombs blast the monsters they should.
 Integration tests verify the boss floor seals the exit and drops the relic.
+Integration tests verify aegis defence reduces damage during live combat.
+Integration tests verify completed history remains after a new run starts.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 The final floor must spawn a boss and a relic.
+Every generated shrine must use a valid offer and a unique interior cell.
 
 Run the suite with `tools/run_tests`.
 CI runs the same commands on every push.

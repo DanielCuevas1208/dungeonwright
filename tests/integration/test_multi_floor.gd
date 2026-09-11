@@ -11,7 +11,7 @@ func before_each() -> void:
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	main = scene.instantiate()
 	add_child_autofree(main)
-	await wait_frames(1)
+	await wait_physics_frames(1)
 
 ## Teleports the hero onto the exit tile and runs one physics tick.
 func _step_to_exit() -> void:
@@ -47,11 +47,66 @@ func test_loot_carries_between_floors() -> void:
 	_step_to_exit()
 	assert_eq(main.player.coins, 5)
 
+func test_live_combat_updates_run_statistics() -> void:
+	main.start_run(777)
+	var monster := main.monsters_root.get_child(0) as MonsterActor
+	var health_before := monster.stats.health
+	main._damage_monster(monster, 3)
+	assert_eq(main.run_stats.damage_dealt, health_before - monster.stats.health)
+	main.player.apply_pickup(&"aegis", 2)
+	main.player.take_damage(8)
+	assert_eq(main.run_stats.damage_blocked, 2)
+	main.player.bombs = 1
+	assert_true(main.player.try_throw_bomb())
+	assert_eq(main.run_stats.bombs_thrown, 1)
+
+func test_run_statistics_carry_between_floors() -> void:
+	main.start_run(321)
+	main.run_stats.record_damage_dealt(7)
+	main.run_stats.record_damage_blocked(2)
+	main.run_stats.record_bomb_thrown()
+	_step_to_exit()
+	assert_eq(main.run_stats.damage_dealt, 7)
+	assert_eq(main.run_stats.damage_blocked, 2)
+	assert_eq(main.run_stats.bombs_thrown, 1)
+
+func test_new_run_resets_statistics() -> void:
+	main.start_run(654)
+	main.run_stats.record_damage_dealt(7)
+	main.run_stats.record_damage_blocked(2)
+	main.run_stats.record_bomb_thrown()
+	main.start_run(655)
+	assert_eq(main.run_stats.damage_dealt, 0)
+	assert_eq(main.run_stats.damage_blocked, 0)
+	assert_eq(main.run_stats.bombs_thrown, 0)
+
 func test_keys_reset_on_descent() -> void:
 	main.start_run(123)
 	main.player.apply_pickup(&"key", 3)
 	_step_to_exit()
 	assert_eq(main.player.keys_held, 0)
+
+func test_shrine_buffs_expire_on_descent() -> void:
+	main.start_run(12345)
+	var shrine := main.shrines_root.get_child(0) as ShrineActor
+	var base_damage := main.player.stats.damage
+	var base_defence := main.player.stats.defence
+	main.player.apply_pickup(&"shard", ShrineOffer.COST)
+	main.player.grid_pos = shrine.grid_pos
+	assert_true(main._use_shrine(shrine))
+	assert_true(shrine.used)
+	assert_eq(main.player.shards, 0)
+	assert_eq(
+		main.player.stats.damage,
+		base_damage + ShrineOffer.damage_bonus(shrine.shrine.offer_id)
+	)
+	assert_eq(
+		main.player.stats.defence,
+		base_defence + ShrineOffer.defence_bonus(shrine.shrine.offer_id)
+	)
+	_step_to_exit()
+	assert_eq(main.player.stats.damage, base_damage)
+	assert_eq(main.player.stats.defence, base_defence)
 
 func test_health_persists_and_heals_between_floors() -> void:
 	main.start_run(555)
@@ -81,6 +136,9 @@ func test_winning_on_the_final_floor_shows_victory() -> void:
 	_step_to_exit()
 	assert_eq(RunState.status, RunState.RunStatus.WON)
 	assert_true(main.result_overlay.visible)
+	assert_eq(main.run_history.size(), 1)
+	assert_true(main.run_history.records()[0]["won"])
+	assert_true(main.result_overlay._history_label.text.contains("Recent runs"))
 
 ## Kills the boss that guards the final-floor exit.
 func _kill_the_warden() -> void:
@@ -92,6 +150,17 @@ func test_defeat_still_shows_the_reached_floor() -> void:
 	main.player.take_damage(100000)
 	assert_eq(RunState.status, RunState.RunStatus.LOST)
 	assert_true(main.result_overlay.visible)
+	assert_eq(main.run_history.size(), 1)
+	assert_false(main.run_history.records()[0]["won"])
+
+func test_new_run_keeps_completed_history() -> void:
+	main.start_run(404)
+	main.player.take_damage(100000)
+	main.start_run(505)
+
+	assert_eq(main.run_history.size(), 1)
+	assert_eq(main.run_history.records()[0]["seed"], SeededRng.encode_seed(404))
+	assert_false(main.run_history.records()[0]["won"])
 
 func test_replay_restarts_from_the_first_floor() -> void:
 	main.start_run(999)

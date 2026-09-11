@@ -8,6 +8,7 @@ extends RefCounted
 var max_health: int = 1
 var health: int = 1
 var damage: int = 1
+var defence: int = 0
 var speed: float = 1.0
 var attack_range: float = 1.0
 var attack_cooldown: float = 1.0
