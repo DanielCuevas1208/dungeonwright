@@ -222,6 +222,14 @@ The controller records each thrown bomb.
 The counters continue across floor descent and reset at run start.
 `ResultOverlay` reads the counters when it builds the final summary.
 
+## Run history
+
+`RunHistory` stores up to five completed runs in memory.
+The main controller adds a record when the hero wins or loses.
+Each record copies the run counters before the next run starts.
+The result overlay formats records newest first.
+The history does not write files or change dungeon generation.
+
 ## Floor descent
 
 A run spans three floors.
@@ -306,12 +314,14 @@ Unit tests also cover every biome rule and the Tidebound Archive replay.
 Unit tests also cover shared map previews and the showcase replay seed.
 Unit tests also cover the aegis defence formula, pickup events, and drop weights.
 Unit tests also cover shrine offers, placement, purchases, and floor expiry.
+Unit tests also cover run history retention, copying, and result display.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
 Integration tests verify bombs blast the monsters they should.
 Integration tests verify the boss floor seals the exit and drops the relic.
 Integration tests verify aegis defence reduces damage during live combat.
+Integration tests verify completed history remains after a new run starts.
 Every generated dungeon must be solvable.
 Each floor must be a fresh solvable dungeon.
 The final floor must spawn a boss and a relic.

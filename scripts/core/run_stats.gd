@@ -23,3 +23,11 @@ func record_damage_blocked(p_amount: int) -> void:
 ## Records a bomb that the hero throws.
 func record_bomb_thrown() -> void:
 	bombs_thrown += 1
+
+## Returns a copy of the counters for a completed-run record.
+func snapshot() -> Dictionary:
+	return {
+		"damage_dealt": damage_dealt,
+		"damage_blocked": damage_blocked,
+		"bombs_thrown": bombs_thrown,
+	}

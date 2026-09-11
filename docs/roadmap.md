@@ -2,6 +2,13 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.14.0 - Run history
+
+- Added a bounded history for the five latest completed runs.
+- Added copied run counters for stable result records.
+- Added compact history entries to the victory and defeat overlay.
+- Added tests for ordering, retention, copying, and result display.
+
 ## 0.13.0 - Interactive shrines
 
 - Added deterministic room-interior shrine placement.
@@ -81,10 +88,10 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Next up
 
-### Run history
+### Persistent run records
 
-- Expand the result screen with optional run history.
-- Keep the current counters as the first release of this system.
+- Decide whether history should persist across launches.
+- Define a storage format and reset behavior before implementation.
 
 ## Scope rules
 

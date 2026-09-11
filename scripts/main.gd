@@ -36,6 +36,7 @@ var biome: DungeonConfig = null
 var occupancy: Dictionary = {}
 var run_seed: int = 0
 var run_stats := RunStats.new()
+var run_history := RunHistory.new()
 var floor_index := 0
 var monster_index := 0
 var _ended := false
@@ -517,15 +518,7 @@ func _on_player_died() -> void:
 	audio.stop_music()
 	RunState.status = RunState.RunStatus.LOST
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
-	result_overlay.show_result(
-		false,
-		SeededRng.encode_seed(run_seed),
-		floor_index + 1,
-		run_rules.floor_count,
-		player.coins,
-		RunState.elapsed(),
-		run_stats
-	)
+	_show_result(false)
 	get_tree().paused = true
 
 func _on_victory() -> void:
@@ -536,16 +529,31 @@ func _on_victory() -> void:
 	audio.stop_music()
 	RunState.status = RunState.RunStatus.WON
 	RunState.finished_at = Time.get_ticks_msec() / 1000.0
-	result_overlay.show_result(
-		true,
+	_show_result(true)
+	get_tree().paused = true
+
+## Records and displays the completed run without changing the active counters.
+func _show_result(p_won: bool) -> void:
+	var elapsed_time := RunState.elapsed()
+	run_history.add_result(
+		p_won,
 		SeededRng.encode_seed(run_seed),
 		floor_index + 1,
 		run_rules.floor_count,
 		player.coins,
-		RunState.elapsed(),
+		elapsed_time,
 		run_stats
 	)
-	get_tree().paused = true
+	result_overlay.show_result(
+		p_won,
+		SeededRng.encode_seed(run_seed),
+		floor_index + 1,
+		run_rules.floor_count,
+		player.coins,
+		elapsed_time,
+		run_stats,
+		run_history
+	)
 
 func _toggle_pause() -> void:
 	if get_tree().paused:

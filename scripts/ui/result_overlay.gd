@@ -9,6 +9,7 @@ signal new_run_requested(same_seed: bool)
 
 var _title: Label = null
 var _summary: Label = null
+var _history_label: Label = null
 var _new_button: Button = null
 var _same_seed_button: Button = null
 
@@ -24,7 +25,8 @@ func show_result(
 	p_floor_count: int,
 	p_coins: int,
 	p_time: float,
-	p_stats: RunStats = null
+	p_stats: RunStats = null,
+	p_history: RunHistory = null
 ) -> void:
 	visible = true
 	_title.text = "Victory" if p_won else "Defeat"
@@ -41,6 +43,9 @@ func show_result(
 			p_stats.bombs_thrown,
 		]
 	_summary.text = summary
+	_history_label.visible = p_history != null and not p_history.is_empty()
+	if _history_label.visible:
+		_history_label.text = "Recent runs (this session)\n" + p_history.format_records()
 	_same_seed_button.visible = p_won
 	_new_button.grab_focus()
 
@@ -73,6 +78,13 @@ func _build() -> void:
 	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_summary.add_theme_font_size_override("font_size", 16)
 
+	_history_label = Label.new()
+	_history_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_history_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_history_label.add_theme_font_size_override("font_size", 12)
+	_history_label.add_theme_color_override("font_color", Color("#92a4b5"))
+	_history_label.visible = false
+
 	var new_button := Button.new()
 	new_button.text = "New run (random seed)"
 	new_button.custom_minimum_size = Vector2(0, 36)
@@ -84,6 +96,7 @@ func _build() -> void:
 
 	box.add_child(_title)
 	box.add_child(_summary)
+	box.add_child(_history_label)
 	box.add_child(new_button)
 	box.add_child(_same_seed_button)
 

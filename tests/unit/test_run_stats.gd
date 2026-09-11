@@ -39,6 +39,17 @@ func test_reset_clears_every_counter() -> void:
 	assert_eq(stats.damage_blocked, 0)
 	assert_eq(stats.bombs_thrown, 0)
 
+func test_snapshot_copies_every_counter() -> void:
+	var stats := RunStats.new()
+	stats.record_damage_dealt(12)
+	stats.record_damage_blocked(3)
+	stats.record_bomb_thrown()
+	var snapshot := stats.snapshot()
+	stats.reset()
+	assert_eq(snapshot["damage_dealt"], 12)
+	assert_eq(snapshot["damage_blocked"], 3)
+	assert_eq(snapshot["bombs_thrown"], 1)
+
 func test_result_screen_shows_counters() -> void:
 	var overlay := ResultOverlay.new()
 	autofree(overlay)
@@ -52,3 +63,15 @@ func test_result_screen_shows_counters() -> void:
 	assert_true(overlay._summary.text.contains("Damage dealt: 12"))
 	assert_true(overlay._summary.text.contains("Damage blocked: 3"))
 	assert_true(overlay._summary.text.contains("Bombs thrown: 1"))
+
+func test_result_screen_shows_recent_history_when_provided() -> void:
+	var overlay := ResultOverlay.new()
+	autofree(overlay)
+	add_child(overlay)
+	await wait_process_frames(1)
+	var history := RunHistory.new()
+	history.add_result(true, "000123", 3, 3, 4, 10.0)
+	overlay.show_result(true, "000123", 3, 3, 4, 10.0, null, history)
+	assert_true(overlay._history_label.visible)
+	assert_true(overlay._history_label.text.contains("Recent runs (this session)"))
+	assert_true(overlay._history_label.text.contains("WON | 000123"))

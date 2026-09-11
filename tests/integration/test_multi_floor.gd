@@ -136,6 +136,9 @@ func test_winning_on_the_final_floor_shows_victory() -> void:
 	_step_to_exit()
 	assert_eq(RunState.status, RunState.RunStatus.WON)
 	assert_true(main.result_overlay.visible)
+	assert_eq(main.run_history.size(), 1)
+	assert_true(main.run_history.records()[0]["won"])
+	assert_true(main.result_overlay._history_label.text.contains("Recent runs"))
 
 ## Kills the boss that guards the final-floor exit.
 func _kill_the_warden() -> void:
@@ -147,6 +150,17 @@ func test_defeat_still_shows_the_reached_floor() -> void:
 	main.player.take_damage(100000)
 	assert_eq(RunState.status, RunState.RunStatus.LOST)
 	assert_true(main.result_overlay.visible)
+	assert_eq(main.run_history.size(), 1)
+	assert_false(main.run_history.records()[0]["won"])
+
+func test_new_run_keeps_completed_history() -> void:
+	main.start_run(404)
+	main.player.take_damage(100000)
+	main.start_run(505)
+
+	assert_eq(main.run_history.size(), 1)
+	assert_eq(main.run_history.records()[0]["seed"], SeededRng.encode_seed(404))
+	assert_false(main.run_history.records()[0]["won"])
 
 func test_replay_restarts_from_the_first_floor() -> void:
 	main.start_run(999)

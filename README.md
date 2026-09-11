@@ -59,7 +59,14 @@ Each blessing lasts for the current floor.
 - A capture-ready showcase frame for the featured biome.
 - Interactive shrines that trade shards for floor-only combat buffs.
 
-## This release: Interactive shrines
+## This release: Run history
+
+The result screen keeps the five latest completed runs for the current session.
+Each entry shows the outcome, seed, reached floor, coins, and time.
+The history uses copied data, so a new run cannot change an older entry.
+It stays in memory and does not write a save file.
+
+## Previous release: Interactive shrines
 
 Each generated floor places one or two shrines in room interiors.
 Shrines offer Might or Ward from a seeded offer table.
@@ -93,6 +100,7 @@ The project separates pure generation logic from the live scene.
 - `scripts/audio`: Procedural waveform synthesis, sound bank cues, and looping biome music themes.
 - `scripts/core`: Deterministic multi-floor rules and runtime state tracking.
 - `RunStats` keeps run counters separate from the live scene.
+- `RunHistory` snapshots completed runs for the result overlay.
 - `ShrineOffer` keeps shrine costs and effects in pure data.
 - `scripts/ui`: In-game HUD, pause menu, biome gallery, and showcase overlay.
 - `scripts/world`: Procedural pixel art, map rendering, and shrine actors.
@@ -150,7 +158,7 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 246 tests pass across 26 test scripts with 5,274 assertions.
+- 255 tests pass across 27 test scripts with 5,301 assertions.
 - 0 failing tests and 0 deprecation warnings.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
 - Headless smoke test passes with seed 12345.
@@ -176,10 +184,10 @@ GUT test suite summary:
 
 Totals
 ------
-Scripts              26
-Tests               246
-Passing Tests       246
-Asserts            5274
+Scripts              27
+Tests               255
+Passing Tests       255
+Asserts            5301
 Time              <duration>
 
 ---- All tests passed! ----
@@ -191,6 +199,13 @@ Result screen counters:
 Damage dealt: <enemy health removed>
 Damage blocked: <damage absorbed>
 Bombs thrown: <bombs used>
+```
+
+Recent run history:
+
+```
+Recent runs (this session)
+1. WON | 0000ZJ | F3/3 | 4c | 0:10
 ```
 
 Shrine prompt:
@@ -209,6 +224,7 @@ Audio is instrumental, with no voice acting.
 Gallery previews use fixed seeds.
 The showcase frame features one fixed biome.
 Run statistics cover one run and are not saved.
+Run history covers five completed runs and is not saved.
 Shrine buffs expire on floor descent and are not saved.
 
 ## Roadmap
@@ -224,6 +240,9 @@ Done in this release:
 - Procedural pixel art and pickup audio for the Aegis Crest.
 - HUD armour counter in the loot row.
 - Unit and integration tests for defence scaling and drop balance.
+- Bounded run history with copied completion records.
+- Result-screen history for wins and defeats.
+- Unit and integration tests for history ordering and retention.
 
 Done in earlier releases:
 - Capture-ready showcase frame and biome gallery.
@@ -235,7 +254,7 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Optional run history on the result screen.
+- Persistent run records across launches, if a storage design is approved.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

@@ -4,6 +4,15 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.14.0] - 2026-09-11
+
+Added
+
+- A bounded in-session history for the five latest completed runs.
+- Copied run counters for stable result records.
+- Compact history entries on victory and defeat screens.
+- Unit and integration tests for history ordering and retention.
+
 ## [0.13.0] - 2026-09-03
 
 Added
