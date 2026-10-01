@@ -37,6 +37,8 @@ var occupancy: Dictionary = {}
 var run_seed: int = 0
 var run_stats := RunStats.new()
 var run_history := RunHistory.new()
+## Storage path for completed runs. Tests can provide an isolated user path.
+var history_path := RunHistory.STORAGE_PATH
 var floor_index := 0
 var monster_index := 0
 var _ended := false
@@ -49,6 +51,7 @@ var _shake_time := 0.0
 var _shake_strength := 0.0
 
 func _ready() -> void:
+	run_history.load_from_disk(history_path)
 	_wire_signals()
 	get_tree().paused = true
 	menu_overlay.show_menu(false)
@@ -71,6 +74,7 @@ func _wire_signals() -> void:
 	menu_overlay.start_requested.connect(_on_start_requested)
 	menu_overlay.continue_requested.connect(_resume)
 	result_overlay.new_run_requested.connect(_on_new_run_requested)
+	result_overlay.clear_history_requested.connect(_on_clear_history_requested)
 
 func _unhandled_input(p_event: InputEvent) -> void:
 	if p_event.is_action_pressed("new_run") and run != null:
@@ -544,6 +548,7 @@ func _show_result(p_won: bool) -> void:
 		elapsed_time,
 		run_stats
 	)
+	run_history.save_to_disk(history_path)
 	result_overlay.show_result(
 		p_won,
 		SeededRng.encode_seed(run_seed),
@@ -554,6 +559,10 @@ func _show_result(p_won: bool) -> void:
 		run_stats,
 		run_history
 	)
+
+func _on_clear_history_requested() -> void:
+	if run_history.clear_saved():
+		result_overlay.set_history(run_history)
 
 func _toggle_pause() -> void:
 	if get_tree().paused:

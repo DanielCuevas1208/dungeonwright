@@ -58,13 +58,18 @@ Each blessing lasts for the current floor.
 - An in-game biome gallery for quick visual comparison.
 - A capture-ready showcase frame for the featured biome.
 - Interactive shrines that trade shards for floor-only combat buffs.
+- Persistent run history that survives game launches.
 
-## This release: Run history
+## This release: Persistent run history
 
-The result screen keeps the five latest completed runs for the current session.
-Each entry shows the outcome, seed, reached floor, coins, and time.
+The result screen keeps the five latest completed runs.
+Each entry shows the outcome, seed, reached floor, coins, time, and combat totals.
 The history uses copied data, so a new run cannot change an older entry.
-It stays in memory and does not write a save file.
+Dungeonwright stores records in versioned JSON at `user://dungeonwright_run_history.json`.
+The game saves after every completed run.
+The result screen clears saved records after confirmation.
+Missing data starts with an empty history.
+Invalid records are skipped.
 
 ## Previous release: Interactive shrines
 
@@ -100,7 +105,7 @@ The project separates pure generation logic from the live scene.
 - `scripts/audio`: Procedural waveform synthesis, sound bank cues, and looping biome music themes.
 - `scripts/core`: Deterministic multi-floor rules and runtime state tracking.
 - `RunStats` keeps run counters separate from the live scene.
-- `RunHistory` snapshots completed runs for the result overlay.
+- `RunHistory` snapshots completed runs and persists them for the result overlay.
 - `ShrineOffer` keeps shrine costs and effects in pure data.
 - `scripts/ui`: In-game HUD, pause menu, biome gallery, and showcase overlay.
 - `scripts/world`: Procedural pixel art, map rendering, and shrine actors.
@@ -158,9 +163,10 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 255 tests pass across 27 test scripts with 5,301 assertions.
+- 260 tests pass across 27 test scripts with 5,319 assertions.
 - 0 failing tests and 0 deprecation warnings.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
+- Persistence tests cover round trips, invalid data, retention, and clearing.
 - Headless smoke test passes with seed 12345.
 - GitHub Actions CI workflow validates pushes and pull requests.
 
@@ -204,8 +210,8 @@ Bombs thrown: <bombs used>
 Recent run history:
 
 ```
-Recent runs (this session)
-1. WON | 0000ZJ | F3/3 | 4c | 0:10
+Recent runs (saved between launches)
+1. WON | 0000ZJ | F3/3 | 4c | 0:10 | dmg 42 blk 8 bomb 1
 ```
 
 Shrine prompt:
@@ -223,8 +229,8 @@ The hero has one melee attack and one thrown bomb.
 Audio is instrumental, with no voice acting.
 Gallery previews use fixed seeds.
 The showcase frame features one fixed biome.
-Run statistics cover one run and are not saved.
-Run history covers five completed runs and is not saved.
+Run history stores five completed runs.
+Run history stores no dates, screenshots, or personal information.
 Shrine buffs expire on floor descent and are not saved.
 
 ## Roadmap
@@ -242,7 +248,9 @@ Done in this release:
 - Unit and integration tests for defence scaling and drop balance.
 - Bounded run history with copied completion records.
 - Result-screen history for wins and defeats.
-- Unit and integration tests for history ordering and retention.
+- Versioned JSON storage for five completed runs.
+- Confirmed clearing for saved history.
+- Unit and integration tests for history ordering, retention, storage, and reset.
 
 Done in earlier releases:
 - Capture-ready showcase frame and biome gallery.
@@ -254,7 +262,8 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Persistent run records across launches, if a storage design is approved.
+- Review whether the main menu should expose saved history before a new run.
+- Keep the storage format versioned before adding more record fields.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

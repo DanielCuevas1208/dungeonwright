@@ -4,6 +4,16 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.15.0] - 2026-10-01
+
+Added
+
+- Persistent storage for the five latest completed runs.
+- Versioned JSON records in Godot's user-data directory.
+- Safe handling for missing, malformed, and unknown-version data.
+- A confirmed clear action on the result screen.
+- Unit and integration tests for storage and reset behavior.
+
 ## [0.14.0] - 2026-09-11
 
 Added

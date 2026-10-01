@@ -73,5 +73,6 @@ func test_result_screen_shows_recent_history_when_provided() -> void:
 	history.add_result(true, "000123", 3, 3, 4, 10.0)
 	overlay.show_result(true, "000123", 3, 3, 4, 10.0, null, history)
 	assert_true(overlay._history_label.visible)
-	assert_true(overlay._history_label.text.contains("Recent runs (this session)"))
+	assert_true(overlay._history_label.text.contains("Recent runs (saved between launches)"))
 	assert_true(overlay._history_label.text.contains("WON | 000123"))
+	assert_true(overlay._clear_history_button.visible)

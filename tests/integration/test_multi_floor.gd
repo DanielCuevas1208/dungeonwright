@@ -6,12 +6,19 @@ extends GutTest
 ## the checks deterministic.
 
 var main: Main = null
+const TEST_HISTORY_PATH := "res://.dungeonwright_integration_history.json"
 
 func before_each() -> void:
+	_reset_test_history()
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	main = scene.instantiate()
+	main.history_path = TEST_HISTORY_PATH
 	add_child_autofree(main)
 	await wait_physics_frames(1)
+
+func after_all() -> void:
+	if FileAccess.file_exists(TEST_HISTORY_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_HISTORY_PATH))
 
 ## Teleports the hero onto the exit tile and runs one physics tick.
 func _step_to_exit() -> void:
@@ -152,6 +159,9 @@ func test_defeat_still_shows_the_reached_floor() -> void:
 	assert_true(main.result_overlay.visible)
 	assert_eq(main.run_history.size(), 1)
 	assert_false(main.run_history.records()[0]["won"])
+	var loaded := RunHistory.new()
+	assert_true(loaded.load_from_disk(TEST_HISTORY_PATH))
+	assert_eq(loaded.records()[0]["seed"], SeededRng.encode_seed(404))
 
 func test_new_run_keeps_completed_history() -> void:
 	main.start_run(404)
@@ -170,3 +180,8 @@ func test_replay_restarts_from_the_first_floor() -> void:
 	assert_eq(main.floor_index, 0)
 	assert_eq(main.run.seed_value, 999)
 	assert_eq(main.player.coins, 0)
+
+func _reset_test_history() -> void:
+	var history := RunHistory.new()
+	history.load_from_disk(TEST_HISTORY_PATH)
+	history.clear_saved()

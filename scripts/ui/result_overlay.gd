@@ -6,10 +6,12 @@ extends Control
 ## or the same seed.
 
 signal new_run_requested(same_seed: bool)
+signal clear_history_requested
 
 var _title: Label = null
 var _summary: Label = null
 var _history_label: Label = null
+var _clear_history_button: Button = null
 var _new_button: Button = null
 var _same_seed_button: Button = null
 
@@ -43,11 +45,16 @@ func show_result(
 			p_stats.bombs_thrown,
 		]
 	_summary.text = summary
-	_history_label.visible = p_history != null and not p_history.is_empty()
-	if _history_label.visible:
-		_history_label.text = "Recent runs (this session)\n" + p_history.format_records()
+	set_history(p_history)
 	_same_seed_button.visible = p_won
 	_new_button.grab_focus()
+
+## Refreshes the saved completion list without rebuilding the result summary.
+func set_history(p_history: RunHistory) -> void:
+	_history_label.visible = p_history != null and not p_history.is_empty()
+	_clear_history_button.visible = _history_label.visible
+	if _history_label.visible:
+		_history_label.text = "Recent runs (saved between launches)\n" + p_history.format_records()
 
 func hide_result() -> void:
 	visible = false
@@ -85,6 +92,11 @@ func _build() -> void:
 	_history_label.add_theme_color_override("font_color", Color("#92a4b5"))
 	_history_label.visible = false
 
+	_clear_history_button = Button.new()
+	_clear_history_button.text = "Clear saved history"
+	_clear_history_button.custom_minimum_size = Vector2(0, 30)
+	_clear_history_button.visible = false
+
 	var new_button := Button.new()
 	new_button.text = "New run (random seed)"
 	new_button.custom_minimum_size = Vector2(0, 36)
@@ -97,6 +109,7 @@ func _build() -> void:
 	box.add_child(_title)
 	box.add_child(_summary)
 	box.add_child(_history_label)
+	box.add_child(_clear_history_button)
 	box.add_child(new_button)
 	box.add_child(_same_seed_button)
 
@@ -107,3 +120,19 @@ func _build() -> void:
 
 	new_button.pressed.connect(func() -> void: new_run_requested.emit(false))
 	_same_seed_button.pressed.connect(func() -> void: new_run_requested.emit(true))
+	_clear_history_button.pressed.connect(_confirm_clear_history)
+
+func _confirm_clear_history() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "Clear saved history?"
+	dialog.dialog_text = "Remove the five saved run records from this computer?"
+	dialog.ok_button_text = "Clear"
+	dialog.cancel_button_text = "Keep records"
+	dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+	dialog.confirmed.connect(func() -> void:
+		clear_history_requested.emit()
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered()

@@ -2,6 +2,14 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.15.0 - Persistent run records
+
+- Saved the five latest completed runs between launches.
+- Added versioned JSON storage under Godot's user-data directory.
+- Added safe handling for missing, malformed, and unknown-version data.
+- Added a confirmed clear action on the result screen.
+- Added unit and integration coverage for storage and reset behavior.
+
 ## 0.14.0 - Run history
 
 - Added a bounded history for the five latest completed runs.
@@ -88,10 +96,10 @@ This roadmap tracks shipped work and the next release slice.
 
 ## Next up
 
-### Persistent run records
+### History visibility
 
-- Decide whether history should persist across launches.
-- Define a storage format and reset behavior before implementation.
+- Review whether the main menu should show saved records before a new run.
+- Keep storage versioned before adding more record fields.
 
 ## Scope rules
 

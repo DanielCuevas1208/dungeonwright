@@ -224,11 +224,22 @@ The counters continue across floor descent and reset at run start.
 
 ## Run history
 
-`RunHistory` stores up to five completed runs in memory.
+`RunHistory` stores up to five completed runs.
 The main controller adds a record when the hero wins or loses.
 Each record copies the run counters before the next run starts.
 The result overlay formats records newest first.
-The history does not write files or change dungeon generation.
+The controller loads records when the main scene starts.
+It saves records after each completed run.
+
+The store uses versioned JSON at `user://dungeonwright_run_history.json`.
+Version one stores outcome, seed, floor, coins, time, and combat counters.
+A missing file starts with an empty history.
+Malformed records are skipped during loading.
+An unknown storage version leaves the current records unchanged.
+
+The result overlay offers a confirmed clear action.
+The action writes an empty versioned record set.
+Persistence does not change dungeon generation.
 
 ## Floor descent
 
@@ -314,7 +325,7 @@ Unit tests also cover every biome rule and the Tidebound Archive replay.
 Unit tests also cover shared map previews and the showcase replay seed.
 Unit tests also cover the aegis defence formula, pickup events, and drop weights.
 Unit tests also cover shrine offers, placement, purchases, and floor expiry.
-Unit tests also cover run history retention, copying, and result display.
+Unit tests also cover run history retention, copying, storage, reset, and result display.
 Integration tests run many seeds across all biomes.
 Integration tests also drive the floor descent flow.
 Integration tests verify archers fire and bolts damage the hero.
