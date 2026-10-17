@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache the GUT addon
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: addons/gut
           key: gut-${{ hashFiles('tools/gut.version.json') }}
