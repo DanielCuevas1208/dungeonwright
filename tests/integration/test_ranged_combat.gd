@@ -10,7 +10,7 @@ func before_each() -> void:
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	main = scene.instantiate()
 	add_child_autofree(main)
-	await wait_frames(1)
+	await wait_physics_frames(1)
 
 ## A wide open map so an archer always has line of sight.
 func _open_map() -> DungeonMap:

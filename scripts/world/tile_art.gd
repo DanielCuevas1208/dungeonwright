@@ -21,6 +21,7 @@ const ENTITY_KEYS := [
 	&"player", &"key", &"potion", &"coin", &"shard", &"bomb",
 	&"skeleton", &"crawler", &"wisp", &"shambler", &"golem",
 	&"archer", &"wraith", &"warden", &"bolt", &"relic", &"emblem",
+	&"aegis", &"shrine",
 ]
 
 static var _tile_cache: Dictionary = {}
@@ -103,6 +104,10 @@ static func _entity_pattern(p_key: StringName) -> Array:
 			return _RELIC
 		&"emblem":
 			return _EMBLEM
+		&"aegis":
+			return _AEGIS
+		&"shrine":
+			return _SHRINE
 		&"key":
 			return _KEY
 		&"shard":
@@ -145,6 +150,10 @@ static func _entity_palette(p_key: StringName) -> Dictionary:
 			return { &"@": Color("#8a6ad9"), &"*": Color("#f0e8ff"), &"o": Color("#e8b84c"), &"+": Color("#b49ae8") }
 		&"emblem":
 			return { &"@": Color("#4a7ab5"), &"o": Color("#e8b84c"), &"+": Color("#dff0ff") }
+		&"aegis":
+			return { &"@": Color("#208060"), &"o": Color("#e8b84c"), &"+": Color("#7fffd4"), &"*": Color("#ffffff") }
+		&"shrine":
+			return { &"@": Color("#7147a8"), &"o": Color("#c58cff"), &"+": Color("#f0d9ff"), &"*": Color("#ffffff") }
 		&"key":
 			return { &"o": Color("#e8b84c"), &"@": Color("#b8860b"), &"+": Color("#fff0b0") }
 		&"shard":
@@ -369,6 +378,28 @@ const _EMBLEM := [
 	".@+@@+@.",
 	"..@@@@..",
 	"...@@...",
+	"........",
+]
+
+const _AEGIS := [
+	".oooooo.",
+	"o@@++@@o",
+	"o@+**+@o",
+	"o@+**+@o",
+	".o@++@o.",
+	"..o@@o..",
+	"...oo...",
+	"........",
+]
+
+const _SHRINE := [
+	"...oo...",
+	"..o@@o..",
+	".o@++@o.",
+	".o@**@o.",
+	".o@++@o.",
+	"..o@@o..",
+	"...oo...",
 	"........",
 ]
 

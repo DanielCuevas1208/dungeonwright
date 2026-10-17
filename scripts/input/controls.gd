@@ -12,7 +12,7 @@ const MOVE_DEADZONE := 0.25
 ## to prove the input map stays complete.
 const ACTIONS: Array[StringName] = [
 	&"move_left", &"move_right", &"move_up", &"move_down",
-	&"attack", &"throw_bomb", &"new_run", &"toggle_minimap", &"pause",
+	&"attack", &"throw_bomb", &"interact", &"new_run", &"toggle_minimap", &"pause",
 ]
 
 ## Movement from the keyboard or the first connected gamepad.
@@ -49,6 +49,8 @@ static func label_for(p_action: StringName, p_gamepad: bool) -> String:
 			return "A or R shoulder" if p_gamepad else "Space, J, or click"
 		&"throw_bomb":
 			return "X" if p_gamepad else "B"
+		&"interact":
+			return "B" if p_gamepad else "E"
 		&"new_run":
 			return "Y" if p_gamepad else "N"
 		&"toggle_minimap":
@@ -64,5 +66,5 @@ static func hint_text() -> String:
 ## A two-line hint for the menu, tailored to a given device.
 static func hint_for(p_gamepad: bool) -> String:
 	if p_gamepad:
-		return "Move: left stick or d-pad   Attack: A or R shoulder   Bomb: X\nOpen doors: walk in with a key   New run: Y   Pause: Start"
-	return "Move: WASD or arrows   Attack: Space, J, or click   Bomb: B\nOpen doors: walk in with a key   New run: N   Pause: Esc"
+		return "Move: left stick or d-pad   Attack: A or R shoulder   Bomb: X\nShrines: B   Open doors: walk in with a key   New run: Y   Pause: Start"
+	return "Move: WASD or arrows   Attack: Space, J, or click   Bomb: B\nShrines: E   Open doors: walk in with a key   New run: N   Pause: Esc"

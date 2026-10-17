@@ -25,6 +25,8 @@ var corridor_style: StringName = CorridorStyle.elbow
 var loop_chance: float = 0.25
 var door_count_min: int = 2
 var door_count_max: int = 3
+var shrine_count_min: int = 1
+var shrine_count_max: int = 2
 var monster_density: float = 0.5
 var monster_cap: int = 10
 var monster_table: Array = []
@@ -43,6 +45,8 @@ func validate() -> Array[String]:
 		problems.append("room size range is invalid")
 	if door_count_min < 0:
 		problems.append("door count is negative")
+	if shrine_count_min < 0 or shrine_count_min > shrine_count_max:
+		problems.append("shrine count range is invalid")
 	if monster_density < 0.0 or monster_density > 1.0:
 		problems.append("monster density must be between 0 and 1")
 	if loop_chance < 0.0 or loop_chance > 1.0:

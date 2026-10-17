@@ -24,6 +24,8 @@ const CUES: Array[StringName] = [
 	&"pickup_bomb",
 	&"pickup_key",
 	&"pickup_emblem",
+	&"pickup_aegis",
+	&"shrine_activate",
 	&"pickup_relic",
 	&"door_open",
 	&"descend",
@@ -81,6 +83,10 @@ static func _build(p_id: StringName) -> AudioStreamWAV:
 			return _pack(_pickup_key())
 		&"pickup_emblem":
 			return _pack(_pickup_emblem())
+		&"pickup_aegis":
+			return _pack(_pickup_aegis())
+		&"shrine_activate":
+			return _pack(_shrine_activate())
 		&"pickup_relic":
 			return _pack(_pickup_relic())
 		&"door_open":
@@ -202,6 +208,28 @@ static func _pickup_emblem() -> PackedFloat32Array:
 	)
 	var sparkle := Waveform.envelope(Waveform.sine(1760, 0.2, MIX_RATE), 0.005, 0.17, MIX_RATE)
 	return Waveform.mix(Waveform.scale(up, 0.4), Waveform.scale(sparkle, 0.25))
+
+## A resonant, protective chime for an aegis pickup.
+static func _pickup_aegis() -> PackedFloat32Array:
+	var base := Waveform.envelope(
+		Waveform.sine(330, 0.28, MIX_RATE), 0.005, 0.24, MIX_RATE
+	)
+	var chord := Waveform.envelope(
+		Waveform.sine(494, 0.28, MIX_RATE), 0.005, 0.24, MIX_RATE
+	)
+	var shimmer := Waveform.envelope(
+		Waveform.sine(988, 0.22, MIX_RATE), 0.003, 0.18, MIX_RATE
+	)
+	var resonance := Waveform.mix(Waveform.scale(base, 0.4), Waveform.scale(chord, 0.3))
+	return Waveform.mix(resonance, Waveform.scale(shimmer, 0.25))
+
+## A clear, resonant chord when a floor shrine grants its blessing.
+static func _shrine_activate() -> PackedFloat32Array:
+	var low := Waveform.envelope(Waveform.sine(262, 0.45, MIX_RATE), 0.01, 0.4, MIX_RATE)
+	var high := Waveform.envelope(Waveform.sine(784, 0.32, MIX_RATE), 0.01, 0.28, MIX_RATE)
+	var shimmer := Waveform.envelope(Waveform.sine(1568, 0.24, MIX_RATE), 0.005, 0.2, MIX_RATE)
+	var chord := Waveform.mix(Waveform.scale(low, 0.45), Waveform.scale(high, 0.35))
+	return Waveform.mix(chord, Waveform.scale(shimmer, 0.2))
 
 ## A rising fanfare for the warden's relic.
 static func _pickup_relic() -> PackedFloat32Array:

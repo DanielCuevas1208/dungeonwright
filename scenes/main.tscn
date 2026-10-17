@@ -26,6 +26,8 @@ script = ExtResource("2_view")
 
 [node name="Pickups" type="Node2D" parent="World"]
 
+[node name="Shrines" type="Node2D" parent="World"]
+
 [node name="Projectiles" type="Node2D" parent="World"]
 
 [node name="Bombs" type="Node2D" parent="World"]

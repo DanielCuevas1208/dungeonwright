@@ -3,7 +3,7 @@ extends RefCounted
 ## The complete output of the dungeon generator.
 ##
 ## Contains the map, the rooms, the corridors, and every placed feature:
-## the start, the exit, keys, doors, and monster spawns.
+## the start, the exit, keys, doors, shrines, and monster spawns.
 
 var seed_value: int = 0
 var config: DungeonConfig = null
@@ -19,6 +19,8 @@ var boss_spawn: Vector2i = Vector2i.ZERO
 var doors: Array = []
 ## One entry per placed door: { position, corridor, key_pos, room }
 var keys: Array = []
+## One entry per shrine: a Shrine record with a position and offer.
+var shrines: Array[Shrine] = []
 ## One entry per spawn: { position, monster }
 var monster_spawns: Array = []
 ## BFS distance in tiles from start to exit.
@@ -37,6 +39,10 @@ func door_count() -> int:
 ## The number of placed keys.
 func key_count() -> int:
 	return keys.size()
+
+## The number of generated shrines.
+func shrine_count() -> int:
+	return shrines.size()
 
 ## The number of monster spawns.
 func monster_count() -> int:
