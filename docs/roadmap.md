@@ -94,12 +94,56 @@ This roadmap tracks shipped work and the next release slice.
 - Added three-floor runs.
 - Added deterministic floor seeds.
 
-## Next up
+## Milestones
 
-### History visibility
+### history-menu
 
-- Review whether the main menu should show saved records before a new run.
-- Keep storage versioned before adding more record fields.
+Status: complete.
+
+User-visible outcome: Players can review saved runs before starting a new run.
+
+Bounded deliverable: Main-menu history view with versioned loading and confirmed clearing.
+
+Acceptance criteria:
+
+- The menu shows the five newest completed runs.
+- Missing and corrupt files show an empty history.
+- Opening history does not start or change a run.
+- Clearing requires confirmation and writes an empty versioned store.
+
+Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+### seeded-challenges
+
+Status: planned.
+
+User-visible outcome: Players can replay a shareable challenge with fixed rules.
+
+Bounded deliverable: Encode the seed, generator version, and bounded modifiers in a challenge code.
+
+Acceptance criteria:
+
+- Challenge codes round trip without data loss.
+- Fixed codes reach the same generated dungeon.
+- The challenge rules appear before play.
+
+Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+### enemy-telegraphs
+
+Status: planned.
+
+User-visible outcome: One enemy attack pattern becomes readable before damage arrives.
+
+Bounded deliverable: Add windup, attack, and recovery states with matching visual feedback.
+
+Acceptance criteria:
+
+- State timing is deterministic.
+- Damage occurs only during the attack window.
+- Headless tests cover the timing and damage window.
+
+Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
 
 ## Scope rules
 

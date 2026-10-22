@@ -60,16 +60,22 @@ Each blessing lasts for the current floor.
 - Interactive shrines that trade shards for floor-only combat buffs.
 - Persistent run history that survives game launches.
 
-## This release: Persistent run history
+## This release: Main-menu run history
 
-The result screen keeps the five latest completed runs.
+The main menu shows the five latest completed runs.
 Each entry shows the outcome, seed, reached floor, coins, time, and combat totals.
-The history uses copied data, so a new run cannot change an older entry.
-Dungeonwright stores records in versioned JSON at `user://dungeonwright_run_history.json`.
-The game saves after every completed run.
-The result screen clears saved records after confirmation.
+The view reads the existing versioned JSON store.
+Opening the view does not start or change a run.
+Clear saved history requires confirmation.
 Missing data starts with an empty history.
 Invalid records are skipped.
+
+## Previous release: Persistent run history
+
+The result screen saves each completed run.
+The store keeps copied records, so later runs cannot change older entries.
+Dungeonwright stores records in versioned JSON at `user://dungeonwright_run_history.json`.
+The result screen also shows saved records after a run.
 
 ## Previous release: Interactive shrines
 
@@ -105,9 +111,9 @@ The project separates pure generation logic from the live scene.
 - `scripts/audio`: Procedural waveform synthesis, sound bank cues, and looping biome music themes.
 - `scripts/core`: Deterministic multi-floor rules and runtime state tracking.
 - `RunStats` keeps run counters separate from the live scene.
-- `RunHistory` snapshots completed runs and persists them for the result overlay.
+- `RunHistory` snapshots completed runs and persists them for the result and main-menu overlays.
 - `ShrineOffer` keeps shrine costs and effects in pure data.
-- `scripts/ui`: In-game HUD, pause menu, biome gallery, and showcase overlay.
+- `scripts/ui`: In-game HUD, pause menu, history view, biome gallery, and showcase overlay.
 - `scripts/world`: Procedural pixel art, map rendering, and shrine actors.
 
 Read [docs/architecture.md](docs/architecture.md) for detailed architecture documentation.
@@ -141,6 +147,9 @@ Use the buttons or arrow keys to change pages.
 Press Escape to return to the menu.
 
 Choose View showcase in the menu.
+Choose View run history in the menu.
+Review completed runs before starting a new run.
+Confirm the clear action before removing saved records.
 Press Play this seed to start the featured run.
 
 Stand on a shrine and press E to inspect or buy its offer.
@@ -163,11 +172,12 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 260 tests pass across 27 test scripts with 5,319 assertions.
+- 263 tests pass across 28 test scripts with 5,341 assertions.
 - 0 failing tests and 0 deprecation warnings.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
 - Persistence tests cover round trips, invalid data, retention, and clearing.
 - Headless smoke test passes with seed 12345.
+- Menu history tests cover missing, corrupt, valid, and confirmed-clear records.
 - GitHub Actions CI workflow validates pushes and pull requests.
 
 ## Sample output
@@ -190,10 +200,10 @@ GUT test suite summary:
 
 Totals
 ------
-Scripts              27
-Tests               255
-Passing Tests       255
-Asserts            5301
+Scripts              28
+Tests               263
+Passing Tests       263
+Asserts            5341
 Time              <duration>
 
 ---- All tests passed! ----
@@ -207,10 +217,11 @@ Damage blocked: <damage absorbed>
 Bombs thrown: <bombs used>
 ```
 
-Recent run history:
+Main-menu history:
 
 ```
-Recent runs (saved between launches)
+Run history
+Completed runs stay on this computer.
 1. WON | 0000ZJ | F3/3 | 4c | 0:10 | dmg 42 blk 8 bomb 1
 ```
 
@@ -248,9 +259,11 @@ Done in this release:
 - Unit and integration tests for defence scaling and drop balance.
 - Bounded run history with copied completion records.
 - Result-screen history for wins and defeats.
+- Main-menu history before a new run.
 - Versioned JSON storage for five completed runs.
-- Confirmed clearing for saved history.
+- Confirmed clearing from both history views.
 - Unit and integration tests for history ordering, retention, storage, and reset.
+- Integration tests for menu loading and active-run protection.
 
 Done in earlier releases:
 - Capture-ready showcase frame and biome gallery.
@@ -262,8 +275,8 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Review whether the main menu should expose saved history before a new run.
-- Keep the storage format versioned before adding more record fields.
+- Shareable seeded challenges with bounded modifiers.
+- Readable enemy telegraphs with deterministic damage windows.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

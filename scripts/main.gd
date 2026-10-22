@@ -53,8 +53,9 @@ var _shake_strength := 0.0
 func _ready() -> void:
 	run_history.load_from_disk(history_path)
 	_wire_signals()
+	menu_overlay.set_history(run_history)
 	get_tree().paused = true
-	menu_overlay.show_menu(false)
+	menu_overlay.show_menu(false, run_history)
 	audio.play_music(&"menu")
 
 func _wire_signals() -> void:
@@ -73,6 +74,7 @@ func _wire_signals() -> void:
 	player.moved.connect(_on_player_moved)
 	menu_overlay.start_requested.connect(_on_start_requested)
 	menu_overlay.continue_requested.connect(_resume)
+	menu_overlay.clear_history_requested.connect(_on_clear_history_requested)
 	result_overlay.new_run_requested.connect(_on_new_run_requested)
 	result_overlay.clear_history_requested.connect(_on_clear_history_requested)
 
@@ -563,13 +565,14 @@ func _show_result(p_won: bool) -> void:
 func _on_clear_history_requested() -> void:
 	if run_history.clear_saved():
 		result_overlay.set_history(run_history)
+		menu_overlay.set_history(run_history)
 
 func _toggle_pause() -> void:
 	if get_tree().paused:
 		_resume()
 	else:
 		get_tree().paused = true
-		menu_overlay.show_menu(true)
+		menu_overlay.show_menu(true, run_history)
 
 func _resume() -> void:
 	menu_overlay.hide_menu()
