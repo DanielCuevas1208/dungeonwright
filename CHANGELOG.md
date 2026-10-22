@@ -4,6 +4,15 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.16.0] - 2026-10-22
+
+Added
+
+- A main-menu view for the five latest completed runs.
+- Confirmed clearing from the main menu.
+- Safe empty views for missing and corrupt history files.
+- Integration coverage for active-run protection.
+
 ## [0.15.0] - 2026-10-01
 
 Added

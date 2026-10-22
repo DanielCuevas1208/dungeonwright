@@ -238,6 +238,12 @@ Malformed records are skipped during loading.
 An unknown storage version leaves the current records unchanged.
 
 The result overlay offers a confirmed clear action.
+The main menu receives the same store before it opens.
+It formats the records without copying run state into the overlay.
+The history view replaces the menu panel while it is open.
+Back and Escape return to the menu.
+The clear action uses the same confirmation pattern as the result overlay.
+Opening history never calls the run-start path.
 The action writes an empty versioned record set.
 Persistence does not change dungeon generation.
 

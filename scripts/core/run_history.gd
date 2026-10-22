@@ -50,7 +50,10 @@ func load_from_disk(p_path: String = STORAGE_PATH) -> bool:
 		return false
 	var payload_text := file.get_as_text()
 	file.close()
-	var payload: Variant = JSON.parse_string(payload_text)
+	var json := JSON.new()
+	if json.parse(payload_text) != OK:
+		return false
+	var payload: Variant = json.data
 	if not payload is Dictionary:
 		return false
 	if int(payload.get("version", -1)) != STORAGE_VERSION:
