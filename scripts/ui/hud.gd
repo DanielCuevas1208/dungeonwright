@@ -42,9 +42,15 @@ func _ready() -> void:
 	_build_interaction_hint()
 
 ## Shows the run context. The floor is a one-based counter.
-func set_run(p_biome: String, p_seed: String, p_floor: int, p_floors: int) -> void:
+func set_run(
+	p_biome: String,
+	p_seed: String,
+	p_floor: int,
+	p_floors: int,
+	p_challenge_code: String = ""
+) -> void:
 	biome_label.text = "Biome: " + p_biome
-	seed_label.text = "Seed: " + p_seed
+	seed_label.text = "Challenge: " + p_challenge_code if not p_challenge_code.is_empty() else "Seed: " + p_seed
 	floor_label.text = "Floor %d of %d" % [p_floor + 1, p_floors]
 
 func set_hp(p_current: int, p_max: int) -> void:

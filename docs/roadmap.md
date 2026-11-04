@@ -2,6 +2,20 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.17.0 - Seeded challenges
+
+- Added shareable codes with seed, generator version, and four fixed modifiers.
+- Added Standard, Iron, Frenzy, and Gauntlet modifiers.
+- Added rule previews before play.
+- Added challenge code visibility in the HUD and result screen.
+- Added deterministic code, rules, menu, and reachability tests.
+
+## 0.16.0 - Main-menu run history
+
+- Added a pre-run history view.
+- Added safe loading for missing and corrupt history files.
+- Added confirmed clearing from the main menu.
+
 ## 0.15.0 - Persistent run records
 
 - Saved the five latest completed runs between launches.
@@ -115,7 +129,7 @@ Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://
 
 ### seeded-challenges
 
-Status: planned.
+Status: complete.
 
 User-visible outcome: Players can replay a shareable challenge with fixed rules.
 
@@ -128,6 +142,8 @@ Acceptance criteria:
 - The challenge rules appear before play.
 
 Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+Evidence: `tests/unit/test_seeded_challenge.gd` and `tests/integration/test_seeded_challenge.gd` pass in the full GUT suite.
 
 ### enemy-telegraphs
 
@@ -142,6 +158,22 @@ Acceptance criteria:
 - State timing is deterministic.
 - Damage occurs only during the attack window.
 - Headless tests cover the timing and damage window.
+
+Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+### challenge-history
+
+Status: planned.
+
+User-visible outcome: Players can identify challenge runs after they finish.
+
+Bounded deliverable: Store and display the canonical challenge code in saved run records.
+
+Acceptance criteria:
+
+- Challenge records show the code in the main-menu history view.
+- Older history files still load without a challenge code.
+- Clearing history removes challenge records with the existing confirmation.
 
 Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
 

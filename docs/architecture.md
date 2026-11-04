@@ -86,6 +86,17 @@ Each floor derives its dungeon seed from that run seed.
 `RunRules.floor_seed` mixes the run seed with the floor number.
 Floor one uses the run seed unchanged.
 
+## Seeded challenges
+
+`SeededChallenge` stores a run seed, generator version, and fixed modifier.
+It encodes them as `DW1-XXXXXX-M`.
+The menu decodes the code and previews its rules before play.
+The main controller applies the modifier to a fresh `RunRules` object.
+The generator still receives the same derived floor seeds.
+The modifier changes healing and monster growth only.
+This keeps challenge maps deterministic and solvable.
+The HUD and result overlay show the active challenge code.
+
 ## Combat model
 
 The player and each monster carry a `CombatStats` block.

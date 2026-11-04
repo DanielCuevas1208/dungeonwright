@@ -37,6 +37,8 @@ var occupancy: Dictionary = {}
 var run_seed: int = 0
 var run_stats := RunStats.new()
 var run_history := RunHistory.new()
+## The active challenge, or null for an ordinary seeded run.
+var active_challenge: SeededChallenge = null
 ## Storage path for completed runs. Tests can provide an isolated user path.
 var history_path := RunHistory.STORAGE_PATH
 var floor_index := 0
@@ -132,6 +134,13 @@ func _update_bombs(p_delta: float) -> void:
 
 func _on_start_requested(p_seed_text: String) -> void:
 	var text := p_seed_text.strip_edges()
+	if SeededChallenge.looks_like_code(text):
+		var challenge := SeededChallenge.decode(text)
+		if challenge == null:
+			menu_overlay.show_error("Invalid challenge code. Use DW1-XXXXXX-M.")
+			return
+		_start_run(challenge.seed_value, challenge)
+		return
 	var seed_value := 0
 	if text.is_empty():
 		seed_value = randi()
@@ -144,24 +153,34 @@ func _on_start_requested(p_seed_text: String) -> void:
 
 func _on_new_run_requested(p_same_seed: bool) -> void:
 	if p_same_seed:
-		_start_run(run_seed)
+		_start_run(run_seed, active_challenge)
 	else:
-		_start_run(randi())
+		_start_run(randi(), null)
 
 ## Starts a run with a chosen seed. Public entry point for tooling.
 func start_run(p_seed_value: int) -> void:
-	_start_run(p_seed_value)
+	_start_run(p_seed_value, null)
 
-func _start_run(p_seed_value: int) -> void:
+## Starts a run from a decoded challenge. Public entry point for tooling.
+func start_challenge(p_challenge: SeededChallenge) -> void:
+	if p_challenge == null or not p_challenge.is_valid():
+		return
+	_start_run(p_challenge.seed_value, p_challenge)
+
+func _start_run(p_seed_value: int, p_challenge: SeededChallenge = null) -> void:
 	run_seed = p_seed_value
+	active_challenge = p_challenge
 	run_stats.reset()
 	run_rules = RunRules.new()
+	if active_challenge != null:
+		active_challenge.apply_to(run_rules)
 	biome = Biomes.random(SeededRng.new(p_seed_value ^ 0x5EED))
 	floor_index = 0
 	player.start_run()
 
 	RunState.seed_value = p_seed_value
 	RunState.seed_string = SeededRng.encode_seed(p_seed_value)
+	RunState.challenge_code = active_challenge.code() if active_challenge != null else ""
 	RunState.biome_id = biome.id
 	RunState.status = RunState.RunStatus.ACTIVE
 	RunState.started_at = Time.get_ticks_msec() / 1000.0
@@ -210,7 +229,13 @@ func _begin_floor() -> void:
 	_apply_camera_limits()
 	ambient.color = Color(biome.palette.get(&"accent", Color.WHITE)).darkened(0.55)
 
-	hud.set_run(biome.display_name, SeededRng.encode_seed(run_seed), floor_index, run_rules.floor_count)
+	hud.set_run(
+		biome.display_name,
+		SeededRng.encode_seed(run_seed),
+		floor_index,
+		run_rules.floor_count,
+		RunState.challenge_code
+	)
 	hud.set_minimap(dungeon_view.build_minimap_image(), run.map.width, run.map.height)
 
 	RunState.floor_index = floor_index
@@ -559,7 +584,8 @@ func _show_result(p_won: bool) -> void:
 		player.coins,
 		elapsed_time,
 		run_stats,
-		run_history
+		run_history,
+		active_challenge
 	)
 
 func _on_clear_history_requested() -> void:
