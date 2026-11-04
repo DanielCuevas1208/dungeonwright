@@ -24,6 +24,7 @@ Monsters fight in melee or shoot from a distance.
 You can throw bombs and gather damage emblems or defensive aegis crests.
 All pixel art and sound effects generate in code at run time.
 Every run replays identically from its seed.
+Challenge codes bundle a seed, generator version, and fixed rules.
 
 The main menu includes a biome gallery.
 It previews real generated maps before you start a run.
@@ -59,6 +60,26 @@ Each blessing lasts for the current floor.
 - A capture-ready showcase frame for the featured biome.
 - Interactive shrines that trade shards for floor-only combat buffs.
 - Persistent run history that survives game launches.
+- Shareable challenge codes with four fixed rule sets.
+
+## This release: Shareable seeded challenges
+
+Paste a code such as `DW1-002N9C-I` into the main menu.
+The menu shows the challenge rules before play.
+The code keeps the seed, generator version, and modifier together.
+The HUD and result screen keep the code visible during the run.
+
+Challenge modifiers:
+
+| Code | Name | Rules |
+| --- | --- | --- |
+| `S` | Standard Descent | Normal healing and monster growth. |
+| `I` | Iron Descent | No healing between floors. |
+| `F` | Frenzy Descent | Faster monster growth. |
+| `G` | Gauntlet | No healing and faster monster growth. |
+
+Invalid codes show an error.
+Ordinary seeds keep the existing start flow.
 
 ## This release: Main-menu run history
 
@@ -152,6 +173,9 @@ Review completed runs before starting a new run.
 Confirm the clear action before removing saved records.
 Press Play this seed to start the featured run.
 
+Paste a challenge code to preview its rules before play.
+Use `DW1-XXXXXX-M` as the challenge format.
+
 Stand on a shrine and press E to inspect or buy its offer.
 
 A gamepad works too.
@@ -172,12 +196,13 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 263 tests pass across 28 test scripts with 5,341 assertions.
+- 272 tests pass across 30 test scripts with 6,790 assertions.
 - 0 failing tests and 0 deprecation warnings.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
 - Persistence tests cover round trips, invalid data, retention, and clearing.
 - Headless smoke test passes with seed 12345.
 - Menu history tests cover missing, corrupt, valid, and confirmed-clear records.
+- Challenge tests cover code round trips, fixed rules, menu previews, and solvable floors.
 - GitHub Actions CI workflow validates pushes and pull requests.
 
 ## Sample output
@@ -225,6 +250,14 @@ Completed runs stay on this computer.
 1. WON | 0000ZJ | F3/3 | 4c | 0:10 | dmg 42 blk 8 bomb 1
 ```
 
+Challenge preview:
+
+```
+Challenge: DW1-002N9C-I
+Iron Descent — Three floors with no healing between floors.
+Seed 002N9C | Generator 1
+```
+
 Shrine prompt:
 
 ```
@@ -243,6 +276,8 @@ The showcase frame features one fixed biome.
 Run history stores five completed runs.
 Run history stores no dates, screenshots, or personal information.
 Shrine buffs expire on floor descent and are not saved.
+Challenge codes support four fixed modifiers.
+Challenge codes use generator version one.
 
 ## Roadmap
 
@@ -264,6 +299,10 @@ Done in this release:
 - Confirmed clearing from both history views.
 - Unit and integration tests for history ordering, retention, storage, and reset.
 - Integration tests for menu loading and active-run protection.
+- Shareable challenge codes with fixed modifiers.
+- Challenge previews before play.
+- Challenge code visibility in the HUD and result screen.
+- Unit and integration tests for challenge parsing, rules, and reachability.
 
 Done in earlier releases:
 - Capture-ready showcase frame and biome gallery.
@@ -275,8 +314,8 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Shareable seeded challenges with bounded modifiers.
 - Readable enemy telegraphs with deterministic damage windows.
+- Challenge codes in saved run history.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

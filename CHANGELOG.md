@@ -4,6 +4,16 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.17.0] - 2026-11-03
+
+Added
+
+- Shareable challenge codes with seed, generator version, and fixed modifiers.
+- Four bounded challenge modifiers: Standard, Iron, Frenzy, and Gauntlet.
+- Main-menu rule previews before challenge play.
+- Challenge code display in the HUD and result screen.
+- Unit and integration tests for challenge parsing, rules, menus, and reachability.
+
 ## [0.16.0] - 2026-10-22
 
 Added

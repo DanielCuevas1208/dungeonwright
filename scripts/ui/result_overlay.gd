@@ -28,7 +28,8 @@ func show_result(
 	p_coins: int,
 	p_time: float,
 	p_stats: RunStats = null,
-	p_history: RunHistory = null
+	p_history: RunHistory = null,
+	p_challenge: SeededChallenge = null
 ) -> void:
 	visible = true
 	_title.text = "Victory" if p_won else "Defeat"
@@ -44,9 +45,12 @@ func show_result(
 			p_stats.damage_blocked,
 			p_stats.bombs_thrown,
 		]
+	if p_challenge != null:
+		summary += "\n\nChallenge: %s\n%s" % [p_challenge.code(), p_challenge.summary()]
 	_summary.text = summary
 	set_history(p_history)
 	_same_seed_button.visible = p_won
+	_same_seed_button.text = "Replay challenge" if p_challenge != null else "Replay this seed"
 	_new_button.grab_focus()
 
 ## Refreshes the saved completion list without rebuilding the result summary.

@@ -18,6 +18,7 @@ var _gallery_button: Button = null
 var _showcase_button: Button = null
 var _error_label: Label = null
 var _hint_label: Label = null
+var _challenge_label: Label = null
 var _gallery: BiomeGallery = null
 var _showcase: ShowcaseOverlay = null
 var _menu_center: CenterContainer = null
@@ -45,6 +46,7 @@ func show_menu(p_can_continue: bool, p_history: RunHistory = null) -> void:
 	_continue_button.visible = p_can_continue
 	_seed_edit.text = ""
 	_error_label.text = ""
+	_challenge_label.text = ""
 	_seed_edit.grab_focus()
 
 func hide_menu() -> void:
@@ -117,14 +119,20 @@ func _build() -> void:
 	subtitle.add_theme_font_size_override("font_size", 14)
 
 	_seed_edit = LineEdit.new()
-	_seed_edit.placeholder_text = "Seed (optional, letters and digits)"
-	_seed_edit.max_length = 6
-	_seed_edit.tooltip_text = "Leave empty for a random seed"
+	_seed_edit.placeholder_text = "Seed or challenge code"
+	_seed_edit.max_length = 16
+	_seed_edit.tooltip_text = "Leave empty for a random seed. Paste DW1-XXXXXX-M for a challenge."
 
 	_error_label = Label.new()
 	_error_label.add_theme_color_override("font_color", Color("#e07070"))
 	_error_label.add_theme_font_size_override("font_size", 13)
 	_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	_challenge_label = Label.new()
+	_challenge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_challenge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_challenge_label.add_theme_font_size_override("font_size", 13)
+	_challenge_label.add_theme_color_override("font_color", Color("#e4b86a"))
 
 	var start_button := Button.new()
 	start_button.text = "Start new run"
@@ -153,6 +161,7 @@ func _build() -> void:
 	box.add_child(subtitle)
 	box.add_child(_seed_edit)
 	box.add_child(_error_label)
+	box.add_child(_challenge_label)
 	box.add_child(start_button)
 	box.add_child(_history_button)
 	box.add_child(_continue_button)
@@ -170,6 +179,7 @@ func _build() -> void:
 	_continue_button.pressed.connect(func() -> void: continue_requested.emit())
 	_gallery_button.pressed.connect(_open_gallery)
 	_showcase_button.pressed.connect(_open_showcase)
+	_seed_edit.text_changed.connect(_on_seed_changed)
 	_gallery = BiomeGallery.new()
 	add_child(_gallery)
 	_showcase = SHOWCASE_SCENE.instantiate()
@@ -259,6 +269,21 @@ func _refresh_history() -> void:
 
 func _on_start_pressed() -> void:
 	start_requested.emit(_seed_edit.text)
+
+func _on_seed_changed(p_text: String) -> void:
+	if _challenge_label == null:
+		return
+	var text := p_text.strip_edges()
+	if text.is_empty() or not SeededChallenge.looks_like_code(text):
+		_challenge_label.text = ""
+		return
+	var challenge := SeededChallenge.decode(text)
+	if challenge == null:
+		_challenge_label.text = "Invalid challenge code. Use DW1-XXXXXX-M."
+		_challenge_label.add_theme_color_override("font_color", Color("#e07070"))
+		return
+	_challenge_label.text = challenge.preview_text()
+	_challenge_label.add_theme_color_override("font_color", Color("#e4b86a"))
 
 func _open_gallery() -> void:
 	if _showcase != null:
