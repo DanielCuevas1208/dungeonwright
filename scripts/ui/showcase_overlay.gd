@@ -14,8 +14,11 @@ var _seed_label: Label = null
 var _description_label: Label = null
 var _stats_label: Label = null
 var _status_label: Label = null
+var _telegraph_ring: Line2D = null
+var _telegraph_phase_label: Label = null
 var _close_button: Button = null
 var _play_button: Button = null
+var _telegraph_pattern := EnemyAttackPattern.new()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -50,6 +53,14 @@ func close() -> void:
 		return
 	visible = false
 	closed.emit()
+
+func _process(p_delta: float) -> void:
+	if not visible:
+		return
+	if not _telegraph_pattern.is_active():
+		_telegraph_pattern.start()
+	_telegraph_pattern.advance(p_delta)
+	_update_telegraph_demo()
 
 func _unhandled_input(p_event: InputEvent) -> void:
 	if not visible:
@@ -159,6 +170,35 @@ func _build() -> void:
 	_status_label.add_theme_color_override('font_color', Color('#7fe8b9'))
 	info.add_child(_status_label)
 
+	var combat_heading := Label.new()
+	combat_heading.text = 'COMBAT READ'
+	combat_heading.add_theme_font_size_override('font_size', 12)
+	combat_heading.add_theme_color_override('font_color', Color('#92a4b5'))
+	info.add_child(combat_heading)
+	var combat_row := HBoxContainer.new()
+	combat_row.add_theme_constant_override('separation', 10)
+	var telegraph_preview := Control.new()
+	telegraph_preview.custom_minimum_size = Vector2(70, 70)
+	_telegraph_ring = Line2D.new()
+	_telegraph_ring.points = PackedVector2Array([
+		Vector2(26, 26), Vector2(44, 26), Vector2(44, 44),
+		Vector2(26, 44), Vector2(26, 26),
+	])
+	_telegraph_ring.width = 2.0
+	telegraph_preview.add_child(_telegraph_ring)
+	var telegraph_icon := TextureRect.new()
+	telegraph_icon.texture = TileArt.entity_texture(&"skeleton")
+	telegraph_icon.position = Vector2(27, 27)
+	telegraph_icon.size = Vector2(16, 16)
+	telegraph_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	telegraph_preview.add_child(telegraph_icon)
+	combat_row.add_child(telegraph_preview)
+	_telegraph_phase_label = Label.new()
+	_telegraph_phase_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_telegraph_phase_label.add_theme_font_size_override('font_size', 13)
+	combat_row.add_child(_telegraph_phase_label)
+	info.add_child(combat_row)
+
 	var filler := Control.new()
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info.add_child(filler)
@@ -174,6 +214,7 @@ func _build() -> void:
 	info.add_child(note)
 
 func _render() -> void:
+	_telegraph_pattern = EnemyAttackPattern.new()
 	var config := featured_config()
 	var result := featured_result()
 	_map_preview.texture = ImageTexture.create_from_image(
@@ -192,6 +233,38 @@ func _render() -> void:
 		result.map.height,
 	]
 	_status_label.text = 'Exit reachable: yes'
+	_update_telegraph_demo()
+
+## Shows the same timing cycle used by the Bonewalker in a capture-ready card.
+func _update_telegraph_demo() -> void:
+	if _telegraph_ring == null or _telegraph_phase_label == null:
+		return
+	match _telegraph_pattern.phase:
+		EnemyAttackPattern.Phase.WINDUP:
+			_telegraph_ring.visible = true
+			_telegraph_ring.default_color = Color('#f0a33a')
+			_telegraph_ring.modulate.a = 0.8
+			_telegraph_ring.scale = Vector2.ONE * (0.65 + _telegraph_pattern.progress() * 0.55)
+			_telegraph_phase_label.text = 'Windup\nMove before the ring flashes.'
+			_telegraph_phase_label.add_theme_color_override('font_color', Color('#f0c36a'))
+		EnemyAttackPattern.Phase.ATTACK:
+			_telegraph_ring.visible = true
+			_telegraph_ring.default_color = Color('#f05a4f')
+			_telegraph_ring.modulate.a = 1.0
+			_telegraph_ring.scale = Vector2.ONE * 1.2
+			_telegraph_phase_label.text = 'Attack\nDamage window.'
+			_telegraph_phase_label.add_theme_color_override('font_color', Color('#f07a6a'))
+		EnemyAttackPattern.Phase.RECOVERY:
+			_telegraph_ring.visible = true
+			_telegraph_ring.default_color = Color('#c57d4a')
+			_telegraph_ring.modulate.a = 0.35
+			_telegraph_ring.scale = Vector2.ONE
+			_telegraph_phase_label.text = 'Recovery\nPunish or reposition.'
+			_telegraph_phase_label.add_theme_color_override('font_color', Color('#d2a36d'))
+		EnemyAttackPattern.Phase.READY:
+			_telegraph_ring.visible = false
+			_telegraph_phase_label.text = 'Ready\nThe cycle repeats.'
+			_telegraph_phase_label.add_theme_color_override('font_color', Color('#92a4b5'))
 
 func _play_featured_seed() -> void:
 	play_requested.emit(featured_seed_text())

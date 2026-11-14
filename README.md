@@ -61,8 +61,20 @@ Each blessing lasts for the current floor.
 - Interactive shrines that trade shards for floor-only combat buffs.
 - Persistent run history that survives game launches.
 - Shareable challenge codes with four fixed rule sets.
+- Readable Bonewalker melee attacks with deterministic timing.
 
-## This release: Shareable seeded challenges
+## This release: Readable enemy attacks
+
+Bonewalkers show an amber ring before a melee hit.
+The ring grows during a 0.45 second windup.
+Damage lands during a 0.12 second attack window.
+The ring fades during a 0.28 second recovery.
+Move away before the ring flashes to avoid the hit.
+
+The showcase includes a capture-ready timing card.
+It uses the same timing model as the live enemy.
+
+## Previous release: Shareable seeded challenges
 
 Paste a code such as `DW1-002N9C-I` into the main menu.
 The menu shows the challenge rules before play.
@@ -196,13 +208,14 @@ The script installs GUT, imports the project, and runs the suite.
 Tests run headless, so no window opens.
 
 Test status:
-- 272 tests pass across 30 test scripts with 6,790 assertions.
-- 0 failing tests and 0 deprecation warnings.
+- 282 tests pass across 32 test scripts with 6,820 assertions.
+- 0 failing tests and 0 deprecation warnings in the GUT suite.
 - Result screens show damage dealt, damage blocked, and bombs thrown.
 - Persistence tests cover round trips, invalid data, retention, and clearing.
 - Headless smoke test passes with seed 12345.
 - Menu history tests cover missing, corrupt, valid, and confirmed-clear records.
 - Challenge tests cover code round trips, fixed rules, menu previews, and solvable floors.
+- Telegraph tests cover phase timing, damage windows, range cancellation, and showcase evidence.
 - GitHub Actions CI workflow validates pushes and pull requests.
 
 ## Sample output
@@ -216,7 +229,7 @@ Headless smoke test output:
 Smoke test passed: seed 12345 spawned a solvable dungeon across floors.
 ```
 
-GUT test suite summary:
+Recorded GUT suite summary:
 
 ```
 ==============================================
@@ -225,10 +238,10 @@ GUT test suite summary:
 
 Totals
 ------
-Scripts              28
-Tests               263
-Passing Tests       263
-Asserts            5341
+Scripts              32
+Tests               282
+Passing Tests       282
+Asserts            6820
 Time              <duration>
 
 ---- All tests passed! ----
@@ -258,6 +271,14 @@ Iron Descent — Three floors with no healing between floors.
 Seed 002N9C | Generator 1
 ```
 
+Enemy telegraph:
+
+```
+Bonewalker
+Windup 0.45s | Attack 0.12s | Recovery 0.28s
+Move before the ring flashes.
+```
+
 Shrine prompt:
 
 ```
@@ -278,6 +299,8 @@ Run history stores no dates, screenshots, or personal information.
 Shrine buffs expire on floor descent and are not saved.
 Challenge codes support four fixed modifiers.
 Challenge codes use generator version one.
+Only Bonewalkers use the new telegraph pattern.
+Other enemy timings remain unchanged.
 
 ## Roadmap
 
@@ -303,6 +326,10 @@ Done in this release:
 - Challenge previews before play.
 - Challenge code visibility in the HUD and result screen.
 - Unit and integration tests for challenge parsing, rules, and reachability.
+- Readable Bonewalker attacks with fixed windup, attack, and recovery phases.
+- Amber windup and red impact feedback in the live scene.
+- A showcase card that demonstrates the same timing before play.
+- Unit and integration tests for attack timing and range cancellation.
 
 Done in earlier releases:
 - Capture-ready showcase frame and biome gallery.
@@ -314,8 +341,8 @@ Done in earlier releases:
 - Multi-floor descent with difficulty scaling.
 
 Next up:
-- Readable enemy telegraphs with deterministic damage windows.
 - Challenge codes in saved run history.
+- A second telegraphed enemy attack pattern.
 
 Read the full release plan in [docs/roadmap.md](docs/roadmap.md).
 

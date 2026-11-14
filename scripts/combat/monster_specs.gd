@@ -27,6 +27,7 @@ static func by_id(p_id: StringName) -> MonsterSpec:
 
 static func skeleton() -> MonsterSpec:
 	var spec := _base(&"skeleton", "Bonewalker", MonsterSpec.AI.chaser, "skeleton", 8.0)
+	spec.attack_pattern_id = EnemyAttackPattern.MELEE_SLAM
 	spec.stats = CombatStats.make({
 		"max_health": 26, "health": 26, "damage": 8,
 		"speed": 2.0, "attack_range": 1.2, "attack_cooldown": 1.0,

@@ -15,6 +15,7 @@ signal ranged_fired(monster, direction: Vector2i)
 signal hp_changed(current: int, max: int)
 signal enraged(monster)
 signal died(monster)
+signal attack_phase_changed(phase: int)
 
 const REPATH_INTERVAL := 0.4
 
@@ -35,8 +36,11 @@ var _attack_timer := 0.0
 var _sprite: Sprite2D = null
 var _hp_bg: ColorRect = null
 var _hp_fill: ColorRect = null
+var _telegraph_ring: Line2D = null
 var _is_dead := false
 var _enraged := false
+var _attack_pattern: EnemyAttackPattern = null
+var attack_phase: int = EnemyAttackPattern.Phase.READY
 
 func setup(
 	p_spec: MonsterSpec,
@@ -60,6 +64,9 @@ func setup(
 	target = p_target
 	position = view.tile_to_world(grid_pos)
 	_build_sprite()
+	if spec.attack_pattern_id == EnemyAttackPattern.MELEE_SLAM:
+		_attack_pattern = EnemyAttackPattern.new()
+		_build_telegraph_ring()
 	_build_hp_bar()
 	hp_changed.emit(stats.health, stats.max_health)
 
@@ -69,6 +76,9 @@ func _physics_process(p_delta: float) -> void:
 	_attack_timer = maxf(0.0, _attack_timer - p_delta)
 	_repath_timer = maxf(0.0, _repath_timer - p_delta)
 	if target == null:
+		return
+	if _attack_pattern != null and _attack_pattern.is_active():
+		_advance_attack_pattern(p_delta)
 		return
 
 	var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
@@ -155,8 +165,33 @@ func _try_attack() -> void:
 	if _attack_timer > 0.0:
 		return
 	_attack_timer = _cooldown()
+	if _attack_pattern != null:
+		if _attack_pattern.start():
+			_set_attack_phase(_attack_pattern.phase)
+		return
 	attack_player.emit(stats.damage)
 	_lunge()
+
+## Advances the telegraphed attack and applies damage at the attack boundary.
+func _advance_attack_pattern(p_delta: float) -> void:
+	var entered := _attack_pattern.advance(p_delta)
+	for phase in entered:
+		_set_attack_phase(phase)
+		if phase == EnemyAttackPattern.Phase.ATTACK:
+			var distance_sq := Vector2(grid_pos).distance_squared_to(Vector2(target.grid_pos))
+			if Combat.within_attack_range(distance_sq, stats.attack_range):
+				attack_player.emit(stats.damage)
+				_lunge()
+	_update_telegraph_visual()
+
+## Changes the visible phase and keeps the phase available to tests and tools.
+func _set_attack_phase(p_phase: int) -> void:
+	if attack_phase == p_phase:
+		_update_telegraph_visual()
+		return
+	attack_phase = p_phase
+	_update_telegraph_visual()
+	attack_phase_changed.emit(p_phase)
 
 ## Fires a projectile at the hero and reports the shot direction.
 func _try_ranged_attack() -> void:
@@ -227,6 +262,45 @@ func _build_sprite() -> void:
 		_sprite.scale = Vector2(1.5, 1.5)
 		_sprite.position.y = -3.0
 	add_child(_sprite)
+
+func _build_telegraph_ring() -> void:
+	_telegraph_ring = Line2D.new()
+	_telegraph_ring.name = "AttackTelegraph"
+	_telegraph_ring.points = PackedVector2Array([
+		Vector2(-9, -9), Vector2(9, -9), Vector2(9, 9),
+		Vector2(-9, 9), Vector2(-9, -9),
+	])
+	_telegraph_ring.width = 2.0
+	_telegraph_ring.default_color = Color("#f0a33a")
+	_telegraph_ring.visible = false
+	add_child(_telegraph_ring)
+
+## The ring grows during windup, flashes at impact, and fades in recovery.
+func _update_telegraph_visual() -> void:
+	if _telegraph_ring == null or _attack_pattern == null:
+		return
+	_telegraph_ring.visible = attack_phase != EnemyAttackPattern.Phase.READY
+	match attack_phase:
+		EnemyAttackPattern.Phase.WINDUP:
+			_telegraph_ring.default_color = Color("#f0a33a")
+			_telegraph_ring.modulate.a = 0.8
+			var windup_scale := 0.65 + _attack_pattern.progress() * 0.55
+			_telegraph_ring.scale = Vector2.ONE * windup_scale
+			_sprite.modulate = Color("#ffd27a")
+		EnemyAttackPattern.Phase.ATTACK:
+			_telegraph_ring.default_color = Color("#f05a4f")
+			_telegraph_ring.modulate.a = 1.0
+			_telegraph_ring.scale = Vector2.ONE * 1.2
+			_sprite.modulate = Color("#ff7a66")
+		EnemyAttackPattern.Phase.RECOVERY:
+			_telegraph_ring.default_color = Color("#c57d4a")
+			_telegraph_ring.modulate.a = 0.35
+			_telegraph_ring.scale = Vector2.ONE
+			_sprite.modulate = Color("#f0c9a0")
+		EnemyAttackPattern.Phase.READY:
+			_telegraph_ring.modulate.a = 0.0
+			_telegraph_ring.scale = Vector2.ONE
+			_sprite.modulate = _rest_color()
 
 func _build_hp_bar() -> void:
 	_hp_bg = ColorRect.new()
