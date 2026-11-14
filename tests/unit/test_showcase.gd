@@ -30,5 +30,7 @@ func test_showcase_opens_and_closes() -> void:
 	showcase.open()
 	assert_true(showcase.visible)
 	assert_true(showcase._stats_label.text.contains('Shrines:'))
+	await wait_process_frames(1)
+	assert_true(showcase._telegraph_phase_label.text.contains('Windup'))
 	showcase.close()
 	assert_false(showcase.visible)

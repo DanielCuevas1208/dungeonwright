@@ -108,6 +108,17 @@ Monsters chase, stalk, or hold ground according to their spec.
 Each monster rolls loot from a weighted `DropTable`.
 Coins drop often, shards sometimes, potions rarely, bombs, emblems, and aegis crests rarest.
 
+### Enemy telegraphs
+
+`EnemyAttackPattern` owns the Bonewalker's fixed melee cycle.
+The cycle has windup, attack, and recovery phases.
+`MonsterActor` applies damage only when the attack phase starts.
+It checks the hero's current range at that moment.
+Moving away during windup cancels the hit.
+The actor draws an amber ring during windup.
+The ring turns red at the damage boundary.
+The showcase overlay runs the same pattern for capture evidence.
+
 ## Ranged combat
 
 Archers fire projectiles at the hero.

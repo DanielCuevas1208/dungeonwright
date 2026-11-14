@@ -28,6 +28,10 @@ func test_scaled_keeps_behaviour_and_loot() -> void:
 	assert_eq(scaled.sprite_key, spec.sprite_key)
 	assert_eq(scaled.drop_table, spec.drop_table)
 
+func test_scaled_bonewalker_keeps_its_attack_pattern() -> void:
+	var scaled := MonsterSpecs.skeleton().scaled(1.5)
+	assert_eq(scaled.attack_pattern_id, EnemyAttackPattern.MELEE_SLAM)
+
 func test_scaled_keeps_speed_and_cooldown() -> void:
 	var spec := MonsterSpecs.crawler()
 	var scaled := spec.scaled(2.0)

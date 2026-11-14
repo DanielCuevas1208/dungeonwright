@@ -18,6 +18,7 @@ var id: StringName = &""
 var display_name: String = ""
 var ai: StringName = AI.chaser
 var sprite_key: String = ""
+var attack_pattern_id: StringName = &""
 var aggro_range: float = 8.0
 var stats: CombatStats = null
 var drop_table: DropTable = null
@@ -49,6 +50,7 @@ func scaled(p_scale: float) -> MonsterSpec:
 	copy.display_name = display_name
 	copy.ai = ai
 	copy.sprite_key = sprite_key
+	copy.attack_pattern_id = attack_pattern_id
 	copy.aggro_range = aggro_range
 	copy.stats = CombatStats.make({
 		"max_health": maxi(1, roundi(stats.max_health * p_scale)),

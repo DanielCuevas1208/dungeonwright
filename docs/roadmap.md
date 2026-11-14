@@ -2,6 +2,13 @@
 
 This roadmap tracks shipped work and the next release slice.
 
+## 0.18.0 - Readable enemy telegraphs
+
+- Added a fixed Bonewalker melee cycle with windup, attack, and recovery phases.
+- Added an amber attack ring that grows before damage and changes at impact.
+- Added range checks at the attack boundary, so moving away avoids damage.
+- Added deterministic timing tests and a capture-ready showcase demonstration.
+
 ## 0.17.0 - Seeded challenges
 
 - Added shareable codes with seed, generator version, and four fixed modifiers.
@@ -147,7 +154,7 @@ Evidence: `tests/unit/test_seeded_challenge.gd` and `tests/integration/test_seed
 
 ### enemy-telegraphs
 
-Status: planned.
+Status: complete.
 
 User-visible outcome: One enemy attack pattern becomes readable before damage arrives.
 
@@ -157,9 +164,13 @@ Acceptance criteria:
 
 - State timing is deterministic.
 - Damage occurs only during the attack window.
-- Headless tests cover the timing and damage window.
+- Headless tests cover state timing and damage windows.
+- The Bonewalker shows a growing amber ring during windup.
+- The showcase demonstrates the same attack timing before play.
 
 Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+Evidence: `tests/unit/test_enemy_attack_pattern.gd`, `tests/integration/test_enemy_telegraph.gd`, and `tests/unit/test_showcase.gd` pass.
 
 ### challenge-history
 
@@ -174,6 +185,22 @@ Acceptance criteria:
 - Challenge records show the code in the main-menu history view.
 - Older history files still load without a challenge code.
 - Clearing history removes challenge records with the existing confirmation.
+
+Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
+
+### telegraph-variety
+
+Status: planned.
+
+User-visible outcome: Players can read a second enemy attack pattern before damage arrives.
+
+Bounded deliverable: Add one ranged or boss telegraph that reuses the timed attack-cycle contract.
+
+Acceptance criteria:
+
+- The second pattern has a fixed windup, damage window, and recovery.
+- Visual feedback identifies the attack source and impact timing.
+- Headless tests cover timing and cancellation when the target leaves the danger area.
 
 Verification: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
 

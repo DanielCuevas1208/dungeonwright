@@ -4,6 +4,15 @@ All notable changes to this project are listed here.
 The format follows Keep a Changelog.
 This project uses semantic versioning.
 
+## [0.18.0] - 2026-11-14
+
+Added
+
+- A readable Bonewalker melee attack with windup, impact, and recovery phases.
+- An amber attack ring that grows before the damage window.
+- A capture-ready showcase card for the attack timing.
+- Unit and integration tests for deterministic phase timing and range cancellation.
+
 ## [0.17.0] - 2026-11-03
 
 Added
